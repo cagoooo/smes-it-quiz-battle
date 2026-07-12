@@ -1,0 +1,4 @@
+{
+    "version":  "2026.07.12-2",
+    "notes":  "加入 Service Worker 版本更新通知與快取自癒機制"
+}

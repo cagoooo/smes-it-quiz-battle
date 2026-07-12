@@ -17,6 +17,7 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
 @media (max-width:700px) { .screen{width:min(100% - 18px,1180px)}.topbar{padding:12px 0}.top-badges span:first-child{display:none}.lobby-hero{padding:28px 4px 16px}.hero-console{display:none}.hero-copy{font-size:15px}.setup-grid{grid-template-columns:1fr}.roster-card{grid-column:auto}.roster{grid-template-columns:1fr 1fr}.hero-card{min-height:112px}.arena{grid-template-columns:1fr 70px 1fr;padding:10px 8px 0}.hud{padding:4px}.hud-name{gap:4px}.hud-name>span{width:30px;height:30px;font-size:17px}.hud-name b{font-size:12px}.hud-name small{font-size:9px}.round-box strong{font-size:30px}.arena-stage{height:254px;margin:0 -8px}.fighter{bottom:20px;width:125px}.fighter-p1{left:7%}.fighter-p2{right:7%}.fighter-avatar{width:90px;height:90px;border-radius:25px;font-size:52px}.fighter b{font-size:12px}#vs-burst{bottom:80px;font-size:24px}.move-deck{gap:7px;padding:10px}.move{min-height:92px;padding:41px 6px 7px}.move-icon{left:9px;top:8px}.move b{font-size:12px}.move small{font-size:10px}.answers{grid-template-columns:1fr}.question-card{margin:0 10px 10px;padding:14px}.question-card h2{font-size:17px}.turn-strip{font-size:12px}.mission-label b{font-size:12px}.mission-label span{font-size:10px}.lesson-note{align-items:flex-start}.lesson-note span{white-space:nowrap}.lesson-note p{font-size:12px} }
 
 /* 原創角色圖：完整全身選角卡與對戰舞台呈現 */
+.sw-update-toast { position:fixed; z-index:50; left:50%; bottom:max(18px,env(safe-area-inset-bottom)); display:flex; align-items:center; gap:16px; width:min(430px,calc(100vw - 28px)); padding:14px 14px 14px 17px; border:1px solid #74e8ff88; border-radius:18px; color:#eafaff; transform:translateX(-50%); background:linear-gradient(135deg,#123f68,#092440); box-shadow:0 18px 45px #000a,0 0 25px #57d9f344; }.sw-update-toast[hidden] { display:none; }.sw-update-toast b,.sw-update-toast small { display:block; }.sw-update-toast b { font-size:15px; }.sw-update-toast small { margin-top:3px; color:#b7d1e3; font-size:12px; line-height:1.35; }.sw-update-actions { display:flex; flex:0 0 auto; align-items:center; gap:6px; }.sw-update-actions button { border:0; cursor:pointer; font-weight:900; }.sw-update-actions #sw-update-now { padding:9px 12px; border-radius:10px; color:#06243a; background:linear-gradient(135deg,#69ecff,#82f4b7); white-space:nowrap; }.sw-update-actions #sw-update-later { padding:6px; color:#bdd6e7; background:transparent; font-size:18px; }
 .move-ultimate { border-color:var(--ultimate-color,#f4c05e77); box-shadow:inset 0 0 18px color-mix(in srgb,var(--ultimate-color,#ffe479) 20%,transparent); }
 .move-ultimate .move-icon { color:var(--ultimate-color,#ffe479); }
 .blast.ultimate { border-color:var(--blast-color,#fff); box-shadow:0 0 28px var(--blast-color,#ffdc70); }
@@ -43,6 +44,11 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
 .fighter b { margin-top:2px; }
 
 @media (max-width:700px) {
+  .sw-update-toast { align-items:flex-start; gap:10px; padding:13px 12px 13px 14px; }
+  .sw-update-toast b { font-size:14px; }
+  .sw-update-toast small { font-size:11px; }
+  .sw-update-actions { gap:2px; }
+  .sw-update-actions #sw-update-now { padding:9px 10px; font-size:13px; }
   .hero-card { min-height:184px; }
   .hero-portrait { height:130px; }
   .hero-content { padding:7px 9px 9px; }

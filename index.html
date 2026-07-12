@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="theme-color" content="#061b33">
   <title>石門國小｜資訊科技駕駛艙：答題快打</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2026.07.12-2">
 </head>
 <body>
   <main class="app-shell">
@@ -125,6 +125,12 @@
     </section>
   </main>
   <footer class="site-credit">桃園市龍潭區石門國民小學 · 鱻魚特色學園<br>Made with <span class="site-credit__heart" aria-label="愛心">❤️</span> by <a href="https://www.smes.tyc.edu.tw/modules/tadnews/page.php?ncsn=11&nsn=16#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a></footer>
-  <script src="game.js"></script>
+  <aside id="sw-update-toast" class="sw-update-toast" role="status" aria-live="polite" hidden>
+    <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
+    <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
+  </aside>
+  <script>window.APP_VERSION='2026.07.12-2';</script>
+  <script src="game.js?v=2026.07.12-2"></script>
+  <script src="sw-register.js?v=2026.07.12-2"></script>
 </body>
 </html>
