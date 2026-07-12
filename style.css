@@ -1,6 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Noto+Sans+TC:wght@400;500;700;900&display=swap');
 
 :root { --ink:#e9f5ff; --muted:#9cb5cd; --navy:#061b33; --panel:#0d2d4e; --line:rgba(157,218,255,.22); --cyan:#52e6ff; --mint:#62f7bb; --yellow:#ffe477; --pink:#ff7196; --orange:#ff9a5e; }
+.lobby-sound-btn { border:1px solid #77e9d688; border-radius:99px; padding:6px 10px; color:#d7fff4; cursor:pointer; background:#0b2a48a8; font:800 12px "Noto Sans TC",sans-serif; }
 * { box-sizing:border-box; }
 body { min-width:320px; margin:0; color:var(--ink); background:#06162a; font-family:"Noto Sans TC",system-ui,sans-serif; }
 button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px solid var(--yellow); outline-offset:3px; }

@@ -39,7 +39,7 @@ const skillSets = {
 };
 
 const unitNames = { mixed: '綜合挑戰', safety: '網路安全', coding: '程式思維', digital: '數位公民' };
-const music = { enabled: true, manifest: null, tracks: new Map(), currentScene: null, fallbackTimer: null, fallbackContext: null, fallbackStep: 0 };
+const music = { enabled: true, unlocked: false, manifest: null, tracks: new Map(), currentScene: null, fallbackTimer: null, fallbackContext: null, fallbackStep: 0 };
 const questions = [
   { unit:'safety', level:'light', q:'收到不認識的人傳來的奇怪連結，最好的做法是？', a:['立刻點開看看','先告訴老師或家長，不隨意點擊','轉傳給全班同學','輸入帳密確認'], correct:1, tip:'陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。' },
   { unit:'safety', level:'light', q:'下列哪一組密碼比較安全？', a:['123456','myname','Ab!9qL#2','生日年月日'], correct:2, tip:'密碼應混合大小寫英文、數字與符號，並避免個人資料。' },
@@ -167,7 +167,7 @@ function finish(winner, reason='') { if(!state.running)return; state.running=fal
 function playTone(good,level='light'){if(!state.sound)return;try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.type=good?'sine':'sawtooth';o.frequency.value=good?(level==='ultimate'?740:level==='heavy'?520:390):145;g.gain.setValueAtTime(.0001,ac.currentTime);g.gain.exponentialRampToValueAtTime(.06,ac.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.22);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.24);}catch(e){}}
 
 async function loadMusicManifest() {
-  try { const response = await fetch('assets/audio/audio-manifest.json'); if (response.ok) { music.manifest = await response.json(); if (state.running && music.enabled) playMusicScene('battle', true); } }
+  try { const response = await fetch('assets/audio/audio-manifest.json'); if (response.ok) { music.manifest = await response.json(); if (music.unlocked && music.enabled) playMusicScene(state.running?'battle':'lobby', true); } }
   catch (error) { console.info('Music manifest is not available yet.', error); }
 }
 function approvedTrack(scene) { const track = music.manifest?.tracks?.[scene]; return track?.status === 'approved' ? track : null; }
@@ -181,14 +181,15 @@ function fallbackBeat(scene) {
   pulse(); music.fallbackTimer = window.setInterval(pulse, scene==='battle'?260:420);
 }
 function playMusicScene(scene, restart=false) {
-  if (!music.enabled) return; const track = approvedTrack(scene); stopFallbackMusic();
+  if (!music.enabled || !music.unlocked) return; const track = approvedTrack(scene); stopFallbackMusic();
   if (!track) { music.currentScene = scene; fallbackBeat(scene); return; }
   if (music.currentScene === scene && !restart) return; music.tracks.forEach(audio => { audio.pause(); audio.currentTime = 0; });
   let audio = music.tracks.get(scene); if (!audio) { audio = new Audio(track.path); audio.loop = Boolean(track.loop); audio.preload = 'auto'; audio.volume = track.volume ?? .34; music.tracks.set(scene, audio); }
   music.currentScene = scene; audio.currentTime = 0; audio.play().catch(() => fallbackBeat(scene));
 }
 function playMusicStinger(scene) { const track = approvedTrack(scene); if (!music.enabled || !track) return; const audio = new Audio(track.path); audio.volume = track.volume ?? .46; audio.play().catch(() => {}); }
+function unlockMusic() { const wasLocked=!music.unlocked; music.unlocked=true; if (music.enabled && wasLocked) playMusicScene(state.running?'battle':'lobby', true); const button=$('lobby-sound-btn'); if(button){button.textContent='🎵 BGM 已開啟';button.setAttribute('aria-pressed','true');} }
 function showLobby() { state.running=false; clearInterval(state.timerId); stopMusic(); $('result').classList.add('hidden'); $('battle').classList.add('hidden'); $('lobby').classList.remove('hidden'); playMusicScene('lobby', true); }
 
 document.addEventListener('click',(event)=>{const mode=event.target.closest('[data-mode]');if(mode){state.mode=mode.dataset.mode;choose('[data-mode]',state.mode,'mode');}const difficulty=event.target.closest('[data-difficulty]');if(difficulty){state.difficulty=difficulty.dataset.difficulty;choose('[data-difficulty]',state.difficulty,'difficulty');}const unit=event.target.closest('[data-unit]');if(unit){state.unit=unit.dataset.unit;choose('[data-unit]',state.unit,'unit');}const hero=event.target.closest('[data-hero]');if(hero){state.character=characters.find(c=>c.id===hero.dataset.hero);renderRoster();}const move=event.target.closest('[data-move]');if(move)chooseMove(move.dataset.move);const answerBtn=event.target.closest('[data-answer]');if(answerBtn)answer(Number(answerBtn.dataset.answer));});
-$('launch-btn').addEventListener('click',setupBattle);$('back-btn').addEventListener('click',showLobby);$('retry-btn').addEventListener('click',setupBattle);$('lobby-btn').addEventListener('click',showLobby);$('sound-btn').addEventListener('click',()=>{state.sound=!state.sound;music.enabled=state.sound;if(!state.sound)stopMusic();else playMusicScene(state.running?'battle':'lobby');$('sound-btn').textContent=state.sound?'🔊':'🔇';$('sound-btn').setAttribute('aria-pressed',String(state.sound));});loadMusicManifest();renderRoster();
+document.addEventListener('pointerdown',unlockMusic,{once:true,capture:true});document.addEventListener('keydown',unlockMusic,{once:true,capture:true});$('lobby-sound-btn').addEventListener('click',unlockMusic);$('launch-btn').addEventListener('click',setupBattle);$('back-btn').addEventListener('click',showLobby);$('retry-btn').addEventListener('click',setupBattle);$('lobby-btn').addEventListener('click',showLobby);$('sound-btn').addEventListener('click',()=>{state.sound=!state.sound;music.enabled=state.sound;if(!state.sound)stopMusic();else {unlockMusic();playMusicScene(state.running?'battle':'lobby');}$('sound-btn').textContent=state.sound?'🔊':'🔇';$('sound-btn').setAttribute('aria-pressed',String(state.sound));});loadMusicManifest();renderRoster();
