@@ -5,6 +5,7 @@
 目前已核可並隨專案提供：
 
 - `smes-it-battle.mp3` — Suno v5.5「Pixel Class Clash」，34.224 秒，對戰循環 BGM。
+- `smes-it-ultimate.mp3` — Suno v5.5「Quiz Combo Stinger」，9 秒，大絕招三連數位衝擊與馬林巴收尾效果音。
 - `smes-it-victory.mp3` — Suno v5.5「Mission Complete Parade」，43.392 秒，任務成功效果音。
 
 ## 製作與放置

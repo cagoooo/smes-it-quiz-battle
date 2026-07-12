@@ -22,11 +22,15 @@
       "sha256": "78B523702A78CBDDCDEAA2B1754FE81B862201FE1BF8F0F0093FBE6B5804B056"
     },
     "ultimate": {
-      "status": "awaiting-audited-file",
+      "status": "approved",
       "path": "assets/audio/smes-it-ultimate.mp3",
       "loop": false,
       "volume": 0.48,
-      "sunoPrompt": "Instrumental only. Short 4 second celebratory video game power-up stinger for a digital safety shield, sparkling synth rise, bright chime hit, cheerful and child-friendly, no vocals."
+      "sunoPrompt": "Instrumental only. A short 8-second ultimate-combo stinger for a child-friendly technology quiz fighting game: instant bright synth rise, three rhythmic digital impact hits, sparkling chiptune arpeggio, heroic marimba flourish, clean final power chord. Energetic, playful, triumphant, no vocals, no lyrics, no scary or aggressive mood.",
+      "sunoClipId": "84753e68-1a90-4061-865c-45e7f5bacd61",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 9,
+      "sha256": "1A527FB264E8DD3CE26C2BFBDEC9622493F922FF38910DA1D298DE09FA21AC9C"
     },
     "victory": {
       "status": "approved",
