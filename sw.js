@@ -1,4 +1,4 @@
-const BUILD_VERSION = '2026.07.12-10';
+const BUILD_VERSION = '2026.07.12-11';
 const CACHE_NAME = `smes-it-quiz-battle-${BUILD_VERSION}`;
 const PRECACHE = [
   './',
@@ -33,14 +33,20 @@ self.addEventListener('fetch', event => {
 
   if (request.mode === 'navigate' || url.pathname.endsWith('.html')) {
     event.respondWith(fetch(request).then(response => {
-      if (response.ok) caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+      if (response.ok) {
+        const cacheCopy = response.clone();
+        event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(request, cacheCopy)).catch(() => {}));
+      }
       return response;
     }).catch(() => caches.match(request).then(cached => cached || caches.match('./index.html'))));
     return;
   }
 
   event.respondWith(caches.match(request).then(cached => cached || fetch(request).then(response => {
-    if (response.ok && response.type === 'basic') caches.open(CACHE_NAME).then(cache => cache.put(request, response.clone()));
+    if (response.ok && response.type === 'basic') {
+      const cacheCopy = response.clone();
+      event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.put(request, cacheCopy)).catch(() => {}));
+    }
     return response;
   })));
 });
