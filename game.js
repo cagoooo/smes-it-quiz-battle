@@ -13,11 +13,11 @@ const cpuEnemies = [
   { id:'firewall', name:'防火牆怪', icon:'🧠', image:'assets/characters/firewall.png', moves:{light:'封包衝撞',heavy:'熱牆彈幕'}, ultimates:[{ name:'封包封鎖', damage:32, color:'#ff826f' }, { name:'熔岩防線', damage:36, color:'#ffb06c' }] },
   { id:'noise-beast', name:'雜訊干擾獸', icon:'📡', image:'assets/characters/noise-beast.png', moves:{light:'頻率刺擊',heavy:'雜波連射'}, ultimates:[{ name:'雜訊震盪', damage:32, color:'#e387ff' }, { name:'頻率風暴', damage:36, color:'#ffb0ee' }] },
   { id:'bug-phantom', name:'漏洞幻影', icon:'🧩', image:'assets/characters/bug-phantom.png', moves:{light:'錯誤咬擊',heavy:'裂縫穿梭'}, ultimates:[{ name:'錯誤裂縫', damage:32, color:'#7b9cff' }, { name:'藍屏幻象', damage:36, color:'#b4c7ff' }] },
-  { id:'phishing-siren', name:'釣魚海妖', icon:'🎣', image:'', moves:{light:'誘餌波紋',heavy:'假連結連射'}, ultimates:[{ name:'深海釣信', damage:33, color:'#38c9ff' }, { name:'帳密漩渦', damage:38, color:'#8ceaff' }] },
-  { id:'cache-golem', name:'快取石巨人', icon:'🗄️', image:'', moves:{light:'資料落石',heavy:'延遲重壓'}, ultimates:[{ name:'記憶體崩落', damage:33, color:'#d39b5c' }, { name:'快取迷宮', damage:38, color:'#ffe09a' }] },
-  { id:'glitch-dragon', name:'像素故障龍', icon:'🐉', image:'', moves:{light:'像素吐息',heavy:'斷訊俯衝'}, ultimates:[{ name:'故障龍捲', damage:33, color:'#a77bff' }, { name:'畫面撕裂炮', damage:38, color:'#d8c3ff' }] },
-  { id:'malware-mimic', name:'惡意偽裝怪', icon:'🎭', image:'', moves:{light:'偽裝衝擊',heavy:'假檔案連招'}, ultimates:[{ name:'偽裝百變', damage:33, color:'#ff6f9d' }, { name:'病毒鏡像陣', damage:38, color:'#ffb2ca' }] },
-  { id:'bot-swarm', name:'機器人蜂群', icon:'🐝', image:'', moves:{light:'蜂群掃描',heavy:'自動回覆砲'}, ultimates:[{ name:'帳號轟炸', damage:33, color:'#ffe15c' }, { name:'蜂巢同步攻勢', damage:38, color:'#fff1a8' }] },
+  { id:'phishing-siren', name:'釣魚海妖', icon:'🎣', image:'assets/characters/phishing-siren.png', moves:{light:'誘餌波紋',heavy:'假連結連射'}, ultimates:[{ name:'深海釣信', damage:33, color:'#38c9ff' }, { name:'帳密漩渦', damage:38, color:'#8ceaff' }] },
+  { id:'cache-golem', name:'快取石巨人', icon:'🗄️', image:'assets/characters/cache-golem.png', moves:{light:'資料落石',heavy:'延遲重壓'}, ultimates:[{ name:'記憶體崩落', damage:33, color:'#d39b5c' }, { name:'快取迷宮', damage:38, color:'#ffe09a' }] },
+  { id:'glitch-dragon', name:'像素故障龍', icon:'🐉', image:'assets/characters/glitch-dragon.png', moves:{light:'像素吐息',heavy:'斷訊俯衝'}, ultimates:[{ name:'故障龍捲', damage:33, color:'#a77bff' }, { name:'畫面撕裂炮', damage:38, color:'#d8c3ff' }] },
+  { id:'malware-mimic', name:'惡意偽裝怪', icon:'🎭', image:'assets/characters/malware-mimic.png', moves:{light:'偽裝衝擊',heavy:'假檔案連招'}, ultimates:[{ name:'偽裝百變', damage:33, color:'#ff6f9d' }, { name:'病毒鏡像陣', damage:38, color:'#ffb2ca' }] },
+  { id:'bot-swarm', name:'機器人蜂群', icon:'🐝', image:'assets/characters/bot-swarm.png', moves:{light:'蜂群掃描',heavy:'自動回覆砲'}, ultimates:[{ name:'帳號轟炸', damage:33, color:'#ffe15c' }, { name:'蜂巢同步攻勢', damage:38, color:'#fff1a8' }] },
 ];
 
 const skillSet = (quick, quickDamage, heavy, heavyDamage, tactical, tacticalDamage) => [
@@ -136,7 +136,7 @@ function playUltimateCombo(actor, defender, damage) {
   const stage=document.querySelector('.arena-stage'), callout=$('ultimate-callout'), effects=$('battle-fx');
   const hits=Math.min(9,6+Math.floor(Math.random()*2)+Math.min(actor.streak,2)), color=actor.ultimate.color, intro=560, cadence=390, duration=intro+hits*cadence+760;
   const chunks=Array.from({length:hits},(_,index)=>Math.floor(damage/hits)+(index<damage%hits?1:0));
-  stage.style.setProperty('--ultimate-color',color); stage.classList.remove('ultimate-showcase'); void stage.offsetWidth; stage.classList.add('ultimate-showcase');
+  const style={coder:'code',guardian:'shield',data:'matrix',creator:'paint','ai-explorer':'neural','green-engineer':'eco','robotics-ace':'mech','cloud-ranger':'cloud',firewall:'shield','noise-beast':'noise','bug-phantom':'glitch','phishing-siren':'wave','cache-golem':'stone','glitch-dragon':'glitch','malware-mimic':'mirror','bot-swarm':'swarm'}[actor.id] || 'code'; stage.dataset.ultimateStyle=style; stage.style.setProperty('--ultimate-color',color); stage.classList.remove('ultimate-showcase'); void stage.offsetWidth; stage.classList.add('ultimate-showcase');
   callout.style.setProperty('--ultimate-color',color); callout.querySelector('b').textContent=actor.ultimate.name; callout.querySelector('small').textContent=`準備連招 · 0 / ${hits} HIT`; callout.classList.remove('active'); void callout.offsetWidth; callout.classList.add('active');
   const created=[];
   for(let index=0;index<hits;index++){
@@ -150,6 +150,7 @@ function playUltimateCombo(actor, defender, damage) {
       for(let sparkIndex=0;sparkIndex<4;sparkIndex++){const spark=document.createElement('i');spark.className='ultimate-spark';spark.style.setProperty('--ultimate-color',color);spark.style.setProperty('--delay',`${delay+sparkIndex*34}ms`);spark.style.setProperty('--x',`${Math.round((Math.random()-.5)*300)}px`);spark.style.setProperty('--y',`${Math.round((Math.random()-.5)*220)}px`);effects.append(spark);created.push(spark);}
     },delay);
   }
+  for(let index=0;index<6;index++){const signature=document.createElement('i');signature.className=`ultimate-signature ${style}`;signature.style.setProperty('--ultimate-color',color);signature.style.setProperty('--delay',`${300+index*360}ms`);signature.style.setProperty('--x',`${(index-2.5)*52}px`);effects.append(signature);created.push(signature);}
   const ring=document.createElement('i'); ring.className='ultimate-ring'; ring.style.setProperty('--ultimate-color',color); effects.append(ring); created.push(ring);
   window.setTimeout(()=>{ $('combo').classList.add('hidden'); callout.querySelector('small').textContent=`${hits} HIT FINISH · ${damage} DAMAGE`; },intro+hits*cadence);
   window.setTimeout(()=>created.forEach(effect=>effect.remove()),duration); window.setTimeout(()=>stage.classList.remove('ultimate-showcase'),duration-220); window.setTimeout(()=>callout.classList.remove('active'),duration);
