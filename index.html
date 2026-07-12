@@ -1,0 +1,130 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#061b33">
+  <title>石門國小｜資訊科技駕駛艙：答題快打</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <main class="app-shell">
+    <section id="lobby" class="screen lobby-screen" aria-labelledby="game-title">
+      <div class="topbar">
+        <a class="school-mark" href="https://www.smes.tyc.edu.tw" target="_blank" rel="noopener noreferrer" aria-label="石門國小網站">
+          <span class="mark-fish">🐟</span><span>石門國小<br><b>資訊科技駕駛艙</b></span>
+        </a>
+        <div class="top-badges"><span>鱻魚特色學園</span><span class="online-dot">課堂版</span></div>
+      </div>
+
+      <div class="lobby-hero">
+        <div>
+          <p class="eyebrow">IT QUEST / KNOWLEDGE BATTLE</p>
+          <h1 id="game-title">答題快打 <span>⚡</span></h1>
+          <p class="hero-copy">用資訊力出招！答對題目，讓你的數位戰隊守護校園網路。</p>
+        </div>
+        <div class="hero-console" aria-hidden="true">
+          <div class="radar"><i></i><b>READY</b></div>
+          <div class="console-lines"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
+      <div class="setup-grid">
+        <section class="setup-card mode-card" aria-labelledby="mode-title">
+          <p class="card-kicker">01 / 對戰方式</p>
+          <h2 id="mode-title">選擇任務模式</h2>
+          <div class="choice-row" role="group" aria-label="對戰方式">
+            <button class="choice selected" data-mode="solo" type="button"><span>🤖</span><b>單人闖關</b><small>挑戰駕駛艙 AI</small></button>
+            <button class="choice" data-mode="duel" type="button"><span>👫</span><b>同桌對戰</b><small>輪流出題快打</small></button>
+          </div>
+        </section>
+
+        <section class="setup-card" aria-labelledby="unit-title">
+          <p class="card-kicker">02 / 本節任務</p>
+          <h2 id="unit-title">選擇資訊主題</h2>
+          <div class="unit-grid" role="group" aria-label="資訊主題">
+            <button class="unit selected" data-unit="mixed" type="button"><span>🌟</span>綜合挑戰</button>
+            <button class="unit" data-unit="safety" type="button"><span>🛡️</span>網路安全</button>
+            <button class="unit" data-unit="coding" type="button"><span>💻</span>程式思維</button>
+            <button class="unit" data-unit="digital" type="button"><span>🌐</span>數位公民</button>
+          </div>
+        </section>
+
+        <section class="setup-card roster-card" aria-labelledby="hero-title">
+          <p class="card-kicker">03 / 我的駕駛員</p>
+          <h2 id="hero-title">選擇你的技能專長</h2>
+          <div id="roster" class="roster" role="group" aria-label="角色選擇"></div>
+        </section>
+      </div>
+
+      <aside class="lesson-note"><span>💡 教學小提醒</span><p>每次答題後會立即顯示正解與原因；可以兩人輪流，也能投影到大螢幕全班一起討論。</p></aside>
+      <button id="launch-btn" class="launch-btn" type="button"><span>啟動任務</span><b>→</b></button>
+    </section>
+
+    <section id="battle" class="screen battle-screen hidden" aria-live="polite">
+      <header class="battle-header">
+        <button id="back-btn" class="icon-btn" type="button" aria-label="回到任務大廳">←</button>
+        <div class="mission-label"><span id="unit-badge">綜合挑戰</span><b id="mission-title">網路世界守護戰</b></div>
+        <button id="sound-btn" class="icon-btn" type="button" aria-pressed="true" aria-label="切換音效">🔊</button>
+      </header>
+
+      <section class="arena" aria-label="答題對戰場">
+        <div class="hud player-hud">
+          <div class="hud-name"><span id="p1-avatar-mini">🤖</span><div><small>玩家 1</small><b id="p1-name">程式勇者</b></div></div>
+          <div class="bar-label"><span>專注力</span><b id="p1-health-text">100</b></div>
+          <div class="health-bar"><i id="p1-health"></i></div>
+          <div class="bar-label"><span>能量</span><b id="p1-meter-text">0%</b></div>
+          <div class="meter-bar"><i id="p1-meter"></i></div>
+        </div>
+
+        <div class="round-box"><span id="round-label">ROUND 1</span><strong id="timer">75</strong><small>秒</small></div>
+
+        <div class="hud enemy-hud">
+          <div class="hud-name"><div><small id="p2-caption">駕駛艙 AI</small><b id="p2-name">防火牆怪</b></div><span id="p2-avatar-mini">🧠</span></div>
+          <div class="bar-label"><span>專注力</span><b id="p2-health-text">100</b></div>
+          <div class="health-bar enemy"><i id="p2-health"></i></div>
+          <div class="bar-label"><span>能量</span><b id="p2-meter-text">0%</b></div>
+          <div class="meter-bar enemy"><i id="p2-meter"></i></div>
+        </div>
+
+        <div id="arena-stage" class="arena-stage">
+          <div class="sky-code">&lt;safe net="on" /&gt;</div><div class="grid-floor"></div>
+          <div id="fighter-p1" class="fighter fighter-p1"><div class="fighter-aura"></div><div class="fighter-avatar">🤖</div><b id="fighter-p1-name">程式勇者</b><small>PLAYER 1</small></div>
+          <div id="vs-burst">VS</div>
+          <div id="fighter-p2" class="fighter fighter-p2"><div class="fighter-aura"></div><div class="fighter-avatar">🧠</div><b id="fighter-p2-name">防火牆怪</b><small>CPU</small></div>
+          <div id="battle-fx" class="battle-fx" aria-hidden="true"></div>
+          <div id="combo" class="combo hidden"></div>
+        </div>
+      </section>
+
+      <section class="command-deck" aria-labelledby="turn-title">
+        <div class="turn-strip"><span id="turn-dot"></span><b id="turn-title">你的回合：選擇技能</b><span id="streak-label">連擊 x0</span></div>
+        <div id="move-deck" class="move-deck">
+          <button class="move move-light" data-move="light" type="button"><span class="move-icon">⌁</span><b>掃描衝擊</b><small>基礎題 · 傷害 8</small></button>
+          <button class="move move-heavy" data-move="heavy" type="button"><span class="move-icon">⚙</span><b>除錯連發</b><small>進階題 · 傷害 16</small></button>
+          <button id="ultimate-btn" class="move move-ultimate locked" data-move="ultimate" type="button"><span class="move-icon">✦</span><b>終極防護</b><small>挑戰題 · 能量 100%</small></button>
+        </div>
+
+        <div id="question-card" class="question-card hidden">
+          <div class="question-top"><span id="question-level">基礎題</span><span id="question-count">第 1 題</span></div>
+          <h2 id="question-text">題目載入中</h2>
+          <div id="answers" class="answers"></div>
+          <p id="explain" class="explain"></p>
+        </div>
+        <p id="feedback" class="feedback">先選一個技能，答對就能發動攻擊！</p>
+      </section>
+    </section>
+
+    <section id="result" class="result-screen hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="result-card">
+        <p id="result-kicker" class="eyebrow">MISSION COMPLETE</p><div id="result-icon" class="result-icon">🏆</div>
+        <h2 id="result-title">任務成功！</h2><p id="result-copy">你用正確的資訊觀念守護了校園網路。</p>
+        <div class="result-stats"><span><b id="correct-count">0</b>答對</span><span><b id="best-streak">0</b>最高連擊</span><span><b id="time-left">0</b>剩餘秒數</span></div>
+        <div class="result-actions"><button id="retry-btn" type="button">再戰一次</button><button id="lobby-btn" class="secondary" type="button">任務大廳</button></div>
+      </div>
+    </section>
+  </main>
+  <footer class="site-credit">桃園市龍潭區石門國民小學 · 鱻魚特色學園<br>Made with <span class="site-credit__heart" aria-label="愛心">❤️</span> by <a href="https://www.smes.tyc.edu.tw/modules/tadnews/page.php?ncsn=11&nsn=16#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a></footer>
+  <script src="game.js"></script>
+</body>
+</html>
