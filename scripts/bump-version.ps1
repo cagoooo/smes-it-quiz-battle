@@ -13,7 +13,7 @@ if (Test-Path $versionPath) {
 }
 
 $version = "$today-$sequence"
-$versionJson = [ordered]@{ version = $version; notes = $Notes } | ConvertTo-Json
+$versionJson = [ordered]@{ version = $version; notes = $Notes } | ConvertTo-Json -Compress
 [System.IO.File]::WriteAllText($versionPath, $versionJson, $encoding)
 
 $replacements = @(
