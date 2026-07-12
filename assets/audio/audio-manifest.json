@@ -4,11 +4,15 @@
   "license": "僅放入阿凱老師帳號中可用於本遊戲發布的 Suno Pro／Premier 音檔。",
   "tracks": {
     "lobby": {
-      "status": "awaiting-audited-file",
-      "path": "assets/audio/smes-it-lobby.mp3",
+      "status": "approved",
+      "path": "assets/audio/smes-it-battle.mp3",
       "loop": true,
-      "volume": 0.28,
-      "sunoPrompt": "Instrumental only. Cheerful Taiwanese elementary school technology lab, playful chiptune and marimba, clean synth bass, warm optimistic melody, 100 BPM, seamless 30 second game menu loop, no vocals, no sound effects."
+      "volume": 0.22,
+      "sunoPrompt": "Instrumental only. Energetic child-friendly cyber classroom battle music, bouncy 8-bit arpeggios, light electronic drums, bright synth lead, playful and focused, 128 BPM, seamless 45 second game loop, no vocals, no aggressive or dark mood.",
+      "sunoClipId": "8ef0c939-2a2c-4c37-80ef-91ffb8463aa5",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 34.224,
+      "sha256": "78B523702A78CBDDCDEAA2B1754FE81B862201FE1BF8F0F0093FBE6B5804B056"
     },
     "battle": {
       "status": "approved",

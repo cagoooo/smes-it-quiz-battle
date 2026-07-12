@@ -21,9 +21,9 @@ const cpuEnemies = [
 ];
 
 const skillSet = (quick, quickDamage, heavy, heavyDamage, tactical, tacticalDamage) => [
-  { id:'light', name:quick, damage:quickDamage, meterGain:28, questionLevel:'light', label:'基礎題', icon:'⌁' },
-  { id:'heavy', name:heavy, damage:heavyDamage, meterGain:24, questionLevel:'heavy', label:'進階題', icon:'⚙' },
-  { id:'tactical', name:tactical, damage:tacticalDamage, meterGain:18, questionLevel:'tactical', label:'戰術題', icon:'✹' },
+  { id:'light', name:quick, damage:quickDamage, meterGain:36, questionLevel:'light', label:'基礎題', icon:'⌁' },
+  { id:'heavy', name:heavy, damage:heavyDamage, meterGain:42, questionLevel:'heavy', label:'進階題', icon:'⚙' },
+  { id:'tactical', name:tactical, damage:tacticalDamage, meterGain:34, questionLevel:'tactical', label:'戰術題', icon:'✹' },
 ];
 const difficultyModes = { practice:{label:'練習',accuracy:-.14,delay:1450,ultimateChance:.28,hint:'提示：先看清楚題目中的關鍵詞。'}, standard:{label:'標準',accuracy:0,delay:900,ultimateChance:.55,hint:''}, challenge:{label:'挑戰',accuracy:.09,delay:620,ultimateChance:.78,hint:''} };
 const cpuProfiles = { defender:{accuracy:.68,light:.55,heavy:.3,tactical:.15}, burst:{accuracy:.61,light:.22,heavy:.42,tactical:.36}, combo:{accuracy:.65,light:.36,heavy:.35,tactical:.29}, disrupt:{accuracy:.58,light:.45,heavy:.22,tactical:.33} };
