@@ -40,10 +40,10 @@ function choose(selector, value, key) { document.querySelectorAll(selector).forE
 
 function createFighter(name, icon, isCpu=false, image='') { return { name, icon, image, health:100, meter:0, streak:0, isCpu }; }
 function renderAvatar(elementId, fighter) { const element = $(elementId); if (fighter.image) element.innerHTML = `<img src="${fighter.image}" alt="${fighter.name}">`; else element.textContent = fighter.icon; }
-function renderArenaAvatar(selector, fighter) { const element = document.querySelector(selector); if (fighter.image) element.innerHTML = `<img src="${fighter.image}" alt="${fighter.name}">`; else element.textContent = fighter.icon; }
+function renderArenaAvatar(selector, fighter) { const element = document.querySelector(selector); element.closest('.fighter')?.classList.toggle('has-art', Boolean(fighter.image)); if (fighter.image) element.innerHTML = `<img src="${fighter.image}" alt="${fighter.name}">`; else element.textContent = fighter.icon; }
 function setupBattle() {
   state.p1 = createFighter(state.character.name, state.character.icon, false, state.character.image);
-  state.p2 = state.mode === 'solo' ? createFighter('防火牆怪', '🧠', true) : createFighter('玩家 2', '👾');
+  state.p2 = state.mode === 'solo' ? createFighter('防火牆怪', '🧠', true, 'assets/characters/firewall.png') : createFighter('玩家 2', '👾');
   state.turn='p1'; state.running=true; state.time=75; state.current=null; state.used=[]; state.correct=0; state.bestStreak=0;
   $('p1-name').textContent=state.p1.name; $('fighter-p1-name').textContent=state.p1.name; renderAvatar('p1-avatar-mini',state.p1); renderArenaAvatar('#fighter-p1 .fighter-avatar',state.p1);
   $('p2-name').textContent=state.p2.name; $('fighter-p2-name').textContent=state.p2.name; renderAvatar('p2-avatar-mini',state.p2); renderArenaAvatar('#fighter-p2 .fighter-avatar',state.p2);

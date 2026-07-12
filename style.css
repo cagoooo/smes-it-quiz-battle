@@ -30,6 +30,9 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
 .fighter-avatar { width:210px; height:224px; border:0; border-radius:25px; background:transparent; box-shadow:none; font-size:96px; }
 .fighter-avatar img { width:100%; height:100%; object-fit:contain; object-position:center bottom; filter:drop-shadow(0 12px 12px #000b); }
 .fighter-p2 .fighter-avatar { width:129px; height:129px; border:4px solid #ff9d78; background:linear-gradient(145deg,#985555,#3e1d46); box-shadow:inset 0 0 20px #ffcba433,0 0 25px #ff789088; font-size:76px; }
+.fighter-p2.has-art .fighter-avatar { width:210px; height:224px; border:0; background:transparent; box-shadow:none; font-size:0; }
+.fighter-p2.has-art .fighter-aura { width:190px; height:190px; border-color:#ffb36b88; }
+.enemy-hud .hud-name>span { border-color:#ff9d78; }
 .fighter-aura { width:190px; height:190px; }
 .fighter b { margin-top:2px; }
 
@@ -41,5 +44,7 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   .fighter-p1 { left:3%; }
   .fighter-avatar { width:132px; height:152px; }
   .fighter-p2 .fighter-avatar { width:90px; height:90px; font-size:52px; }
+  .fighter-p2.has-art .fighter-avatar { width:132px; height:152px; border:0; background:transparent; box-shadow:none; }
+  .fighter-p2.has-art .fighter-aura { width:120px; height:120px; }
   .fighter-aura { width:120px; height:120px; }
 }
