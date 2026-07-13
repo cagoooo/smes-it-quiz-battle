@@ -1,4 +1,4 @@
-const BUILD_VERSION = '2026.07.13-5';
+const BUILD_VERSION = '2026.07.13-6';
 const CACHE_NAME = `smes-it-quiz-battle-${BUILD_VERSION}`;
 const PRECACHE = [
   './',
@@ -6,6 +6,9 @@ const PRECACHE = [
   `./style.css?v=${BUILD_VERSION}`,
   `./game.js?v=${BUILD_VERSION}`,
   `./sw-register.js?v=${BUILD_VERSION}`,
+  './manifest.webmanifest',
+  './assets/icons/icon-192.png',
+  './assets/icons/icon-512.png',
 ];
 
 self.addEventListener('install', event => {

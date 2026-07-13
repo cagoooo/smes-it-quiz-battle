@@ -1,0 +1,19 @@
+name: 課前穩定性檢查
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: 執行 preflight-check（語法、P0 回歸測試、版本一致性）
+        shell: pwsh
+        run: ./scripts/preflight-check.ps1

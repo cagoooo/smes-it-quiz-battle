@@ -32,10 +32,14 @@
 | 音樂 | 已完成 | Suno 對戰 BGM、勝利音樂與大絕招特效音，具授權與 SHA-256 稽核紀錄。 |
 | PWA 更新 | 已完成 | Service Worker 快取版本控制與新版更新通知（雙線偵測：lifecycle 事件 + version.json 輪詢）。 |
 | 線上發布 | 已完成 | GitHub Pages 自動發布。 |
+| PWA 安裝清單 | 已完成 | 新增 `manifest.webmanifest` 與 192/512/maskable 圖示、`apple-touch-icon`，平板／手機可「加到主畫面」變成全螢幕 App 圖示。 |
+| CI 自動化檢查 | 已完成 | `.github/workflows/ci.yml` 每次 push／PR 自動執行 `preflight-check.ps1`（語法、P0 回歸測試、版本一致性），問題在合併前就攔下。 |
+| 回歸測試補強 | 已完成 | `tests/p0-regressions.test.js` 新增：按鈕 handler 防呆（不可直接把函式傳給 `addEventListener`）、三處版本號一致性、自動捲動邏輯、題庫組合數量與格式檢查，共 9 項測試。 |
+| 無障礙細節 | 已完成 | 答題結果不再只靠顏色區分：正解／你的答案改加上「✓ 正解」「✕ 你的答案」文字標記，色盲使用者也能清楚辨識；既有的鍵盤 focus 樣式與 `prefers-reduced-motion` 減少動畫也已確認涵蓋全站互動元件。 |
 
 ## 課前檢查
 
-上課前可在專案根目錄執行：`./scripts/preflight-check.ps1`。它會檢查 JavaScript 語法、P0 核心互動回歸與 PWA 版本一致性。
+上課前可在專案根目錄執行：`./scripts/preflight-check.ps1`。它會檢查 JavaScript 語法、P0 核心互動回歸與 PWA 版本一致性；`main` 分支的每次 push 也會由 GitHub Actions（`.github/workflows/ci.yml`）自動執行同一套檢查。
 
 ## Suno 音樂機制
 
