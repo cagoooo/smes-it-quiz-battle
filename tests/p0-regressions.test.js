@@ -98,3 +98,14 @@ test('結算畫面依能力指標分組錯題，可只複習單一能力指標',
   assert.match(game, /data-competency-retry="\$\{competency\}"/);
   assert.match(game, /closest\('\[data-competency-retry\]'\)/, '點擊能力指標晶片需透過事件委派觸發 startCompetencyRetry');
 });
+
+test('結算畫面提供可列印的本局報告，且錯題清單在列印時不受捲軸高度裁切', () => {
+  assert.match(html, /id="print-report-btn"/);
+  assert.match(html, /id="print-meta" class="print-only"/);
+  assert.match(game, /\$\('print-report-btn'\)\.addEventListener\('click',\(\)=>window\.print\(\)\)/);
+  assert.match(game, /function renderPrintMeta\(/);
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(css, /@media print \{/);
+  assert.match(css, /\.wrong-answer-list \{ max-height:none!important; overflow:visible!important; \}/, '列印時必須解除 .wrong-answer-list 的 max-height/overflow，否則只會印出捲動視窗內看得到的那幾題');
+  assert.match(css, /\.result-card \{[^}]*max-height:none!important/, '列印時必須解除 .result-card 的 max-height，否則長報告會被截斷');
+});
