@@ -123,6 +123,10 @@
           <button class="move move-tactical" data-move="tactical" type="button"><span class="move-icon">✹</span><b>同步戰術</b><small>戰術題 · 傷害 22</small></button>
           <button id="ultimate-btn" class="move move-ultimate locked" data-move="ultimate" type="button"><span class="move-icon">✦</span><b>終極防護</b><small>挑戰題 · 能量 100%</small></button>
         </div>
+        <div id="cpu-move-deck" class="cpu-move-deck hidden" aria-live="polite" aria-atomic="true">
+          <div class="cpu-move-heading"><span>CPU 技能面板</span><b id="cpu-move-status">正在分析最佳招式…</b></div>
+          <div id="cpu-move-list" class="cpu-move-list"></div>
+        </div>
 
         <div id="question-card" class="question-card hidden" tabindex="-1">
           <div class="question-top"><span id="question-level">基礎題</span><span id="question-count">第 1 題</span><b id="question-timer" aria-live="polite">--</b></div>
@@ -148,8 +152,8 @@
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
     <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
   </aside>
-  <script>window.APP_VERSION='2026.07.12-13';</script>
-  <script src="game.js?v=2026.07.12-13"></script>
-  <script src="sw-register.js?v=2026.07.12-13"></script>
+  <script>window.APP_VERSION='2026.07.13-01';</script>
+  <script src="game.js?v=2026.07.13-01"></script>
+  <script src="sw-register.js?v=2026.07.13-01"></script>
 </body>
 </html>
