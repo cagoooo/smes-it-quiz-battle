@@ -119,3 +119,19 @@ test('本機最佳紀錄使用 localStorage，讀寫皆需容錯（壞資料/無
   assert.match(game, /updateRecords\(\);\$\('result'\)\.classList\.remove\('hidden'\)/, '每次結算都要更新本機最佳紀錄');
   assert.match(html, /id="best-record" class="best-record hidden"/);
 });
+
+test('CPU 難度會依玩家近期表現自適應調整（連續答對加壓、連續答錯放寬、表現持平不變）', () => {
+  const match = game.match(/function adaptiveAccuracyDelta\(\)\{[^}]*\}/);
+  assert.ok(match, '找不到 adaptiveAccuracyDelta 函式');
+  function makeDelta(recentResults) {
+    const state = { recentResults };
+    const fn = eval('(' + match[0] + ')');
+    return fn();
+  }
+  assert.equal(makeDelta([]), 0, '資料不足時不應調整');
+  assert.equal(makeDelta([true, true]), 0, '資料不足 3 筆時不應調整');
+  assert.equal(makeDelta([true, true, true, true]), 0.08, '連續答對應調高 CPU 命中率，增加挑戰感');
+  assert.equal(makeDelta([false, false, false, false]), -0.08, '連續答錯應調低 CPU 命中率，放寬難度不讓學生被電爆');
+  assert.equal(makeDelta([true, false, true, false]), 0, '表現持平時不應調整');
+  assert.match(game, /correct=Math\.random\(\)<Math\.min\(\.9,Math\.max\(\.2,base\+profile\.accuracy-\.65\+mode\.accuracy\+adaptiveAccuracyDelta\(\)\)\)/, 'cpuMove 需要把自適應調整套用到 CPU 命中率計算，且仍維持 .2-.9 的既有上下限');
+});
