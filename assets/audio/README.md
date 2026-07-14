@@ -21,3 +21,12 @@
 4. 在 `audio-manifest.json` 對應曲目補上 `sha256`，並將 `status` 改為 `approved`。
 
 不要將 Suno 網頁預覽網址直接寫進遊戲；發布版一律使用本資料夾內經審核的 MP3。
+
+## 角色專屬戰鬥音樂
+
+除了共用的 `battle` 場景音軌，遊戲支援每位玩家角色各自的專屬戰鬥 BGM，用 `battle-{角色id}` 當 manifest 的 key（例如 `battle-coder`）。`game.js` 的 `battleSceneKey()` 會優先找選定角色對應的 `battle-{id}` 是否為 `approved` 狀態，沒有的話自動退回共用的 `battle` 音軌，不會出錯或缺音樂。
+
+目前狀態：
+
+- `battle-coder`（程式勇者）— 已核可，`assets/audio/battle-coder.mp3`
+- `battle-guardian`／`battle-data`／`battle-creator`／`battle-ai-explorer`／`battle-green-engineer`／`battle-robotics-ace`／`battle-cloud-ranger` — manifest 已預留 `sunoPrompt`，狀態為 `pending`，之後依序在 Suno 生成、下載、算雜湊、改成 `approved` 即可上線，不需要改程式碼。

@@ -53,6 +53,66 @@
       "loop": false,
       "volume": 0.28,
       "sunoPrompt": "Instrumental only. Gentle encouraging game retry cue for children, soft electronic bell melody, optimistic rising ending, 8 seconds, no vocals, never sad or scary."
+    },
+    "battle-coder": {
+      "status": "approved",
+      "path": "assets/audio/battle-coder.mp3",
+      "loop": true,
+      "volume": 0.32,
+      "sunoPrompt": "Instrumental only. Energetic child-friendly chiptune battle theme for a young coder hero, crisp 8-bit arpeggios cascading like scrolling code, punchy electronic drums, bright glassy synth lead, focused and clever mood, 130 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone.",
+      "sunoClipId": "386faa39-78d0-48d2-80ea-319fc3adc8e4",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 44.933,
+      "sha256": "9581FDCBB8E6D753EDABA01B17CCF5FC80F91DCBFFA6DCAC2D52214B8AFDFBF0"
+    },
+    "battle-guardian": {
+      "status": "pending",
+      "path": "assets/audio/battle-guardian.mp3",
+      "loop": true,
+      "volume": 0.32,
+      "sunoPrompt": "Instrumental only. Determined and protective child-friendly synth battle theme, steady marching electronic beat, warm shield-like pad chords, bright defensive brass-synth stabs, confident and safe mood, 118 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+    },
+    "battle-data": {
+      "status": "pending",
+      "path": "assets/audio/battle-data.mp3",
+      "loop": true,
+      "volume": 0.32,
+      "sunoPrompt": "Instrumental only. Whimsical data-magic battle theme for a young analyst wizard, sparkling arpeggiated synth bells over a light electronic pulse, curious and clever mood, subtle chiptune flourishes like numbers falling into place, 124 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+    },
+    "battle-creator": {
+      "status": "pending",
+      "path": "assets/audio/battle-creator.mp3",
+      "loop": true,
+      "volume": 0.32,
+      "sunoPrompt": "Instrumental only. Playful and colorful battle theme for a young digital artist, bouncy marimba and synth brass fanfare, paintbrush-swirl arpeggios, upbeat and imaginative mood, 132 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+    },
+    "battle-ai-explorer": {
+      "status": "pending",
+      "path": "assets/audio/battle-ai-explorer.mp3",
+      "loop": true,
+      "volume": 0.32,
+      "sunoPrompt": "Instrumental only. Adventurous futuristic battle theme for a young AI explorer, gentle sci-fi synth pulses, exploratory rising arpeggios, curious and bright mood, light robotic percussion accents, 126 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+    },
+    "battle-green-engineer": {
+      "status": "pending",
+      "path": "assets/audio/battle-green-engineer.mp3",
+      "loop": true,
+      "volume": 0.32,
+      "sunoPrompt": "Instrumental only. Fresh and hopeful eco-tech battle theme for a young green engineer, organic wood percussion blended with soft electronic pulses, uplifting acoustic-synth melody, energetic and sustainable mood, 122 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+    },
+    "battle-robotics-ace": {
+      "status": "pending",
+      "path": "assets/audio/battle-robotics-ace.mp3",
+      "loop": true,
+      "volume": 0.32,
+      "sunoPrompt": "Instrumental only. Powerful and fun mecha battle theme for a young robotics pilot, punchy synth brass hits, driving electronic beat with mechanical clank accents, heroic and energetic mood, 134 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+    },
+    "battle-cloud-ranger": {
+      "status": "pending",
+      "path": "assets/audio/battle-cloud-ranger.mp3",
+      "loop": true,
+      "volume": 0.32,
+      "sunoPrompt": "Instrumental only. Soaring cloud-surfing battle theme for a young data ranger, airy synth pads with gentle arpeggiated sync pulses, breezy and adventurous mood, light electronic drums, 120 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
     }
   }
 }

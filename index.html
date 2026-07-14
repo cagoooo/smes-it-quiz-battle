@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="答題快打">
   <title>石門國小｜資訊科技駕駛艙：答題快打</title>
-  <link rel="stylesheet" href="style.css?v=2026.07.13-12">
+  <link rel="stylesheet" href="style.css?v=2026.07.14-1">
 </head>
 <body>
   <main class="app-shell">
@@ -29,7 +29,7 @@
           <p class="eyebrow">IT QUEST / KNOWLEDGE BATTLE</p>
           <h1 id="game-title">答題快打 <span>⚡</span></h1>
           <p class="hero-copy">用資訊力出招！答對題目，讓你的數位戰隊守護校園網路。</p>
-          <p id="best-record" class="best-record hidden"></p>
+          <p id="best-record" class="best-record hidden"><span id="best-record-text"></span><button id="reset-record-btn" type="button">重置</button></p>
         </div>
         <div class="hero-console" aria-hidden="true">
           <div class="radar"><i></i><b>READY</b></div>
@@ -89,7 +89,7 @@
       <header class="battle-header">
         <button id="back-btn" class="icon-btn" type="button" aria-label="回到任務大廳">←</button>
         <div class="mission-label"><span id="unit-badge">綜合挑戰</span><b id="mission-title">網路世界守護戰</b></div>
-        <button id="sound-btn" class="icon-btn" type="button" aria-pressed="true" aria-label="切換音效">🔊</button>
+        <div class="header-actions"><button id="music-btn" class="icon-btn" type="button" aria-pressed="true" aria-label="切換背景音樂">🎵</button><button id="sound-btn" class="icon-btn" type="button" aria-pressed="true" aria-label="切換音效">🔊</button></div>
       </header>
 
       <section class="arena" aria-label="答題對戰場">
@@ -162,8 +162,8 @@
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
     <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
   </aside>
-  <script>window.APP_VERSION='2026.07.13-12';</script>
-  <script src="game.js?v=2026.07.13-12"></script>
-  <script src="sw-register.js?v=2026.07.13-12"></script>
+  <script>window.APP_VERSION='2026.07.14-1';</script>
+  <script src="game.js?v=2026.07.14-1"></script>
+  <script src="sw-register.js?v=2026.07.14-1"></script>
 </body>
 </html>

@@ -169,3 +169,37 @@ test('每位玩家角色至少有 4 種大絕招、每種 CPU 敵人至少有 3 
     }
   }
 });
+
+test('角色專屬戰鬥音樂：找不到核可音軌時要優雅退回共用 battle 音軌', () => {
+  assert.match(game, /function battleSceneKey\(\)\{ const key=`battle-\$\{state\.character\.id\}`; return approvedTrack\(key\) \? key : 'battle'; \}/);
+  assert.doesNotMatch(game, /playMusicScene\('battle', true\)/, 'setupBattle 應改用 battleSceneKey() 而非寫死的 battle');
+  assert.match(game, /playMusicScene\(battleSceneKey\(\), true\)/);
+  assert.doesNotMatch(game, /scene==='battle'\?260:420/, 'fallbackBeat 節奏判斷需涵蓋 battle-{角色id} 這類前綴，不能只比對完全相等');
+  assert.match(game, /scene\.startsWith\('battle'\)\?260:420/);
+
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'assets/audio/audio-manifest.json'), 'utf8'));
+  assert.ok(manifest.tracks['battle-coder'], 'manifest 應有 battle-coder 條目');
+  assert.equal(manifest.tracks['battle-coder'].status, 'approved');
+  const audioPath = path.join(root, manifest.tracks['battle-coder'].path);
+  assert.ok(fs.existsSync(audioPath), `battle-coder 音檔應存在：${manifest.tracks['battle-coder'].path}`);
+  for (const [key, track] of Object.entries(manifest.tracks)) {
+    if (track.status === 'approved') {
+      assert.match(track.sha256, /^[0-9A-Fa-f]{64}$/, `「${key}」approved 音軌需有效的 SHA-256`);
+    }
+  }
+});
+
+test('大廳歷史最佳紀錄提供重置入口，且需經確認才會清除', () => {
+  assert.match(html, /id="reset-record-btn"/);
+  assert.match(game, /function resetRecords\(\)\{ if\(!window\.confirm\(/, '重置前必須先跳出確認，避免誤觸就清空紀錄');
+  assert.match(game, /localStorage\.removeItem\(RECORDS_KEY\)/);
+  assert.match(game, /\$\('reset-record-btn'\)\.addEventListener\('click',resetRecords\)/);
+});
+
+test('音效與背景音樂為獨立開關，互不影響彼此狀態', () => {
+  assert.match(html, /id="music-btn"/);
+  assert.doesNotMatch(game, /state\.sound=!state\.sound;music\.enabled=state\.sound/, 'sound-btn 不應再同時控制 music.enabled，兩者要能分開靜音');
+  assert.match(game, /function toggleMusicMute\(\)\{ music\.enabled=!music\.enabled;/);
+  assert.match(game, /\$\('music-btn'\)\.addEventListener\('click',toggleMusicMute\)/);
+  assert.match(game, /\$\('sound-btn'\)\.addEventListener\('click',\(\)=>\{state\.sound=!state\.sound;\$\('sound-btn'\)\.textContent/, 'sound-btn 的 click handler 應只切換 state.sound（音效），不得再連動 music.enabled');
+});
