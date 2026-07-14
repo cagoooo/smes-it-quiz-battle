@@ -250,3 +250,47 @@ test('回合時間可調整（60/75/90/120 秒），setupBattle 需採用 state.
   assert.match(game, /state\.time=state\.roundTime/, 'setupBattle 應使用 state.roundTime 而非寫死的 75');
   assert.match(game, /const roundTime=event\.target\.closest\('\[data-round-time\]'\)/);
 });
+
+test('CPU 敵人專屬戰鬥音樂：輪到 CPU 出招時切到牠的音軌，換回玩家回合時切回', () => {
+  assert.match(game, /function cpuBattleSceneKey\(cpuId\)\{ const key=`battle-\$\{cpuId\}`; return approvedTrack\(key\) \? key : null; \}/);
+  assert.match(game, /if\(actor\.isCpu\)\{ const cpuScene=cpuBattleSceneKey\(actor\.id\); if\(cpuScene\)playMusicScene\(cpuScene\); window\.setTimeout\(cpuMove,difficultyModes\[state\.difficulty\]\.delay\); \} else \{ playMusicScene\(battleSceneKey\(\)\); \}/, 'setTurn 需依 CPU 是否有專屬音軌切換，玩家回合則切回 battleSceneKey()');
+
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'assets/audio/audio-manifest.json'), 'utf8'));
+  const enemyMatch = game.match(/const cpuEnemies = (\[[\s\S]*?\n\]);/);
+  const enemies = eval(enemyMatch[1]);
+  for (const enemy of enemies) {
+    const key = `battle-${enemy.id}`;
+    assert.ok(manifest.tracks[key], `manifest 應有 ${key} 條目（CPU 敵人「${enemy.name}」）`);
+    assert.equal(manifest.tracks[key].status, 'approved', `${key} 應為 approved 狀態`);
+    const audioPath = path.join(root, manifest.tracks[key].path);
+    assert.ok(fs.existsSync(audioPath), `${key} 音檔應存在：${manifest.tracks[key].path}`);
+  }
+});
+
+test('大絕招專屬音效：每位玩家角色都有 ultimate-{角色id}，找不到時退回共用 ultimate', () => {
+  assert.match(game, /function ultimateSceneKey\(characterId\)\{ const key=`ultimate-\$\{characterId\}`; return approvedTrack\(key\) \? key : 'ultimate'; \}/);
+  assert.match(game, /playMusicStinger\(ultimateSceneKey\(actor\.id\)\)/, 'attack() 的大絕招分支應改用 ultimateSceneKey(actor.id) 而非寫死的 ultimate');
+  assert.doesNotMatch(game, /playMusicStinger\('ultimate'\)/, '不應再殘留寫死的 ultimate 場景字串');
+
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'assets/audio/audio-manifest.json'), 'utf8'));
+  const cMatch = game.match(/const characters = (\[[\s\S]*?\n\]);/);
+  const chars = eval(cMatch[1]);
+  for (const character of chars) {
+    const key = `ultimate-${character.id}`;
+    assert.ok(manifest.tracks[key], `manifest 應有 ${key} 條目（角色「${character.name}」）`);
+    assert.equal(manifest.tracks[key].status, 'approved', `${key} 應為 approved 狀態`);
+    const audioPath = path.join(root, manifest.tracks[key].path);
+    assert.ok(fs.existsSync(audioPath), `${key} 音檔應存在：${manifest.tracks[key].path}`);
+  }
+});
+
+test('音檔長度正規化：所有 approved 戰鬥循環音軌不超過 45 秒，超長來源需留下裁剪紀錄', () => {
+  const manifest = JSON.parse(fs.readFileSync(path.join(root, 'assets/audio/audio-manifest.json'), 'utf8'));
+  for (const [key, track] of Object.entries(manifest.tracks)) {
+    if (track.status !== 'approved' || !key.startsWith('battle-')) continue;
+    assert.ok(track.durationSeconds <= 45.05, `「${key}」戰鬥循環音軌長度 ${track.durationSeconds}s 超過 45 秒上限，應以 ffmpeg 裁剪`);
+    if (track.trimmedFromSeconds) {
+      assert.ok(track.trimNote && track.trimNote.length > 0, `「${key}」有 trimmedFromSeconds 就必須留下 trimNote 審核紀錄`);
+    }
+  }
+});

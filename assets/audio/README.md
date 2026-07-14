@@ -37,4 +37,29 @@
 - `battle-robotics-ace`（機器人操控師）— `assets/audio/battle-robotics-ace.mp3`
 - `battle-cloud-ranger`（雲端航海家）— `assets/audio/battle-cloud-ranger.mp3`
 
-CPU 敵人目前沒有專屬戰鬥音樂，仍使用共用的 `battle` 音軌；未來若要擴充，可比照上述模式新增 `battle-{敵人id}` 條目。
+## CPU 敵人專屬戰鬥音樂
+
+CPU 敵人也全部已核可上線，用 `battle-{敵人id}` 當 manifest 的 key。單人闖關時，輪到 CPU 出招時會切到牠的專屬音軌，換回玩家回合時再切回玩家角色的戰鬥音樂（`setTurn()` 內以 `cpuBattleSceneKey()` 判斷）。
+
+- `battle-firewall`（防火牆怪）— `assets/audio/battle-firewall.mp3`
+- `battle-noise-beast`（雜訊干擾獸）— `assets/audio/battle-noise-beast.mp3`
+- `battle-bug-phantom`（漏洞幻影）— `assets/audio/battle-bug-phantom.mp3`
+- `battle-phishing-siren`（釣魚海妖）— `assets/audio/battle-phishing-siren.mp3`
+- `battle-cache-golem`（快取石巨人）— `assets/audio/battle-cache-golem.mp3`
+- `battle-glitch-dragon`（像素故障龍）— `assets/audio/battle-glitch-dragon.mp3`
+- `battle-malware-mimic`（惡意偽裝怪）— `assets/audio/battle-malware-mimic.mp3`
+- `battle-bot-swarm`（機器人蜂群）— `assets/audio/battle-bot-swarm.mp3`
+
+## 大絕招專屬音效
+
+除了共用的 `ultimate` 音效，每位玩家角色也有專屬的大絕招 stinger，用 `ultimate-{角色id}` 當 key。`game.js` 的 `ultimateSceneKey()` 會優先找對應角色的專屬音效，沒有的話自動退回共用的 `ultimate` 音效。
+
+- `ultimate-coder`、`ultimate-guardian`、`ultimate-data`、`ultimate-creator`、`ultimate-ai-explorer`、`ultimate-green-engineer`、`ultimate-robotics-ace`、`ultimate-cloud-ranger` — 皆已核可上線。
+
+## 音檔長度正規化
+
+過長的 Suno 生成結果（超過 45 秒）一律用 ffmpeg 裁剪並加 4 秒淡出，統一循環長度，並在 manifest 對應條目記錄 `trimmedFromSeconds` 與 `trimNote` 留存審核紀錄。指令範例：
+
+```
+ffmpeg -y -v error -i "input.mp3" -t 45 -af "afade=t=out:st=41:d=4" -codec:a libmp3lame -q:a 2 "output.mp3"
+```
