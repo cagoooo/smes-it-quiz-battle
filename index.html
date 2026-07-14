@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="答題快打">
   <title>石門國小｜資訊科技駕駛艙：答題快打</title>
-  <link rel="stylesheet" href="style.css?v=2026.07.14-2">
+  <link rel="stylesheet" href="style.css?v=2026.07.14-3">
 </head>
 <body>
   <main class="app-shell">
@@ -30,6 +30,7 @@
           <h1 id="game-title">答題快打 <span>⚡</span></h1>
           <p class="hero-copy">用資訊力出招！答對題目，讓你的數位戰隊守護校園網路。</p>
           <p id="best-record" class="best-record hidden"><span id="best-record-text"></span><button id="reset-record-btn" type="button">重置</button></p>
+          <div id="badge-shelf" class="badge-shelf hidden" aria-label="已解鎖成就徽章"></div>
         </div>
         <div class="hero-console" aria-hidden="true">
           <div class="radar"><i></i><b>READY</b></div>
@@ -65,6 +66,17 @@
             <button class="choice" data-difficulty="practice" type="button"><span>🌱</span><b>練習</b><small>CPU 較慢，答題有提示</small></button>
             <button class="choice selected" data-difficulty="standard" type="button"><span>⚡</span><b>標準</b><small>均衡的課堂對戰</small></button>
             <button class="choice" data-difficulty="challenge" type="button"><span>🔥</span><b>挑戰</b><small>更積極使用戰術與大絕</small></button>
+          </div>
+        </section>
+
+        <section class="setup-card" aria-labelledby="round-time-title">
+          <p class="card-kicker">02C / 對戰節奏</p>
+          <h2 id="round-time-title">選擇回合時間</h2>
+          <div class="choice-row" role="group" aria-label="回合時間">
+            <button class="choice" data-round-time="60" type="button"><span>⏱️</span><b>60 秒</b><small>快速暖身</small></button>
+            <button class="choice selected" data-round-time="75" type="button"><span>⏱️</span><b>75 秒</b><small>標準節奏</small></button>
+            <button class="choice" data-round-time="90" type="button"><span>⏱️</span><b>90 秒</b><small>從容作答</small></button>
+            <button class="choice" data-round-time="120" type="button"><span>⏱️</span><b>120 秒</b><small>深度練習</small></button>
           </div>
         </section>
 
@@ -151,6 +163,7 @@
         <h2 id="result-title">任務成功！</h2><p id="result-copy">你用正確的資訊觀念守護了校園網路。</p>
         <p id="print-meta" class="print-only"></p>
         <div class="result-stats"><span><b id="correct-count">0</b>答對</span><span><b id="best-streak">0</b>最高連擊</span><span><b id="time-left">0</b>剩餘秒數</span></div>
+        <div id="badge-unlock" class="badge-unlock hidden" aria-live="polite"></div>
         <div id="duel-summary" class="duel-summary hidden" aria-label="同桌對戰成績"><div><b id="p1-result-name">玩家 1</b><span id="p1-result-correct">答對 0 · 連擊 0 · 傷害 0</span></div><div><b id="p2-result-name">玩家 2</b><span id="p2-result-correct">答對 0 · 連擊 0 · 傷害 0</span></div><p id="duel-highlight" class="duel-highlight">本次表現亮點</p></div>
         <section id="review-panel" class="review-panel hidden" aria-labelledby="review-title"><div class="review-heading"><h3 id="review-title">本局錯題回顧</h3><span id="wrong-answer-count">0 題</span></div><div id="competency-chips" class="competency-chips hidden" aria-label="依能力指標複習"></div><div id="wrong-answer-list" class="wrong-answer-list"></div><button id="retry-wrong-btn" type="button">🎯 只練本局錯題</button></section>
         <div class="result-actions"><button id="print-report-btn" class="secondary" type="button">🖨️ 列印本局報告</button><button id="retry-btn" type="button">再戰一次</button><button id="lobby-btn" class="secondary" type="button">任務大廳</button></div>
@@ -162,8 +175,8 @@
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
     <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
   </aside>
-  <script>window.APP_VERSION='2026.07.14-2';</script>
-  <script src="game.js?v=2026.07.14-2"></script>
-  <script src="sw-register.js?v=2026.07.14-2"></script>
+  <script>window.APP_VERSION='2026.07.14-3';</script>
+  <script src="game.js?v=2026.07.14-3"></script>
+  <script src="sw-register.js?v=2026.07.14-3"></script>
 </body>
 </html>

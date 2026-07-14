@@ -208,3 +208,45 @@ test('音效與背景音樂為獨立開關，互不影響彼此狀態', () => {
   assert.match(game, /\$\('music-btn'\)\.addEventListener\('click',toggleMusicMute\)/);
   assert.match(game, /\$\('sound-btn'\)\.addEventListener\('click',\(\)=>\{state\.sound=!state\.sound;\$\('sound-btn'\)\.textContent/, 'sound-btn 的 click handler 應只切換 state.sound（音效），不得再連動 music.enabled');
 });
+
+test('成就徽章系統：5 種固定徽章、不重複解鎖、資料存在 records.badges', () => {
+  const match = game.match(/const BADGES = \[[\s\S]*?\n\];/);
+  assert.ok(match, '找不到 BADGES 陣列');
+  const BADGES = eval(match[0].replace('const BADGES = ', ''));
+  assert.equal(BADGES.length, 5, `徽章清單應固定 5 種，避免範圍蔓延（目前 ${BADGES.length} 種）`);
+  const ids = BADGES.map(b => b.id);
+  assert.equal(new Set(ids).size, ids.length, '徽章 id 不應重複');
+
+  assert.match(game, /badges:\[\],\.\.\.saved/, 'loadRecords 預設值需包含 badges 陣列');
+  assert.match(game, /if\(!records\.badges\.includes\(badge\.id\)&&badge\.check\(records,battleStats\)\)/, 'updateRecords 需檢查該徽章尚未解鎖過才會觸發，避免重複顯示解鎖提示');
+  assert.match(html, /id="badge-shelf" class="badge-shelf hidden"/);
+  assert.match(html, /id="badge-unlock" class="badge-unlock hidden"/);
+  assert.match(game, /function renderBadgeShelf\(/);
+  assert.match(game, /function renderBadgeUnlock\(newBadges\)/);
+});
+
+test('8 種 CPU 敵人各自有獨立的難度風格，不再共用 4 種模板', () => {
+  const match = game.match(/const cpuProfiles = (\{[\s\S]*?\});/);
+  assert.ok(match, '找不到 cpuProfiles');
+  const cpuProfiles = eval('(' + match[1] + ')');
+  const eMatch = game.match(/const cpuEnemies = (\[[\s\S]*?\n\]);/);
+  const cpuEnemies = eval(eMatch[1]);
+  const signatures = new Set();
+  for (const enemy of cpuEnemies) {
+    assert.ok(cpuProfiles[enemy.id], `cpuProfiles 應有「${enemy.name}」（${enemy.id}）專屬條目`);
+    const sig = JSON.stringify(cpuProfiles[enemy.id]);
+    assert.ok(!signatures.has(sig), `「${enemy.name}」的難度風格與其他敵人重複`);
+    signatures.add(sig);
+  }
+  assert.doesNotMatch(game, /const cpuStyle=\{firewall:'defender'/, 'createFighter 不應再用 cpuStyle 把 8 隻敵人對應到 4 種共用模板');
+});
+
+test('回合時間可調整（60/75/90/120 秒），setupBattle 需採用 state.roundTime', () => {
+  assert.match(html, /data-round-time="60"/);
+  assert.match(html, /data-round-time="75"/);
+  assert.match(html, /data-round-time="90"/);
+  assert.match(html, /data-round-time="120"/);
+  assert.match(game, /roundTime:75/, 'state 預設 roundTime 應為 75 秒，維持原本預設體驗');
+  assert.match(game, /state\.time=state\.roundTime/, 'setupBattle 應使用 state.roundTime 而非寫死的 75');
+  assert.match(game, /const roundTime=event\.target\.closest\('\[data-round-time\]'\)/);
+});
