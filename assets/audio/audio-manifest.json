@@ -66,53 +66,81 @@
       "sha256": "9581FDCBB8E6D753EDABA01B17CCF5FC80F91DCBFFA6DCAC2D52214B8AFDFBF0"
     },
     "battle-guardian": {
-      "status": "pending",
+      "status": "approved",
       "path": "assets/audio/battle-guardian.mp3",
       "loop": true,
       "volume": 0.32,
-      "sunoPrompt": "Instrumental only. Determined and protective child-friendly synth battle theme, steady marching electronic beat, warm shield-like pad chords, bright defensive brass-synth stabs, confident and safe mood, 118 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+      "sunoPrompt": "Instrumental only. Determined and protective child-friendly synth battle theme, steady marching electronic beat, warm shield-like pad chords, bright defensive brass-synth stabs, confident and safe mood, 118 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone.",
+      "sunoClipId": "4b5313a3-a0f3-498a-82d5-9fd19d8ca4ff",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 14.581,
+      "sha256": "736384781B3FD3A0A37BD5F5694DAAC0D274F5A2590E57974B6F74655D46C171"
     },
     "battle-data": {
-      "status": "pending",
+      "status": "approved",
       "path": "assets/audio/battle-data.mp3",
       "loop": true,
       "volume": 0.32,
-      "sunoPrompt": "Instrumental only. Whimsical data-magic battle theme for a young analyst wizard, sparkling arpeggiated synth bells over a light electronic pulse, curious and clever mood, subtle chiptune flourishes like numbers falling into place, 124 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+      "sunoPrompt": "Instrumental only. Whimsical data-magic battle theme for a young analyst wizard, sparkling arpeggiated synth bells over a light electronic pulse, curious and clever mood, subtle chiptune flourishes like numbers falling into place, 124 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone.",
+      "sunoClipId": "285ceb06-719c-45d0-9b6e-4d8c9c77bd1b",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 23.738,
+      "sha256": "6071E5E5795B49FD5B6CCFA40BA6A74FE9809119D6050A989D12062B54ABACF5"
     },
     "battle-creator": {
-      "status": "pending",
+      "status": "approved",
       "path": "assets/audio/battle-creator.mp3",
       "loop": true,
       "volume": 0.32,
-      "sunoPrompt": "Instrumental only. Playful and colorful battle theme for a young digital artist, bouncy marimba and synth brass fanfare, paintbrush-swirl arpeggios, upbeat and imaginative mood, 132 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+      "sunoPrompt": "Instrumental only. Playful and colorful battle theme for a young digital artist, bouncy marimba and synth brass fanfare, paintbrush-swirl arpeggios, upbeat and imaginative mood, 132 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone.",
+      "sunoClipId": "c7850787-77db-459f-9ac3-c92262b17062",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 31.56,
+      "sha256": "885B347F6B82CF771B04499680398B4AB9DD317BE01D27853ADD53B320F6AAA2"
     },
     "battle-ai-explorer": {
-      "status": "pending",
+      "status": "approved",
       "path": "assets/audio/battle-ai-explorer.mp3",
       "loop": true,
       "volume": 0.32,
-      "sunoPrompt": "Instrumental only. Adventurous futuristic battle theme for a young AI explorer, gentle sci-fi synth pulses, exploratory rising arpeggios, curious and bright mood, light robotic percussion accents, 126 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+      "sunoPrompt": "Instrumental only. Adventurous futuristic battle theme for a young AI explorer, gentle sci-fi synth pulses, exploratory rising arpeggios, curious and bright mood, light robotic percussion accents, 126 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone.",
+      "sunoClipId": "9ad2c30a-a055-43ea-8496-28e12ff2887f",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 67.963,
+      "sha256": "A1F2AFF26C837B321F6F4F14578CF66BF356917B6805F55B3A0F064787FE8470"
     },
     "battle-green-engineer": {
-      "status": "pending",
+      "status": "approved",
       "path": "assets/audio/battle-green-engineer.mp3",
       "loop": true,
       "volume": 0.32,
-      "sunoPrompt": "Instrumental only. Fresh and hopeful eco-tech battle theme for a young green engineer, organic wood percussion blended with soft electronic pulses, uplifting acoustic-synth melody, energetic and sustainable mood, 122 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+      "sunoPrompt": "Instrumental only. Fresh and hopeful eco-tech battle theme for a young green engineer, organic wood percussion blended with soft electronic pulses, uplifting acoustic-synth melody, energetic and sustainable mood, 122 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone.",
+      "sunoClipId": "a9f61c49-7f22-4402-883b-4bf8121ad463",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 60.946,
+      "sha256": "123996F94F3E23CC91CA343F682780E755B1FFD6A141EC3721700EB9737D54C0"
     },
     "battle-robotics-ace": {
-      "status": "pending",
+      "status": "approved",
       "path": "assets/audio/battle-robotics-ace.mp3",
       "loop": true,
       "volume": 0.32,
-      "sunoPrompt": "Instrumental only. Powerful and fun mecha battle theme for a young robotics pilot, punchy synth brass hits, driving electronic beat with mechanical clank accents, heroic and energetic mood, 134 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+      "sunoPrompt": "Instrumental only. Powerful and fun mecha battle theme for a young robotics pilot, punchy synth brass hits, driving electronic beat with mechanical clank accents, heroic and energetic mood, 134 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone.",
+      "sunoClipId": "484a3acb-94a0-4791-b2e7-2a1bedb0b35e",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 177.36,
+      "sha256": "47F64A048E4B657D0BB650706E2A9533AE78A0AD2D4C0A388ED1051A16911148"
     },
     "battle-cloud-ranger": {
-      "status": "pending",
+      "status": "approved",
       "path": "assets/audio/battle-cloud-ranger.mp3",
       "loop": true,
       "volume": 0.32,
-      "sunoPrompt": "Instrumental only. Soaring cloud-surfing battle theme for a young data ranger, airy synth pads with gentle arpeggiated sync pulses, breezy and adventurous mood, light electronic drums, 120 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone."
+      "sunoPrompt": "Instrumental only. Soaring cloud-surfing battle theme for a young data ranger, airy synth pads with gentle arpeggiated sync pulses, breezy and adventurous mood, light electronic drums, 120 BPM, seamless 40 second loop, no vocals, no aggressive or dark tone.",
+      "sunoClipId": "aad84e99-2899-4b74-ae13-4986e21e4194",
+      "license": "阿凱老師 Suno Pro 帳號產生，可用於本遊戲發布。",
+      "durationSeconds": 70.632,
+      "sha256": "F625E689DE235D68BA3BE8BF8D9B56F6D3F485CDA0A6E911091FF47FA747E7DA"
     }
   }
 }

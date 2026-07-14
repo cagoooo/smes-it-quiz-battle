@@ -178,10 +178,15 @@ test('角色專屬戰鬥音樂：找不到核可音軌時要優雅退回共用 b
   assert.match(game, /scene\.startsWith\('battle'\)\?260:420/);
 
   const manifest = JSON.parse(fs.readFileSync(path.join(root, 'assets/audio/audio-manifest.json'), 'utf8'));
-  assert.ok(manifest.tracks['battle-coder'], 'manifest 應有 battle-coder 條目');
-  assert.equal(manifest.tracks['battle-coder'].status, 'approved');
-  const audioPath = path.join(root, manifest.tracks['battle-coder'].path);
-  assert.ok(fs.existsSync(audioPath), `battle-coder 音檔應存在：${manifest.tracks['battle-coder'].path}`);
+  const cMatchForMusic = game.match(/const characters = (\[[\s\S]*?\n\]);/);
+  const charactersForMusic = eval(cMatchForMusic[1]);
+  for (const character of charactersForMusic) {
+    const key = `battle-${character.id}`;
+    assert.ok(manifest.tracks[key], `manifest 應有 ${key} 條目（角色「${character.name}」）`);
+    assert.equal(manifest.tracks[key].status, 'approved', `${key} 應為 approved 狀態`);
+    const audioPath = path.join(root, manifest.tracks[key].path);
+    assert.ok(fs.existsSync(audioPath), `${key} 音檔應存在：${manifest.tracks[key].path}`);
+  }
   for (const [key, track] of Object.entries(manifest.tracks)) {
     if (track.status === 'approved') {
       assert.match(track.sha256, /^[0-9A-Fa-f]{64}$/, `「${key}」approved 音軌需有效的 SHA-256`);

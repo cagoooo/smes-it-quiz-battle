@@ -26,7 +26,15 @@
 
 除了共用的 `battle` 場景音軌，遊戲支援每位玩家角色各自的專屬戰鬥 BGM，用 `battle-{角色id}` 當 manifest 的 key（例如 `battle-coder`）。`game.js` 的 `battleSceneKey()` 會優先找選定角色對應的 `battle-{id}` 是否為 `approved` 狀態，沒有的話自動退回共用的 `battle` 音軌，不會出錯或缺音樂。
 
-目前狀態：
+目前狀態：8 位玩家角色全部已核可上線。
 
-- `battle-coder`（程式勇者）— 已核可，`assets/audio/battle-coder.mp3`
-- `battle-guardian`／`battle-data`／`battle-creator`／`battle-ai-explorer`／`battle-green-engineer`／`battle-robotics-ace`／`battle-cloud-ranger` — manifest 已預留 `sunoPrompt`，狀態為 `pending`，之後依序在 Suno 生成、下載、算雜湊、改成 `approved` 即可上線，不需要改程式碼。
+- `battle-coder`（程式勇者）— `assets/audio/battle-coder.mp3`
+- `battle-guardian`（網安守護者）— `assets/audio/battle-guardian.mp3`
+- `battle-data`（資料魔法師）— `assets/audio/battle-data.mp3`
+- `battle-creator`（創意設計師）— `assets/audio/battle-creator.mp3`
+- `battle-ai-explorer`（AI 探險家）— `assets/audio/battle-ai-explorer.mp3`
+- `battle-green-engineer`（綠能工程師）— `assets/audio/battle-green-engineer.mp3`
+- `battle-robotics-ace`（機器人操控師）— `assets/audio/battle-robotics-ace.mp3`
+- `battle-cloud-ranger`（雲端航海家）— `assets/audio/battle-cloud-ranger.mp3`
+
+CPU 敵人目前沒有專屬戰鬥音樂，仍使用共用的 `battle` 音軌；未來若要擴充，可比照上述模式新增 `battle-{敵人id}` 條目。
