@@ -21,7 +21,7 @@
         <a class="school-mark" href="https://www.smes.tyc.edu.tw" target="_blank" rel="noopener noreferrer" aria-label="石門國小網站">
           <span class="mark-fish">🐟</span><span>石門國小<br><b>資訊科技駕駛艙</b></span>
         </a>
-        <div class="top-badges"><button id="lobby-sound-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🎵 開啟 BGM</button><span class="online-dot">課堂版</span></div>
+        <div class="top-badges"><span id="console-status-badge" class="console-status-badge">⚪ 自主練習</span><button id="lobby-sound-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🎵 開啟 BGM</button><span class="online-dot">課堂版</span></div>
       </div>
 
       <div class="lobby-hero">
@@ -39,6 +39,19 @@
       </div>
 
       <div class="setup-grid">
+        <section class="setup-card name-card" aria-labelledby="name-title">
+          <p class="card-kicker">00 / 戰隊身分</p>
+          <h2 id="name-title">輸入座號姓名</h2>
+          <div class="name-inputs">
+            <div class="input-wrap">
+              <input type="text" id="p1-name-input" placeholder="例如：01陳小明" maxlength="10">
+            </div>
+            <div id="p2-name-input-wrap" class="input-wrap hidden" style="margin-top: 10px;">
+              <input type="text" id="p2-name-input" placeholder="例如：02林阿花 (玩家二)" maxlength="10">
+            </div>
+          </div>
+        </section>
+
         <section class="setup-card mode-card" aria-labelledby="mode-title">
           <p class="card-kicker">01 / 對戰方式</p>
           <h2 id="mode-title">選擇任務模式</h2>
@@ -50,12 +63,16 @@
 
         <section class="setup-card" aria-labelledby="unit-title">
           <p class="card-kicker">02 / 本節任務</p>
-          <h2 id="unit-title">選擇資訊主題</h2>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+            <h2 id="unit-title" style="margin: 0;">選擇資訊主題</h2>
+            <button id="custom-quiz-btn" class="setup-action-btn" type="button">⚙️ 自訂題庫</button>
+          </div>
           <div class="unit-grid" role="group" aria-label="資訊主題">
             <button class="unit selected" data-unit="mixed" type="button"><span>🌟</span>綜合挑戰</button>
             <button class="unit" data-unit="safety" type="button"><span>🛡️</span>網路安全</button>
             <button class="unit" data-unit="coding" type="button"><span>💻</span>程式思維</button>
             <button class="unit" data-unit="digital" type="button"><span>🌐</span>數位公民</button>
+            <button id="custom-unit-btn" class="unit hidden" data-unit="custom" type="button"><span>✨</span>[自訂] 主題</button>
           </div>
         </section>
 
@@ -170,6 +187,89 @@
       </div>
     </section>
   </main>
+
+  <!-- 自訂題庫 Modal -->
+  <div id="custom-quiz-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h3 id="modal-title">⚙️ 自訂課堂題庫設定</h3>
+        <button id="modal-close-btn" class="close-btn" type="button" aria-label="關閉對話框">✕</button>
+      </header>
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" data-modal-tab="json">貼上 JSON</button>
+        <button class="modal-tab-btn" data-modal-tab="csv">CSV 匯入</button>
+        <button class="modal-tab-btn" data-modal-tab="url">網址載入</button>
+        <button class="modal-tab-btn" data-modal-tab="ai">Gemini AI 出題</button>
+      </div>
+      
+      <!-- Tab 1: JSON -->
+      <div id="modal-tab-json" class="modal-tab-content active">
+        <div class="form-group">
+          <label for="json-textarea">請貼上符合格式的題庫 JSON 陣列：</label>
+          <textarea id="json-textarea" rows="8" placeholder='[
+  {
+    "unit": "custom",
+    "level": "light",
+    "q": "這是一題基礎題？",
+    "a": ["答案A", "答案B", "答案C", "答案D"],
+    "correct": 1,
+    "tip": "這是這題的解析說明。"
+  }
+]'></textarea>
+        </div>
+        <button id="import-json-btn" class="modal-btn" type="button">匯入題庫</button>
+      </div>
+
+      <!-- Tab 2: CSV -->
+      <div id="modal-tab-csv" class="modal-tab-content">
+        <p style="font-size:13px; color:#94a3b8; margin-bottom:12px; line-height: 1.4;">
+          請選擇您的 CSV 檔案，欄位順序必須為：<br>
+          <code style="display:block; background:#020c1b; padding:6px; border-radius:4px; margin-top:4px; color:#38bdf8; font-family: monospace;">主題(預設custom),難度(light/heavy/tactical/ultimate),題目,選項1,選項2,選項3,選項4,正確答案索引(0-3),教學提示</code>
+        </p>
+        <div class="form-group">
+          <input type="file" id="csv-file-input" accept=".csv">
+        </div>
+        <button id="import-csv-btn" class="modal-btn" type="button">解析並匯入 CSV</button>
+      </div>
+
+      <!-- Tab 3: URL -->
+      <div id="modal-tab-url" class="modal-tab-content">
+        <div class="form-group">
+          <label for="url-input">自訂題庫 JSON 網址</label>
+          <input type="url" id="url-input" placeholder="https://example.com/my-quiz.json">
+        </div>
+        <button id="import-url-btn" class="modal-btn" type="button">從網址載入</button>
+      </div>
+
+      <!-- Tab 4: AI Outport -->
+      <div id="modal-tab-ai" class="modal-tab-content">
+        <div class="form-group">
+          <label for="gemini-key-input">Gemini API Key (本機安全儲存)</label>
+          <input type="password" id="gemini-key-input" placeholder="AIzaSy...">
+          <small style="color:#94a3b8; display:block; margin-top:4px;">
+            您的 API Key 只會存在本機瀏覽器，直接呼叫 Google 官方端點，無洩漏風險。
+          </small>
+        </div>
+        <div class="form-group">
+          <label for="ai-subject-input">出題單元主題</label>
+          <input type="text" id="ai-subject-input" placeholder="例如：四年級昆蟲生態、反網路詐騙、吉他基礎樂理">
+        </div>
+        <div class="form-group">
+          <label for="ai-count-select">出題數量</label>
+          <select id="ai-count-select" style="width: 100%; background: #061b33; color: white; border: 1px solid #334155; padding: 10px; border-radius: 6px;">
+            <option value="5">5 題 (快速對戰)</option>
+            <option value="10" selected>10 題 (標準模式)</option>
+            <option value="15">15 題 (深度練習)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; margin-top: 15px;">
+          <button id="generate-ai-quiz-btn" class="modal-btn" type="button">🧠 一鍵 AI 生成題庫</button>
+          <button id="copy-gold-prompt-btn" class="modal-btn modal-btn-secondary" type="button">📋 複製黃金 Prompt (無 Key 備援)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-credit">桃園市龍潭區石門國民小學 · 鱻魚特色學園<br>Made with <span class="site-credit__heart" aria-label="愛心">❤️</span> by <a href="https://www.smes.tyc.edu.tw/modules/tadnews/page.php?ncsn=11&nsn=16#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a></footer>
   <aside id="sw-update-toast" class="sw-update-toast" role="status" aria-live="polite" hidden>
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>

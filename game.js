@@ -177,12 +177,12 @@ const questions = [
 const questionTags = { safety:{grade:'三至六年級',competency:'網路安全與隱私',misconception:'陌生連結與帳密可隨意分享'}, coding:{grade:'三至六年級',competency:'運算思維',misconception:'除錯只靠猜測'}, digital:{grade:'四至六年級',competency:'數位公民與 AI 素養',misconception:'網路資訊與 AI 輸出一定正確'}, mixed:{grade:'三至六年級',competency:'資訊應用與合作',misconception:'整理資料不影響作品品質'} };
 questions.forEach(question=>question.tags={...questionTags[question.unit],difficulty:question.level});
 
-const state = { mode:'solo', unit:'mixed', difficulty:'standard', roundTime:75, character:characters[0], character2:characters[1], turn:'p1', running:false, resolving:false, time:75, timerId:null, questionTimerId:null, current:null, used:[], sound:true, correct:0, bestStreak:0, round:1, p1:null, p2:null, playerStats:null, wrongAnswers:[], retryQueue:[], retryMode:false, recentResults:[] };
+const state = { mode:'solo', unit:'mixed', difficulty:'standard', roundTime:75, character:characters[0], character2:characters[1], turn:'p1', running:false, resolving:false, time:75, timerId:null, questionTimerId:null, current:null, used:[], sound:true, correct:0, bestStreak:0, round:1, p1:null, p2:null, playerStats:null, wrongAnswers:[], retryQueue:[], retryMode:false, recentResults:[], gasUrl:'', className:'501', isConsoleConnected:false, customQuestions:[] };
 const $ = (id) => document.getElementById(id);
 const random = (items) => items[Math.floor(Math.random() * items.length)];
 
 function rosterCards(selected, dataAttribute) { return characters.map(hero => `<button class="hero-card ${hero.id===selected.id?'selected':''}" ${dataAttribute}="${hero.id}" type="button"><span class="hero-portrait" style="--hero-color:${hero.color}">${hero.image ? `<img src="${hero.image}" alt="${hero.name}角色圖">` : `<i aria-hidden="true">${hero.icon}</i>`}</span><span class="hero-content"><b>${hero.name}</b><small>${hero.skill}</small></span><em>選擇</em></button>`).join(''); }
-function renderRoster() { $('roster').innerHTML=rosterCards(state.character,'data-hero'); $('roster-p2').innerHTML=rosterCards(state.character2,'data-hero-p2'); $('p2-roster-card').classList.toggle('hidden',state.mode!=='duel'); }
+function renderRoster() { $('roster').innerHTML=rosterCards(state.character,'data-hero'); $('roster-p2').innerHTML=rosterCards(state.character2,'data-hero-p2'); $('p2-roster-card').classList.toggle('hidden',state.mode!=='duel'); $('p2-name-input-wrap').classList.toggle('hidden',state.mode!=='duel'); }
 function choose(selector, value, key) { document.querySelectorAll(selector).forEach(el => el.classList.toggle('selected', el.dataset[key] === value)); }
 
 function createFighter(profile, isCpu=false) { return { id:profile.id, name:profile.name, icon:profile.icon, image:profile.image, health:100, meter:0, streak:0, isCpu, cpuProfile:cpuProfiles[profile.id] || cpuProfiles.firewall, skills:skillSets[profile.id] || skillSet('掃描衝擊',8,'除錯連發',16,'同步戰術',22), ultimate:random(profile.ultimates?.length ? profile.ultimates : [{ name:'同步衝擊', damage:30, color:'#ffe479' }]) }; }
@@ -190,15 +190,24 @@ function renderAvatar(elementId, fighter) { const element = $(elementId); if (fi
 function renderArenaAvatar(selector, fighter) { const element = document.querySelector(selector); element.closest('.fighter')?.classList.toggle('has-art', Boolean(fighter.image)); if (fighter.image) element.innerHTML = `<img src="${fighter.image}" alt="${fighter.name}">`; else element.textContent = fighter.icon; }
 function fighterKey(actor) { return actor===state.p1?'p1':'p2'; }
 function setupBattle(retryQuestions=[]) {
+  const p1NameVal = $('p1-name-input').value.trim();
+  const p2NameVal = $('p2-name-input').value.trim();
+  localStorage.setItem('smes-battle-p1-name', p1NameVal);
+  localStorage.setItem('smes-battle-p2-name', p2NameVal);
+
   state.p1 = createFighter(state.character);
+  if (p1NameVal) state.p1.name = p1NameVal;
+
   const enemy = random(cpuEnemies);
   state.p2 = state.mode === 'solo' ? createFighter(enemy, true) : createFighter(state.character2);
+  if (state.mode === 'duel' && p2NameVal) state.p2.name = p2NameVal;
+
   state.turn='p1'; state.running=true; state.time=state.roundTime; state.current=null; state.used=[]; state.correct=0; state.bestStreak=0; state.playerStats={p1:{correct:0,bestStreak:0,damage:0},p2:{correct:0,bestStreak:0,damage:0}}; state.wrongAnswers=[]; state.retryQueue=[...retryQuestions]; state.retryMode=retryQuestions.length>0; state.recentResults=[];
   $('p1-name').textContent=state.p1.name; $('fighter-p1-name').textContent=state.p1.name; renderAvatar('p1-avatar-mini',state.p1); renderArenaAvatar('#fighter-p1 .fighter-avatar',state.p1);
   $('p2-name').textContent=state.p2.name; $('fighter-p2-name').textContent=state.p2.name; renderAvatar('p2-avatar-mini',state.p2); renderArenaAvatar('#fighter-p2 .fighter-avatar',state.p2);
   renderMoveDeck(state.p1);
   $('p2-caption').textContent=state.mode==='solo'?'駕駛艙 AI':'玩家 2'; document.querySelector('#fighter-p2 small').textContent=state.mode==='solo'?'CPU':'PLAYER 2';
-  $('unit-badge').textContent=unitNames[state.unit]; $('mission-title').textContent=state.unit==='safety'?'校園網安守護戰':state.unit==='coding'?'程式迷宮突破戰':state.unit==='digital'?'數位公民守護戰':'網路世界守護戰';
+  $('unit-badge').textContent=unitNames[state.unit]; $('mission-title').textContent=state.unit==='safety'?'校園網安守護戰':state.unit==='coding'?'程式迷宮突破戰':state.unit==='digital'?'數位公民守護戰':(state.unit==='custom'?'自訂主題挑戰':'網路世界守護戰');
   $('lobby').classList.add('hidden'); $('battle').classList.remove('hidden'); $('result').classList.add('hidden'); $('question-card').classList.add('hidden'); $('move-deck').classList.remove('hidden'); $('feedback').textContent=state.retryMode?`錯題再練啟動：還有 ${state.retryQueue.length} 題待複習。`:'先選一個技能，答對就能發動攻擊！'; $('feedback').className='feedback';
   updateUI(); startTimer(); setTurn('p1'); playMusicScene(battleSceneKey(), true);
 }
@@ -207,7 +216,21 @@ function renderCpuMoveDeck(actor, selectedId=null) { const skills=[...actor.skil
 function updateUI() { for (const id of ['p1','p2']) { const f=state[id]; $(`${id}-health`).style.width=`${f.health}%`; $(`${id}-health-text`).textContent=f.health; $(`${id}-meter`).style.width=`${f.meter}%`; $(`${id}-meter-text`).textContent=`${f.meter}%`; } const player=state[state.turn]; $('streak-label').textContent=`連擊 x${player.streak}`; $('ultimate-btn').classList.toggle('locked',player.meter<100); $('ultimate-btn').disabled=player.meter<100; }
 function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
 function setTurn(turn) { if(!state.running)return; state.resolving=false; state.turn=turn; state.current=null; const actor=state[turn]; $('turn-title').textContent=actor.isCpu?'駕駛艙 AI 正在分析資料…':`${actor.name} 的回合：選擇技能`; document.querySelector('.turn-strip').classList.toggle('cpu',actor.isCpu); $('move-deck').classList.toggle('hidden',actor.isCpu); $('cpu-move-deck').classList.toggle('hidden',!actor.isCpu); if(actor.isCpu)renderCpuMoveDeck(actor); else renderMoveDeck(actor); $('question-card').classList.add('hidden'); $('feedback').textContent=actor.isCpu?'AI 正在挑選它的招式…':'選擇四種專屬技能之一，答對就能發動攻擊！'; $('feedback').className='feedback'; updateUI(); if(actor.isCpu){ const cpuScene=cpuBattleSceneKey(actor.id); if(cpuScene)playMusicScene(cpuScene); window.setTimeout(cpuMove,difficultyModes[state.difficulty].delay); } else { playMusicScene(battleSceneKey()); } }
-function getQuestion(level, useRetry=false) { if(useRetry&&state.retryQueue.length)return state.retryQueue.shift(); let pool = questions.filter(q => q.level===level && (state.unit==='mixed'||q.unit===state.unit||q.unit==='mixed')); let unused=pool.filter(q=>!state.used.includes(q)); if(!unused.length){state.used=[];unused=pool;} const q=random(unused); state.used.push(q); return q; }
+function getQuestion(level, useRetry=false) {
+  if(useRetry&&state.retryQueue.length)return state.retryQueue.shift();
+  let pool;
+  if (state.unit === 'custom') {
+    pool = state.customQuestions.filter(q => q.level === level);
+    if (!pool.length) pool = state.customQuestions;
+  } else {
+    pool = questions.filter(q => q.level===level && (state.unit==='mixed'||q.unit===state.unit||q.unit==='mixed'));
+  }
+  let unused=pool.filter(q=>!state.used.includes(q));
+  if(!unused.length){state.used=[];unused=pool;}
+  const q=random(unused);
+  state.used.push(q);
+  return q;
+}
 function clearQuestionTimer(){window.clearInterval(state.questionTimerId);state.questionTimerId=null;}
 function startQuestionTimer(skill){clearQuestionTimer();let seconds=skill.id==='light'?14:skill.id==='heavy'?17:skill.id==='tactical'?20:24;const output=$('question-timer');const tick=()=>output.textContent=`⏱ ${seconds}s`;tick();state.questionTimerId=window.setInterval(()=>{seconds--;tick();if(seconds<=0){clearQuestionTimer();answer(-1,true);}},1000);}
 function getSkill(actor, skillId) { return skillId==='ultimate' ? { id:'ultimate', name:actor.ultimate.name, damage:actor.ultimate.damage, meterGain:0, questionLevel:'ultimate', label:'專屬大絕' } : actor.skills.find(skill=>skill.id===skillId); }
@@ -240,7 +263,7 @@ function playUltimateCombo(actor, defender, damage) {
 }
 function focusQuestionCard(delay=0) { window.setTimeout(()=>{ const card=$('question-card'), reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches; card.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'}); card.classList.remove('question-focus'); void card.offsetWidth; card.classList.add('question-focus'); card.focus({preventScroll:true}); window.setTimeout(()=>card.classList.remove('question-focus'),900); },delay); }
 function chooseMove(skillId) { if(!state.running||state.resolving||state.turn!=='p1' && state.mode==='solo')return; const actor=state[state.turn], skill=getSkill(actor,skillId); if(skillId==='ultimate'&&actor.meter<100)return; state.current={skill,q:getQuestion(skill.questionLevel,true)}; $('question-level').textContent=`${skill.label} · ${skill.name} · 傷害 ${skill.damage}`; $('question-count').textContent=`已答對 ${state.playerStats[fighterKey(actor)].correct} 題`; $('question-text').textContent=state.current.q.q; $('answers').innerHTML=state.current.q.a.map((answer,index)=>`<button class="answer" data-answer="${index}" type="button"><b>${'ABCD'[index]}.</b> ${answer}</button>`).join(''); $('explain').textContent=state.difficulty==='practice'?difficultyModes.practice.hint:''; $('question-card').classList.remove('hidden'); $('move-deck').classList.add('hidden'); $('feedback').textContent='題目已就位，選出最合適的答案！'; startQuestionTimer(skill); focusQuestionCard(100); }
-function answer(index,timedOut=false) { if(!state.current||!state.running)return; clearQuestionTimer(); const {q,skill}=state.current; document.querySelectorAll('.answer').forEach(btn=>btn.disabled=true); const correct=!timedOut&&index===q.correct, selected=document.querySelector(`.answer[data-answer="${index}"]`); if(selected)selected.classList.add(correct?'correct':'wrong'); if(state.turn==='p1'){state.recentResults.push(correct); if(state.recentResults.length>4)state.recentResults.shift();} if(!correct)document.querySelector(`.answer[data-answer="${q.correct}"]`).classList.add('correct'); $('explain').textContent=`💡 ${q.tip}`; const actor=state[state.turn], defender=state.turn==='p1'?state.p2:state.p1, actorKey=fighterKey(actor); let attackRecovery=1600; if(correct){state.correct++; actor.streak++; defender.streak=0; state.bestStreak=Math.max(state.bestStreak,actor.streak); state.playerStats[actorKey].correct++; state.playerStats[actorKey].bestStreak=Math.max(state.playerStats[actorKey].bestStreak,actor.streak); const damage=moveDamage(actor,skill.id), meterBefore=actor.meter; actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain); if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime(); $('feedback').textContent=`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`; $('feedback').className='feedback good'; attackRecovery=attack(actor,defender,damage,skill.id); } else { actor.streak=0; actor.meter=Math.max(0,actor.meter-8); state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); $('feedback').textContent=timedOut?'時間到！這題先記下來。':'這題先記下來！攻擊沒有命中。'; $('feedback').className='feedback bad'; playTone(false); }
+function answer(index,timedOut=false) { if(!state.current||!state.running)return; clearQuestionTimer(); const {q,skill}=state.current; document.querySelectorAll('.answer').forEach(btn=>btn.disabled=true); const correct=!timedOut&&index===q.correct, selected=document.querySelector(`.answer[data-answer="${index}"]`); if(selected)selected.classList.add(correct?'correct':'wrong'); if(state.turn==='p1'){state.recentResults.push(correct); if(state.recentResults.length>4)state.recentResults.shift();} if(!correct)document.querySelector(`.answer[data-answer="${q.correct}"]`).classList.add('correct'); $('explain').textContent=`💡 ${q.tip}`; const actor=state[state.turn], defender=state.turn==='p1'?state.p2:state.p1, actorKey=fighterKey(actor); let attackRecovery=1600; if(correct){state.correct++; actor.streak++; defender.streak=0; state.bestStreak=Math.max(state.bestStreak,actor.streak); state.playerStats[actorKey].correct++; state.playerStats[actorKey].bestStreak=Math.max(state.playerStats[actorKey].bestStreak,actor.streak); const damage=moveDamage(actor,skill.id), meterBefore=actor.meter; actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain); if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime(); $('feedback').textContent=actor.isCpu?`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`:`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`; $('feedback').className='feedback good'; attackRecovery=attack(actor,defender,damage,skill.id); } else { actor.streak=0; actor.meter=Math.max(0,actor.meter-8); state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); $('feedback').textContent=timedOut?'時間到！這題先記下來。':'這題先記下來！攻擊沒有命中。'; $('feedback').className='feedback bad'; playTone(false); }
   updateUI(); const recovery=correct ? attackRecovery : 1600; window.setTimeout(()=>{ if(!state.running)return; if(state.retryMode&&state.retryQueue.length===0)finish('p1','錯題再練完成！'); else if(defender.health<=0)finish(state.turn); else setTurn(state.turn==='p1'?'p2':'p1'); },recovery);
 }
 function attack(actor,defender,damage,skillId) { const source=actor===state.p1?$('fighter-p1'):$('fighter-p2'), target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); focusBattleScene(40); source.classList.remove('attack','ultimate'); void source.offsetWidth; source.classList.add(skillId==='ultimate'?'ultimate':'attack'); const blast=document.createElement('i'); blast.className=`blast ${skillId==='heavy'||skillId==='tactical'?'heavy':''} ${skillId==='ultimate'?'ultimate':''}`; if(skillId==='ultimate'){state.resolving=true;$('feedback').textContent='連招施放中，請觀察每一段命中！';blast.style.setProperty('--blast-color',actor.ultimate.color); const duration=playUltimateCombo(actor,defender,damage); $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),duration); playMusicStinger(ultimateSceneKey(actor.id)); playTone(true,skillId,actor.streak); return duration; } target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit'); defender.health=Math.max(0,defender.health-damage); state.playerStats[fighterKey(actor)].damage+=damage; $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),700); if(actor.streak>=2){const combo=$('combo');combo.textContent=`${actor.streak} HIT COMBO!`;combo.classList.remove('hidden');window.setTimeout(()=>combo.classList.add('hidden'),800);} playTone(true,skillId,actor.streak); return 1600; }
@@ -252,7 +275,7 @@ function renderCompetencySummary(){const chips=$('competency-chips'); const coun
 function startCompetencyRetry(competency){const retryQuestions=state.wrongAnswers.filter(entry=>entry.question.tags.competency===competency).map(entry=>entry.question); if(retryQuestions.length)setupBattle(retryQuestions);}
 function renderDuelSummary(winner){const duel=state.mode==='duel', panel=$('duel-summary');panel.classList.toggle('hidden',!duel);if(!duel)return;for(const key of ['p1','p2']){const fighter=state[key],stats=state.playerStats[key];$(`${key}-result-name`).textContent=fighter.name;$(`${key}-result-correct`).textContent=`答對 ${stats.correct} · 連擊 ${stats.bestStreak} · 傷害 ${stats.damage}`;}const highlightKey=state.playerStats.p1.bestStreak===state.playerStats.p2.bestStreak?winner:(state.playerStats.p1.bestStreak>state.playerStats.p2.bestStreak?'p1':'p2'),damageKey=state.playerStats.p1.damage===state.playerStats.p2.damage?winner:(state.playerStats.p1.damage>state.playerStats.p2.damage?'p1':'p2');$('duel-highlight').textContent=`本次表現亮點：${state[highlightKey].name} 最高連擊 x${state.playerStats[highlightKey].bestStreak}；${state[damageKey].name} 造成 ${state.playerStats[damageKey].damage} 點傷害。`;}
 function startWrongAnswerRetry(){const retryQuestions=state.wrongAnswers.map(entry=>entry.question);if(retryQuestions.length)setupBattle(retryQuestions);}
-function finish(winner, reason='') { if(!state.running)return; state.running=false;clearInterval(state.timerId);const solo=state.mode==='solo', won=winner==='p1';$('result-kicker').textContent=solo?(won?'MISSION COMPLETE':'再整理一下資訊力'):'DUEL COMPLETE';$('result-icon').textContent=solo?(won?'🏆':'🧩'):'⚔️';$('result-title').textContent=solo?(won?'任務成功！':'任務暫停，重新挑戰！'):`${state[winner].name} 獲勝！`;$('result-copy').textContent=solo?(won?`${reason?'時間到！':''}你用正確的資訊觀念守護了校園網路。`:'別灰心，每一題的說明都是下一次更強的技能。'):'兩位玩家都完成了資訊力挑戰，看看下方的個別表現吧！';$('correct-count').textContent=state.playerStats.p1.correct;$('best-streak').textContent=state.playerStats.p1.bestStreak;$('time-left').textContent=Math.max(0,state.time);renderDuelSummary(winner);renderWrongAnswerReview();renderPrintMeta();updateRecords();$('result').classList.remove('hidden');playMusicScene(solo&&won?'victory':'retry',true);playTone(solo&&won,'ultimate'); }
+function finish(winner, reason='') { if(!state.running)return; state.running=false;clearInterval(state.timerId);const solo=state.mode==='solo', won=winner==='p1';$('result-kicker').textContent=solo?(won?'MISSION COMPLETE':'再整理一下資訊力'):'DUEL COMPLETE';$('result-icon').textContent=solo?(won?'🏆':'🧩'):'⚔️';$('result-title').textContent=solo?(won?'任務成功！':'任務暫停，重新挑戰！'):`${state[winner].name} 獲勝！`;$('result-copy').textContent=solo?(won?`${reason?'時間到！':''}你用正確的資訊觀念守護了校園網路。`:'別灰心，每一題的說明都是下一次更強的技能。'):'兩位玩家都完成了資訊力挑戰，看看下方的個別表現吧！';$('correct-count').textContent=state.playerStats.p1.correct;$('best-streak').textContent=state.playerStats.p1.bestStreak;$('time-left').textContent=Math.max(0,state.time);renderDuelSummary(winner);renderWrongAnswerReview();renderPrintMeta();updateRecords();$('result').classList.remove('hidden');playMusicScene(solo&&won?'victory':'retry',true);playTone(solo&&won,'ultimate'); syncRecordToConsole(); }
 function renderPrintMeta(){const now=new Date(), pad=n=>String(n).padStart(2,'0'), dateStr=`${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`, modeLabel=state.mode==='solo'?'單人闖關':'同桌對戰', names=state.mode==='solo'?state.p1.name:`${state.p1.name} vs ${state.p2.name}`; $('print-meta').textContent=`${unitNames[state.unit]} · ${modeLabel} · ${names} · 列印時間 ${dateStr}`; }
 function playTone(good,level='light',streak=0){if(!state.sound)return;try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.type=good?'sine':'sawtooth';const comboBoost=good?Math.min(streak,6)*18:0;o.frequency.value=(good?(level==='ultimate'?740:level==='heavy'?520:390):145)+comboBoost;g.gain.setValueAtTime(.0001,ac.currentTime);g.gain.exponentialRampToValueAtTime(.06,ac.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.22);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.24);}catch(e){}}
 function playUltimateReadyChime(){if(!state.sound)return;try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.setValueAtTime(660,ac.currentTime);o.frequency.exponentialRampToValueAtTime(990,ac.currentTime+.18);g.gain.setValueAtTime(.0001,ac.currentTime);g.gain.exponentialRampToValueAtTime(.07,ac.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.5);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.52);}catch(e){}}
@@ -291,4 +314,367 @@ document.addEventListener('click',(event)=>{const mode=event.target.closest('[da
 document.addEventListener('pointerdown',unlockMusic,{once:true,capture:true});document.addEventListener('keydown',unlockMusic,{once:true,capture:true});
 $('lobby-sound-btn').addEventListener('click',function initialEnable(){ unlockMusic(); this.removeEventListener('click',initialEnable); this.addEventListener('click',toggleMusicMute); },{once:true});
 $('music-btn').addEventListener('click',toggleMusicMute);
-$('launch-btn').addEventListener('click',()=>setupBattle());$('back-btn').addEventListener('click',showLobby);$('retry-btn').addEventListener('click',()=>setupBattle());$('retry-wrong-btn').addEventListener('click',startWrongAnswerRetry);$('print-report-btn').addEventListener('click',()=>window.print());$('reset-record-btn').addEventListener('click',resetRecords);$('lobby-btn').addEventListener('click',showLobby);$('sound-btn').addEventListener('click',()=>{state.sound=!state.sound;$('sound-btn').textContent=state.sound?'🔊':'🔇';$('sound-btn').setAttribute('aria-pressed',String(state.sound));});loadMusicManifest();renderRoster();renderBestRecord();renderBadgeShelf();
+$('launch-btn').addEventListener('click',()=>setupBattle());$('back-btn').addEventListener('click',showLobby);$('retry-btn').addEventListener('click',()=>setupBattle());$('retry-wrong-btn').addEventListener('click',startWrongAnswerRetry);$('print-report-btn').addEventListener('click',()=>window.print());$('reset-record-btn').addEventListener('click',resetRecords);$('lobby-btn').addEventListener('click',showLobby);$('sound-btn').addEventListener('click',()=>{state.sound=!state.sound;$('sound-btn').textContent=state.sound?'🔊':'🔇';$('sound-btn').setAttribute('aria-pressed',String(state.sound));});loadMusicManifest();renderRoster();renderBestRecord();renderBadgeShelf();initEdTechFeatures();
+
+// EdTech 課堂看板與自訂題庫功能實作
+function syncRecordToConsole() {
+  if (!state.gasUrl) return;
+  const payload = {
+    className: state.className,
+    name: state.p1.name,
+    correct: state.playerStats.p1.correct,
+    bestStreak: state.playerStats.p1.bestStreak,
+    damage: state.playerStats.p1.damage,
+    wrongCount: state.wrongAnswers.length,
+    wrongList: state.wrongAnswers.map(w => ({
+      q: w.question.q,
+      a: w.question.a,
+      correct: w.question.correct,
+      userAnswer: w.selectedIndex,
+      tip: w.question.tip
+    }))
+  };
+
+  fetch(state.gasUrl, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: { 'Content-Type': 'text/plain' },
+    body: JSON.stringify(payload)
+  }).then(() => {
+    console.info('對戰成績已同步至課堂看板 🟢');
+  }).catch(err => {
+    console.error('同步看板失敗：', err);
+  });
+}
+
+function initEdTechFeatures() {
+  const params = new URLSearchParams(window.location.search);
+  const b64Gas = params.get('gas');
+  const cls = params.get('class');
+  
+  if (b64Gas) {
+    try {
+      state.gasUrl = atob(decodeURIComponent(b64Gas));
+      localStorage.setItem('smes-battle-gas-url', state.gasUrl);
+    } catch (e) {
+      console.error('GAS URL 解碼失敗：', e);
+    }
+  } else {
+    state.gasUrl = localStorage.getItem('smes-battle-gas-url') || '';
+  }
+  
+  if (cls) {
+    state.className = decodeURIComponent(cls);
+    localStorage.setItem('smes-battle-class-name', state.className);
+  } else {
+    state.className = localStorage.getItem('smes-battle-class-name') || '501';
+  }
+  
+  state.isConsoleConnected = Boolean(state.gasUrl);
+  
+  // 載入座號姓名快取
+  if ($('p1-name-input')) {
+    $('p1-name-input').value = localStorage.getItem('smes-battle-p1-name') || '';
+  }
+  if ($('p2-name-input')) {
+    $('p2-name-input').value = localStorage.getItem('smes-battle-p2-name') || '';
+  }
+  
+  // 載入自訂題庫
+  try {
+    const custom = JSON.parse(localStorage.getItem('smes-custom-questions'));
+    if (Array.isArray(custom)) {
+      state.customQuestions = custom;
+    }
+  } catch (e) {}
+  
+  // 載入 Gemini API Key
+  if ($('gemini-key-input')) {
+    $('gemini-key-input').value = localStorage.getItem('smes-gemini-key') || '';
+  }
+  
+  updateConsoleStatusUI();
+  updateCustomUnitButton();
+  initCustomQuizListeners();
+}
+
+function updateConsoleStatusUI() {
+  const el = $('console-status-badge');
+  if (!el) return;
+  if (state.isConsoleConnected) {
+    el.textContent = `🟢 已連線至 [${state.className}] 班級看板`;
+    el.className = 'console-status-badge connected';
+  } else {
+    el.textContent = `⚪ 自主練習`;
+    el.className = 'console-status-badge';
+  }
+}
+
+function updateCustomUnitButton() {
+  const btn = $('custom-unit-btn');
+  if (!btn) return;
+  if (state.customQuestions && state.customQuestions.length > 0) {
+    let subject = '自訂題庫';
+    if (state.customQuestions[0] && state.customQuestions[0].customTitle) {
+      subject = state.customQuestions[0].customTitle;
+    }
+    btn.innerHTML = `<span>✨</span>[自訂] ${subject}`;
+    btn.classList.remove('hidden');
+    unitNames.custom = `[自訂] ${subject}`;
+  } else {
+    btn.classList.add('hidden');
+    if (state.unit === 'custom') {
+      state.unit = 'mixed';
+      choose('[data-unit]', 'mixed', 'unit');
+    }
+  }
+}
+
+function initCustomQuizListeners() {
+  const modal = $('custom-quiz-modal');
+  if (!modal) return;
+  
+  // 開關 Modal
+  $('custom-quiz-btn').addEventListener('click', () => {
+    modal.classList.remove('hidden');
+  });
+  $('modal-close-btn').addEventListener('click', () => {
+    modal.classList.add('hidden');
+  });
+  
+  // Tab 切換
+  modal.querySelectorAll('.modal-tab-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const tab = btn.getAttribute('data-modal-tab');
+      modal.querySelectorAll('.modal-tab-btn').forEach(b => b.classList.toggle('active', b === btn));
+      modal.querySelectorAll('.modal-tab-content').forEach(c => {
+        c.classList.toggle('active', c.id === `modal-tab-${tab}`);
+      });
+    });
+  });
+
+  // JSON 匯入
+  $('import-json-btn').addEventListener('click', () => {
+    const raw = $('json-textarea').value.trim();
+    if (!raw) return alert('請貼上 JSON 題目資料！');
+    try {
+      const data = JSON.parse(raw);
+      if (!Array.isArray(data)) throw new Error('題庫格式必須是 JSON 陣列！');
+      saveCustomQuestions(data, '貼上之 JSON 題庫');
+    } catch(e) {
+      alert('解析失敗：' + e.message);
+    }
+  });
+
+  // CSV 匯入
+  $('import-csv-btn').addEventListener('click', () => {
+    const fileInput = $('csv-file-input');
+    const file = fileInput.files[0];
+    if (!file) return alert('請選擇 CSV 檔案！');
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const text = e.target.result;
+        const data = parseCSV(text);
+        if (!data.length) throw new Error('未能成功解析任何題目，請檢查 CSV 欄位與編碼！');
+        saveCustomQuestions(data, file.name.replace('.csv', ''));
+      } catch(err) {
+        alert('CSV 解析錯誤：' + err.message);
+      }
+    };
+    reader.readAsText(file, 'utf-8');
+  });
+
+  // URL 載入
+  $('import-url-btn').addEventListener('click', () => {
+    const url = $('url-input').value.trim();
+    if (!url) return alert('請輸入題庫 URL！');
+    
+    fetch(url)
+      .then(res => res.json())
+      .then(data => {
+        if (!Array.isArray(data)) throw new Error('格式不符合 JSON 陣列！');
+        saveCustomQuestions(data, '遠端 URL 題庫');
+      })
+      .catch(err => {
+        alert('下載或解析失敗：' + err.message);
+      });
+  });
+
+  // AI 智慧出題
+  $('generate-ai-quiz-btn').addEventListener('click', async () => {
+    const key = $('gemini-key-input').value.trim();
+    const subject = $('ai-subject-input').value.trim();
+    const count = parseInt($('ai-count-select').value) || 10;
+    
+    if (!key) return alert('請輸入您的 Gemini API Key！');
+    if (!subject) return alert('請輸入出題主題！');
+    
+    localStorage.setItem('smes-gemini-key', key);
+    
+    const btn = $('generate-ai-quiz-btn');
+    const originalText = btn.textContent;
+    btn.textContent = '🧠 AI 出題中，請稍候約 5-10 秒...';
+    btn.disabled = true;
+    
+    const prompt = getAiQuizPrompt(subject, count);
+    
+    try {
+      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-lite:generateContent?key=${key}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            responseMimeType: "application/json"
+          }
+        })
+      });
+      
+      if (!response.ok) {
+        const errJson = await response.json();
+        throw new Error(errJson.error?.message || 'Gemini 呼叫失敗！');
+      }
+      
+      const resData = await response.json();
+      let rawText = resData.candidates?.[0]?.content?.parts?.[0]?.text || '';
+      rawText = rawText.replace(/```json/i, '').replace(/```/g, '').trim();
+      
+      const quiz = JSON.parse(rawText);
+      if (!Array.isArray(quiz)) throw new Error('AI 回傳格式不符合 JSON 陣列！');
+      
+      quiz.forEach(q => {
+        q.unit = 'custom';
+        q.customTitle = subject;
+        q.tags = { grade: '三至六年級', competency: '自訂領域', misconception: '自訂迷思' };
+      });
+      
+      saveCustomQuestions(quiz, subject);
+      alert(`🎉 成功！AI 已為您生成 ${quiz.length} 題「${subject}」對戰題庫！`);
+    } catch(err) {
+      alert('AI 出題失敗：' + err.message);
+    } finally {
+      btn.textContent = originalText;
+      btn.disabled = false;
+    }
+  });
+
+  // 複製黃金 Prompt
+  $('copy-gold-prompt-btn').addEventListener('click', () => {
+    const subject = $('ai-subject-input').value.trim() || '自訂主題';
+    const count = $('ai-count-select').value;
+    const prompt = getAiQuizPrompt(subject, count);
+    
+    navigator.clipboard.writeText(prompt);
+    alert('黃金 Prompt 已成功複製至剪貼簿！可直接貼給任何 AI 生成 JSON 後回來貼上。');
+  });
+}
+
+function getAiQuizPrompt(subject, count) {
+  return `你是一位專業的小學老師。請為「${subject}」單元生成符合「答題快打」對戰遊戲格式的對選題庫，一共需要生成 ${count} 題。
+  
+【難度分配要求】：
+- 輕招 (level: 'light')：佔全部題數的 40% (基礎題)。
+- 重招 (level: 'heavy')：佔全部題數 the 30% (進階題)。
+- 戰術招 (level: 'tactical')：佔全部題數的 20% (觀念思維題)。
+- 終極大絕 (level: 'ultimate')：佔全部題數的 10% (高難度挑戰題)。
+
+【輸出格式】：
+你必須且只能回傳一個乾淨的 JSON 陣列，不需要任何 markdown 包裝（如 \`\`\`json 標記）。
+陣列中每個題目物件必須包含以下鍵值：
+- unit: 必須固定為字串 "custom"
+- customTitle: 必須固定為字串 "${subject}" (即您所出的單元名稱)
+- level: 題目難度層次，字串 light、heavy、tactical 或 ultimate 之一
+- q: 題目敘述文字
+- a: 選項陣列，固定包含 4 個字串選項
+- correct: 正確選項的索引 (0 到 3 之間的整數，代表選項 a 中的位置)
+- tip: 給學生的錯題詳解說明與提示，不超過 40 個字
+
+【JSON 結構範例】：
+[
+  {
+    "unit": "custom",
+    "customTitle": "${subject}",
+    "level": "light",
+    "q": "這是一題基礎題？",
+    "a": ["選項一", "選項二", "選項三", "選項四"],
+    "correct": 1,
+    "tip": "這是這題的解析與教學提示。"
+  }
+]`;
+}
+
+function parseCSV(text) {
+  const lines = text.split(/\r?\n/);
+  const result = [];
+  let customTitle = 'CSV匯入';
+  
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i].trim();
+    if (!line) continue;
+    
+    const fields = [];
+    let current = '';
+    let inQuotes = false;
+    for (let c = 0; c < line.length; c++) {
+      const char = line[c];
+      if (char === '"') {
+        inQuotes = !inQuotes;
+      } else if (char === ',' && !inQuotes) {
+        fields.push(current.trim());
+        current = '';
+      } else {
+        current += char;
+      }
+    }
+    fields.push(current.trim());
+    
+    // 排除標題列
+    if (i === 0 && (fields[0].includes('主題') || fields[2].includes('題目'))) {
+      continue;
+    }
+    
+    if (fields.length >= 8) {
+      const options = [fields[3], fields[4], fields[5], fields[6]].filter(Boolean);
+      if (options.length < 2) continue;
+      
+      const qTitle = fields[0] || '自訂主題';
+      customTitle = qTitle !== 'custom' ? qTitle : 'CSV題庫';
+      
+      result.push({
+        unit: 'custom',
+        customTitle: customTitle,
+        level: fields[1] || 'light',
+        q: fields[2],
+        a: options,
+        correct: parseInt(fields[7]) || 0,
+        tip: fields[8] || '答題解析提示。'
+      });
+    }
+  }
+  
+  result.forEach(q => {
+    q.customTitle = customTitle;
+  });
+  
+  return result;
+}
+
+function saveCustomQuestions(data, title) {
+  data.forEach(q => {
+    q.unit = 'custom';
+    q.customTitle = title;
+    q.tags = { grade: '三至六年級', competency: '自訂領域', misconception: '自訂複習' };
+  });
+
+  state.customQuestions = data;
+  localStorage.setItem('smes-custom-questions', JSON.stringify(data));
+  updateCustomUnitButton();
+  
+  state.unit = 'custom';
+  choose('[data-unit]', 'custom', 'unit');
+  
+  $('custom-quiz-modal').classList.add('hidden');
+  alert(`題庫「${title}」已成功匯入！現已切換至該題庫。`);
+}

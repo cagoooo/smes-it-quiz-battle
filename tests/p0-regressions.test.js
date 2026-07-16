@@ -294,3 +294,20 @@ test('音檔長度正規化：所有 approved 戰鬥循環音軌不超過 45 秒
     }
   }
 });
+
+test('EdTech 看板與自訂題庫參數解析', () => {
+  assert.match(game, /state\.gasUrl\s*=\s*atob\(decodeURIComponent\(b64Gas\)\)/);
+  assert.match(game, /state\.className\s*=\s*decodeURIComponent\(cls\)/);
+  assert.match(game, /state\.isConsoleConnected\s*=\s*Boolean\(state\.gasUrl\)/);
+});
+
+test('對戰結算後發送成績到 GAS 看板', () => {
+  assert.match(game, /function syncRecordToConsole\(\)/);
+  assert.match(game, /fetch\(state\.gasUrl,[\s\S]*?method:\s*'POST'/);
+  assert.match(game, /syncRecordToConsole\(\);/);
+});
+
+test('支援自訂題庫的隨機選題', () => {
+  assert.match(game, /if\s*\(state\.unit\s*===\s*'custom'\)/);
+  assert.match(game, /pool\s*=\s*state\.customQuestions\.filter/);
+});

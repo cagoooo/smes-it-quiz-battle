@@ -114,3 +114,204 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   .result-actions, #retry-wrong-btn { display:none!important; }
   .badge-unlock { color:#000!important; background:#fff!important; border:1px solid #333!important; }
 }
+
+/* 看板連線狀態徽章 */
+.console-status-badge {
+  border: 1px solid var(--line);
+  border-radius: 99px;
+  padding: 6px 12px;
+  background: #0b2a48a8;
+  color: var(--muted);
+  font-weight: bold;
+}
+.console-status-badge.connected {
+  border-color: #10b981;
+  background: rgba(16, 185, 129, 0.15);
+  color: #34d399;
+  text-shadow: 0 0 8px rgba(52, 211, 153, 0.3);
+}
+
+/* 身分輸入欄位 */
+.name-inputs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.name-inputs input {
+  width: 100%;
+  padding: 10px 14px;
+  background: #061b33;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  color: var(--ink);
+  font-size: 14px;
+  font-weight: bold;
+  transition: border-color 0.2s;
+}
+.name-inputs input:focus {
+  outline: none;
+  border-color: var(--cyan);
+  box-shadow: 0 0 10px rgba(82, 230, 255, 0.15);
+}
+
+/* 自訂按鈕 */
+.setup-action-btn {
+  background: transparent;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 4px 10px;
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.setup-action-btn:hover {
+  background: rgba(82, 230, 255, 0.1);
+  border-color: var(--cyan);
+}
+
+/* Modal 彈窗樣式 */
+.modal {
+  position: fixed;
+  z-index: 100;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(2, 17, 33, 0.85);
+  backdrop-filter: blur(6px);
+}
+.modal.hidden {
+  display: none !important;
+}
+.modal-content {
+  width: min(580px, 100%);
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border: 1px solid #7beeff88;
+  border-radius: 20px;
+  background: radial-gradient(circle at 50% 0, #143a5d, #091a2e 70%);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5), 0 0 30px rgba(82, 230, 255, 0.2);
+  display: flex;
+  flex-direction: column;
+}
+.modal-header {
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.modal-header h3 {
+  margin: 0;
+  font-size: 18px;
+  color: var(--yellow);
+  text-shadow: 0 0 10px rgba(255, 228, 119, 0.2);
+}
+.close-btn {
+  background: transparent;
+  border: none;
+  color: var(--muted);
+  font-size: 20px;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+.close-btn:hover {
+  color: var(--pink);
+}
+.modal-tabs {
+  display: flex;
+  background: #041224;
+  padding: 4px;
+  border-bottom: 1px solid var(--line);
+}
+.modal-tab-btn {
+  flex: 1;
+  background: transparent;
+  border: none;
+  padding: 10px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-tab-btn.active {
+  background: var(--navy);
+  color: var(--cyan);
+  border-bottom: 2px solid var(--cyan);
+}
+.modal-tab-content {
+  padding: 24px;
+  display: none;
+  flex: 1;
+  overflow-y: auto;
+}
+.modal-tab-content.active {
+  display: block;
+}
+.form-group {
+  margin-bottom: 16px;
+}
+.form-group label {
+  display: block;
+  font-size: 13px;
+  color: var(--muted);
+  margin-bottom: 6px;
+  font-weight: bold;
+}
+.form-group textarea {
+  width: 100%;
+  background: #020c1b;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  font-family: monospace;
+  font-size: 12px;
+  padding: 10px;
+  resize: vertical;
+}
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="url"] {
+  width: 100%;
+  background: #020c1b;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  color: var(--ink);
+  padding: 10px 12px;
+  font-size: 13px;
+}
+.form-group input:focus {
+  outline: none;
+  border-color: var(--cyan);
+}
+.modal-btn {
+  width: 100%;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  background: linear-gradient(90deg, #5ce2ff, #6cf4b4);
+  color: #04243b;
+  font-size: 14px;
+  font-weight: 900;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.modal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(82, 230, 255, 0.3);
+}
+.modal-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--line);
+  color: var(--ink);
+}
+.modal-btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
