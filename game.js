@@ -1,9 +1,9 @@
 const supabaseUrl = 'https://lwohskolhlcxhbcamhnq.supabase.co';
 const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3b2hza29saGxjeGhiY2FtaG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNzI3NjQsImV4cCI6MjA4ODY0ODc2NH0.kuPhDn4wyT3Re16FxXU7lBtH-K4Q0aG_f7kUAmpq6N0';
-let supabase = null;
+let supabaseClient = null;
 try {
   if (supabaseUrl && !supabaseUrl.startsWith('__') && typeof window.supabase !== 'undefined') {
-    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+    supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
   }
 } catch (e) {
   console.warn('Supabase 初始化失敗，將安全退回訪客模式', e);
@@ -63,9 +63,9 @@ const BADGES = [
 function loadRecords(){ try{ const saved=JSON.parse(localStorage.getItem(RECORDS_KEY)); if(saved&&typeof saved==='object')return {battles:0,bestStreak:0,bestDamage:0,bestCorrect:0,badges:[],...saved}; }catch(e){} return {battles:0,bestStreak:0,bestDamage:0,bestCorrect:0,badges:[]}; }
 
 async function saveToCloud(records) {
-  if (!supabase || !state.user) return;
+  if (!supabaseClient || !state.user) return;
   try {
-    const { error } = await supabase
+    const { error } = await supabaseClient
       .from('user_records')
       .upsert({
         user_id: state.user.id,
@@ -83,9 +83,9 @@ async function saveToCloud(records) {
 }
 
 async function syncFromCloud() {
-  if (!supabase || !state.user) return;
+  if (!supabaseClient || !state.user) return;
   try {
-    const { data, error } = await supabase
+    const { data, error } = await supabaseClient
       .from('user_records')
       .select('*')
       .eq('user_id', state.user.id)
@@ -121,7 +121,7 @@ async function syncFromCloud() {
 function saveRecords(records){ 
   try{ 
     localStorage.setItem(RECORDS_KEY,JSON.stringify(records)); 
-    if (supabase && state.user) {
+    if (supabaseClient && state.user) {
       saveToCloud(records);
     }
   }catch(e){} 
@@ -133,7 +133,7 @@ function resetRecords(){
   if(!window.confirm('確定要重置本機與雲端的歷史最佳紀錄嗎？這個動作無法復原。'))return; 
   try{ 
     localStorage.removeItem(RECORDS_KEY); 
-    if (supabase && state.user) {
+    if (supabaseClient && state.user) {
       saveToCloud({ battles: 0, bestStreak: 0, bestCorrect: 0, badges: [] });
     }
   }catch(e){} 
@@ -882,14 +882,14 @@ function initCloudSync() {
   
   if (!loginBtn || !logoutBtn || !profileEl || !avatarEl) return;
   
-  if (!supabase) {
+  if (!supabaseClient) {
     loginBtn.style.display = 'none';
     return;
   }
   
   loginBtn.addEventListener('click', async () => {
     try {
-      await supabase.auth.signInWithOAuth({
+      await supabaseClient.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin + window.location.pathname
@@ -902,7 +902,7 @@ function initCloudSync() {
   
   logoutBtn.addEventListener('click', async () => {
     try {
-      await supabase.auth.signOut();
+      await supabaseClient.auth.signOut();
       state.user = null;
       loginBtn.classList.remove('hidden');
       profileEl.classList.add('hidden');
@@ -913,7 +913,7 @@ function initCloudSync() {
     }
   });
   
-  supabase.auth.onAuthStateChange(async (event, session) => {
+  supabaseClient.auth.onAuthStateChange(async (event, session) => {
     if (session) {
       state.user = session.user;
       loginBtn.classList.add('hidden');
