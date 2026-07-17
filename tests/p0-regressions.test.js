@@ -384,5 +384,10 @@ test('戰鬥 3D 舞台渲染與立體 Canvas 粒子噴濺引擎支援', () => {
 
 test('題庫選項隨機打亂與 correct 索引同步更新', () => {
   assert.match(game, /function shuffleQuestion\(/);
-  assert.match(game, /return shuffleQuestion\(q\)/);
+  assert.match(game, /return balanceOptionLengths\(q\)/);
+});
+
+test('選項長度動態拉平平衡機制（語意修飾填充技術）', () => {
+  assert.match(game, /function balanceOptionLengths\(/);
+  assert.match(game, /return balanceOptionLengths\(q\)/);
 });

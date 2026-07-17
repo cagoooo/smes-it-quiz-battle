@@ -233,6 +233,74 @@ function renderCpuMoveDeck(actor, selectedId=null) { const skills=[...actor.skil
 function updateUI() { for (const id of ['p1','p2']) { const f=state[id]; const maxHp=(id==='p2'&&state.mode==='solo'&&state.bossMode)?300:100; $(`${id}-health`).style.width=`${Math.min(100,Math.max(0,(f.health/maxHp)*100))}%`; $(`${id}-health-text`).textContent=f.health; $(`${id}-meter`).style.width=`${f.meter}%`; $(`${id}-meter-text`).textContent=`${f.meter}%`; } const player=state[state.turn]; $('streak-label').textContent=`連擊 x${player.streak}`; $('ultimate-btn').classList.toggle('locked',player.meter<100); $('ultimate-btn').disabled=player.meter<100; }
 function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
 function setTurn(turn) { if(!state.running)return; state.resolving=false; state.turn=turn; state.current=null; const actor=state[turn]; $('turn-title').textContent=actor.isCpu?'駕駛艙 AI 正在分析資料…':`${actor.name} 的回合：選擇技能`; document.querySelector('.turn-strip').classList.toggle('cpu',actor.isCpu); $('move-deck').classList.toggle('hidden',actor.isCpu); $('cpu-move-deck').classList.toggle('hidden',!actor.isCpu); if(actor.isCpu)renderCpuMoveDeck(actor); else renderMoveDeck(actor); $('question-card').classList.add('hidden'); $('feedback').textContent=actor.isCpu?'AI 正在挑選它的招式…':'選擇四種專屬技能之一，答對就能發動攻擊！'; $('feedback').className='feedback'; updateUI(); if(actor.isCpu){ const cpuScene=cpuBattleSceneKey(actor.id); if(cpuScene)playMusicScene(cpuScene); window.setTimeout(cpuMove,difficultyModes[state.difficulty].delay); } else { playMusicScene(battleSceneKey()); } }
+function balanceOptionLengths(q) {
+  if (!q || !q.a || typeof q.correct !== 'number') return q;
+  const correctText = q.a[q.correct];
+  const correctLen = correctText.length;
+  
+  const paddingDb = {
+    safety: [
+      '以防帳密遭到外洩',
+      '以確保個人資訊安全',
+      '並立即回報師長處理',
+      '避免造成系統損害',
+      '這是較為妥善的作法',
+      '以防造成更大損失',
+      '並做好防護措施',
+      '以防設備遭到侵害'
+    ],
+    coding: [
+      '以確保程式能順利執行',
+      '這在寫程式時很常使用',
+      '以方便後續的除錯處理',
+      '讓電腦能正確判讀資料',
+      '這是常見的程式寫法',
+      '以加速程式運行效能',
+      '並建立良好的編碼習慣'
+    ],
+    digital: [
+      '並尊重他人的使用權益',
+      '以避免造成不必要的誤會',
+      '這是合格數位公民的責任',
+      '並主動查證消息真實性',
+      '以利後續的追蹤查核',
+      '這也是很重要的網路禮儀',
+      '以保護大家的隱私安全'
+    ],
+    mixed: [
+      '以利日後的檔案管理',
+      '這是小組合作的良好習慣',
+      '以提升資訊整理的效率',
+      '並做好版本控制與標記',
+      '這對學習非常有幫助'
+    ]
+  };
+
+  const unit = q.unit || 'mixed';
+  const pool = paddingDb[unit] || paddingDb.mixed;
+
+  q.a = q.a.map((text, idx) => {
+    if (idx === q.correct) return text;
+    if (correctLen - text.length >= 4) {
+      const connector = !/[,，、。！!]$/.test(text) ? '，' : '';
+      let bestPadding = pool[0];
+      let bestDiff = Infinity;
+      
+      pool.forEach(pad => {
+        const fullLen = text.length + connector.length + pad.length;
+        const diff = Math.abs(correctLen - fullLen);
+        if (diff < bestDiff) {
+          bestDiff = diff;
+          bestPadding = pad;
+        }
+      });
+      return text + connector + bestPadding;
+    }
+    return text;
+  });
+  return q;
+}
+
 function shuffleQuestion(originalQ) {
   if (!originalQ) return originalQ;
   const q = JSON.parse(JSON.stringify(originalQ));
@@ -245,7 +313,7 @@ function shuffleQuestion(originalQ) {
   }
   
   q.correct = q.a.indexOf(correctText);
-  return q;
+  return balanceOptionLengths(q);
 }
 
 function getQuestion(level, useRetry=false) {
