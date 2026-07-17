@@ -1,0 +1,2531 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>答題快打｜教師課堂控制台與即時看板</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <style>
+    :root {
+      --bg-color: #0b192c;
+      --card-bg: #1e3e62;
+      --text-color: #f1f6f9;
+      --text-muted: #94a3b8;
+      --primary: #38bdf8;
+      --primary-hover: #0ea5e9;
+      --accent: #f43f5e;
+      --success: #10b981;
+      --border-color: #334155;
+      --font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      font-family: var(--font-family);
+      line-height: 1.5;
+      padding-bottom: 60px;
+    }
+
+    header {
+      background-color: #061b33;
+      padding: 20px;
+      border-bottom: 2px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .brand-logo {
+      font-size: 28px;
+    }
+
+    .brand-text h1 {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .brand-text p {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .nav-tabs {
+      display: flex;
+      gap: 10px;
+      background: #020c1b;
+      padding: 5px;
+      border-radius: 8px;
+    }
+
+    .tab-btn {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      padding: 8px 16px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: all 0.2s;
+    }
+
+    .tab-btn.active {
+      background-color: var(--primary);
+      color: #020c1b;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 30px auto;
+      padding: 0 20px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    .card {
+      background-color: var(--card-bg);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      padding: 24px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+    }
+
+    .card-title {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 10px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    label {
+      display: block;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      color: var(--text-muted);
+    }
+
+    input, select, textarea {
+      width: 100%;
+      background-color: #061b33;
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--text-color);
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    button.btn {
+      background-color: var(--primary);
+      color: #020c1b;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 18px;
+      font-size: 14px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    button.btn:hover {
+      background-color: var(--primary-hover);
+    }
+
+    button.btn-secondary {
+      background-color: transparent;
+      border: 1px solid var(--border-color);
+      color: var(--text-color);
+    }
+
+    button.btn-secondary:hover {
+      background-color: rgba(255, 255, 255, 0.05);
+    }
+
+    button.btn-accent {
+      background-color: var(--accent);
+      color: white;
+    }
+
+    button.btn-accent:hover {
+      background-color: #e11d48;
+    }
+
+    .setup-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 768px) {
+      .setup-grid {
+        grid-template-columns: 1fr;
+      }
+      header {
+        flex-direction: column;
+        align-items: stretch;
+      }
+      .nav-tabs {
+        justify-content: center;
+      }
+    }
+
+    .qr-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      background: white;
+      border-radius: 12px;
+      color: #333;
+      text-align: center;
+      min-height: 250px;
+    }
+
+    #qrcode img {
+      margin: 0 auto;
+    }
+
+    .qr-link {
+      margin-top: 15px;
+      word-break: break-all;
+      font-size: 12px;
+      color: #0284c7;
+      text-decoration: underline;
+      cursor: pointer;
+    }
+
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    @media (max-width: 992px) {
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .stat-badge {
+      background-color: rgba(56, 189, 248, 0.1);
+      border: 1px solid rgba(56, 189, 248, 0.2);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 12px;
+      color: var(--primary);
+    }
+
+    /* Leaderboard Styles */
+    .leader-list {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .leader-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background-color: rgba(255, 255, 255, 0.02);
+      padding: 10px 16px;
+      border-radius: 8px;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .leader-rank {
+      font-size: 18px;
+      font-weight: 800;
+      width: 30px;
+      height: 30px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 50%;
+      background-color: #061b33;
+    }
+
+    .leader-rank.rank-1 { background-color: #ffd700; color: #020c1b; }
+    .leader-rank.rank-2 { background-color: #c0c0c0; color: #020c1b; }
+    .leader-rank.rank-3 { background-color: #cd7f32; color: #020c1b; }
+
+    .leader-info {
+      flex: 1;
+    }
+
+    .leader-name {
+      font-weight: 700;
+      font-size: 15px;
+      margin-bottom: 4px;
+    }
+
+    .leader-bar-container {
+      width: 100%;
+      height: 8px;
+      background-color: #061b33;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .leader-bar {
+      height: 100%;
+      background-color: var(--primary);
+      border-radius: 4px;
+      transition: width 0.6s cubic-bezier(0.1, 0.8, 0.3, 1);
+    }
+
+    .leader-stats {
+      font-size: 13px;
+      font-weight: 600;
+      text-align: right;
+      min-width: 120px;
+    }
+
+    .leader-stats span {
+      display: inline-block;
+      margin-left: 10px;
+    }
+
+    /* Wrong Questions Accordion */
+    .accordion-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .accordion-item {
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .accordion-header {
+      padding: 12px 16px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-weight: 700;
+      transition: background-color 0.2s;
+    }
+
+    .accordion-header:hover {
+      background-color: rgba(255, 255, 255, 0.04);
+    }
+
+    .accordion-header-text {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex: 1;
+    }
+
+    .accordion-count-badge {
+      background-color: var(--accent);
+      color: white;
+      font-size: 12px;
+      padding: 2px 6px;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .accordion-body {
+      padding: 16px;
+      border-top: 1px solid var(--border-color);
+      background-color: rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+
+    .accordion-body.open {
+      display: block;
+    }
+
+    .opt-list {
+      margin: 10px 0;
+      list-style-type: none;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    @media (max-width: 576px) {
+      .opt-list {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .opt-item {
+      padding: 8px 12px;
+      border-radius: 4px;
+      font-size: 13px;
+      background-color: #061b33;
+      border: 1px solid var(--border-color);
+    }
+
+    .opt-item.correct {
+      border-color: var(--success);
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #34d399;
+    }
+
+    .question-tip {
+      font-size: 13px;
+      color: var(--text-muted);
+      border-left: 3px solid var(--primary);
+      padding-left: 8px;
+      margin-top: 10px;
+    }
+
+    /* Tournament Bracket CSS */
+    .bracket-container {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      overflow-x: auto;
+      padding: 20px 0;
+      min-height: 400px;
+    }
+
+    .bracket-round {
+      display: flex;
+      flex-direction: column;
+      justify-content: space-around;
+      height: 400px;
+      min-width: 150px;
+    }
+
+    .bracket-match {
+      display: flex;
+      flex-direction: column;
+      background-color: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 6px;
+      padding: 5px;
+      gap: 2px;
+      position: relative;
+    }
+
+    .bracket-slot {
+      padding: 6px 10px;
+      font-size: 13px;
+      font-weight: 700;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      background-color: #061b33;
+      transition: all 0.2s;
+    }
+
+    .bracket-slot:hover {
+      background-color: rgba(56, 189, 248, 0.2);
+    }
+
+    .bracket-slot.winner {
+      background-color: var(--success);
+      color: #020c1b;
+    }
+
+    .bracket-slot.bye {
+      color: var(--text-muted);
+      font-style: italic;
+    }
+
+    /* Code Block copy utility */
+    .code-wrapper {
+      position: relative;
+    }
+
+    .code-copy-btn {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background-color: var(--primary);
+      color: #020c1b;
+      border: none;
+      border-radius: 4px;
+      padding: 5px 10px;
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    pre {
+      background-color: #020c1b;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      overflow-x: auto;
+      font-family: Consolas, Monaco, monospace;
+      font-size: 13px;
+      color: #38bdf8;
+    }
+
+    /* Footer styles */
+    .footer {
+      text-align: center;
+      padding: 20px;
+      color: var(--text-muted);
+      font-size: 13px;
+      border-top: 1px solid var(--border-color);
+      margin-top: 40px;
+    }
+
+    .footer a {
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      text-decoration: underline;
+    }
+
+    /* Modal 通用與學生報告 Modal 樣式 */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(2, 12, 27, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+      transition: opacity 0.3s;
+    }
+
+    .modal.hidden {
+      display: none !important;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .student-report-card {
+      padding: 24px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--accent);
+    }
+
+    .report-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      background-color: #061b33;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .report-meta-item {
+      font-size: 14px;
+    }
+
+    .report-meta-item strong {
+      color: var(--text-muted);
+    }
+
+    .report-wrong-card {
+      background-color: #0b192c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .report-wrong-q {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    .report-wrong-opts {
+      list-style-type: none;
+      padding-left: 0;
+      margin-bottom: 8px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 8px;
+    }
+
+    .report-wrong-opt-item {
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #1e293b;
+      background-color: #0f172a;
+    }
+
+    .report-wrong-opt-item.user-wrong {
+      border-color: var(--accent);
+      background-color: rgba(244, 63, 94, 0.1);
+      color: #fda4af;
+      text-decoration: line-through;
+    }
+
+    .report-wrong-opt-item.correct-ans {
+      border-color: var(--success);
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #6ee7b7;
+    }
+
+    .report-wrong-tip {
+      font-size: 13px;
+      color: #38bdf8;
+      background-color: rgba(56, 189, 248, 0.08);
+      padding: 8px 12px;
+      border-radius: 4px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+    }
+
+    /* 排行榜名字連結樣式 */
+    .student-report-link {
+      color: var(--text-color);
+      text-decoration: underline dotted var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .student-report-link:hover {
+      color: var(--primary);
+      text-decoration: underline solid var(--primary);
+    }
+
+    /* A4 PDF 列印專用 CSS */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* 隱藏網頁上除了 Modal 以外的所有東西 */
+      header, .container, .footer, .no-print, .modal-close {
+        display: none !important;
+      }
+
+      .modal {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        background: none !important;
+        display: block !important;
+        backdrop-filter: none !important;
+        z-index: auto !important;
+      }
+
+      .modal-content {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+
+      .modal-header h3 {
+        color: #000000 !important;
+        font-size: 24px !important;
+        border-bottom: 2px solid #000000 !important;
+        padding-bottom: 8px !important;
+      }
+
+      .report-meta-grid {
+        background-color: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #000000 !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+
+      .report-meta-item strong {
+        color: #475569 !important;
+      }
+
+      .report-wrong-card {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #000000 !important;
+        page-break-inside: avoid; /* 防止跨頁截斷 */
+      }
+
+      .report-wrong-q {
+        color: #0f172a !important;
+      }
+
+      .report-wrong-opt-item {
+        background-color: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+      }
+
+      .report-wrong-opt-item.user-wrong {
+        border-color: #ef4444 !important;
+        background-color: #fef2f2 !important;
+        color: #991b1b !important;
+      }
+
+      .report-wrong-opt-item.correct-ans {
+        border-color: #22c55e !important;
+        background-color: #f0fdf4 !important;
+        color: #166534 !important;
+        font-weight: bold !important;
+      }
+
+      .report-wrong-tip {
+        color: #0284c7 !important;
+        background-color: #f0f9ff !important;
+        border-left-color: #0284c7 !important;
+        border: 1px solid #bae6fd !important;
+        border-left: 4px solid #0284c7 !important;
+      }
+    }
+
+    /* Announcer Ticker 跑馬燈樣式 */
+    .announcer-ticker-container {
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%) translateY(-150px);
+      width: 90%;
+      max-width: 850px;
+      background: rgba(6, 27, 51, 0.95);
+      border: 2px solid var(--primary);
+      box-shadow: 0 0 20px rgba(56, 189, 248, 0.7), inset 0 0 15px rgba(56, 189, 248, 0.3);
+      border-radius: 30px;
+      display: flex;
+      align-items: center;
+      padding: 12px 28px;
+      z-index: 10000;
+      transition: transform 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.4s;
+      opacity: 0;
+      pointer-events: none;
+    }
+    .announcer-ticker-container.show {
+      transform: translateX(-50%) translateY(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .announcer-icon {
+      font-size: 26px;
+      margin-right: 15px;
+      flex-shrink: 0;
+      animation: announcer-pulse 0.8s infinite alternate;
+    }
+    @keyframes announcer-pulse {
+      from { transform: scale(1); }
+      to { transform: scale(1.2); filter: drop-shadow(0 0 6px var(--primary)); }
+    }
+    .announcer-content {
+      flex: 1;
+      overflow: hidden;
+      white-space: nowrap;
+    }
+    #announcer-text {
+      font-size: 18px;
+      font-weight: 800;
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(56, 189, 248, 0.6);
+      display: inline-block;
+    }
+    /* 跑馬燈控制按鈕 */
+    .console-audio-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #020c1b;
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid var(--border-color);
+    }
+    .console-audio-btn {
+      background: none;
+      border: none;
+      color: var(--text-color);
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 8px;
+      border-radius: 12px;
+      transition: background 0.2s;
+    }
+    .console-audio-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    .console-audio-btn.muted {
+      color: var(--text-muted);
+      text-decoration: line-through;
+    }
+    /* 雲端名人榜樣式 */
+    .cloud-leaderboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+      margin-top: 15px;
+    }
+    .cloud-leaderboard-card {
+      background: #0d1e36;
+      border: 1px solid var(--border-color);
+      border-radius: 10px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      gap: 15px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.15);
+    }
+    .cloud-leaderboard-rank {
+      font-size: 24px;
+      font-weight: 900;
+      color: var(--primary);
+      width: 30px;
+      text-align: center;
+    }
+    .cloud-leaderboard-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      border: 2px solid var(--primary);
+      background: #1e293b;
+      object-fit: cover;
+    }
+    .cloud-leaderboard-info {
+      flex: 1;
+    }
+    .cloud-leaderboard-name {
+      font-weight: 700;
+      font-size: 16px;
+    }
+    .cloud-leaderboard-stats {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .cloud-leaderboard-badges {
+      display: flex;
+      gap: 4px;
+      margin-top: 8px;
+      flex-wrap: wrap;
+    }
+    .cloud-badge-tiny {
+      background: rgba(56, 189, 248, 0.15);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+      padding: 2px 6px;
+      font-size: 10px;
+      border-radius: 4px;
+    }
+  </style>
+  <!-- 引入 QR Code js 庫 -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <!-- 引入 Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <!-- 🔊 賽事播報跑馬燈 -->
+  <div id="announcer-ticker-container" class="announcer-ticker-container">
+    <div class="announcer-icon">🔥</div>
+    <div class="announcer-content">
+      <div id="announcer-text">賽況播報：戰鬥即將開始...</div>
+    </div>
+  </div>
+
+  <!-- 戰術卡公告橫幅 -->
+  <div id="tactical-banner" style="display:none; position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:999; background:linear-gradient(135deg, #1e293b, #0f172a); border:2px solid #ff7196; box-shadow:0 0 30px rgba(255,113,150,0.5); border-radius:12px; padding:16px 24px; text-align:center; min-width:320px; animation:float-up-fade 0.5s ease-out; pointer-events:none;">
+    <h3 id="tactical-banner-title" style="color:#ff7196; margin-bottom:6px; font-size:18px; font-weight:bold; text-shadow:0 0 10px rgba(255,113,150,0.5);">💥 紅隊 發動雙倍傷害！</h3>
+    <p id="tactical-banner-desc" style="color:#e2e8f0; font-size:14px; margin:0;">30 秒內所有成員傷害翻倍</p>
+  </div>
+
+  <!-- 班級綜合錯題大字報 Modal -->
+  <div id="class-report-modal" class="modal hidden">
+    <div class="modal-content class-report-card" style="max-width:960px; background:linear-gradient(135deg,#0a192f,#020c1b); border:2px solid var(--border-color); box-shadow:0 0 40px rgba(82,230,255,0.15); border-radius:24px; padding:30px; width:90%; position:relative;">
+      <div style="display:flex; justify-content:space-between; align-items:center; border-bottom:2px solid var(--border-color); padding-bottom:15px; margin-bottom:20px;">
+        <h2 style="font-size:24px; font-weight:800; color:#52e6ff;">📊 全班三大核心易錯觀念大字報</h2>
+        <div style="display:flex; gap:10px;">
+          <button id="print-class-report-btn" class="btn">🖨️ 列印 A4 大字報</button>
+          <button id="class-report-close-btn" class="btn btn-secondary">關閉</button>
+        </div>
+      </div>
+      <div id="class-report-loading" style="text-align:center; padding:40px; color:var(--text-muted); display:none;">
+        正在分析全班數據...
+      </div>
+      <div id="class-report-content" class="class-report-grid">
+        <!-- 錯題內容 -->
+      </div>
+    </div>
+  </div>
+
+  <header>
+    <a class="brand" href="#">
+      <span class="brand-logo">🐟</span>
+      <div class="brand-text">
+        <h1>石門國小｜答題快打教師控制台</h1>
+        <p>IT Quest Classroom Console & Live Dashboard</p>
+      </div>
+    </a>
+    <div class="nav-tabs" role="tablist">
+      <button class="tab-btn active" data-tab="setup" role="tab" aria-selected="true">分發與設定</button>
+      <button class="tab-btn" data-tab="dashboard" role="tab" aria-selected="false">即時數據看板</button>
+      <button class="tab-btn" data-tab="tournament" role="tab" aria-selected="false">淘汰賽對戰表</button>
+      <button class="tab-btn" data-tab="gas" role="tab" aria-selected="false">GAS 雲端同步教學</button>
+      <button class="tab-btn" data-tab="boss" role="tab" aria-selected="false">👹 Boss 挑戰賽</button>
+      <button class="tab-btn" id="tab-btn-cloud-leaderboard" data-tab="cloud-leaderboard" role="tab" aria-selected="false" style="display:none;">🏆 雲端風雲榜</button>
+    </div>
+    <div class="console-audio-control">
+      <button id="console-bgm-btn" class="console-audio-btn muted" type="button">🎵 進行曲: 關</button>
+      <button id="console-sfx-btn" class="console-audio-btn" type="button">🔊 播報音: 開</button>
+    </div>
+  </header>
+
+  <div class="container">
+
+    <!-- TAB 1: Setup & Distribution -->
+    <section id="tab-setup" class="tab-content active">
+      <div class="setup-grid">
+        <div class="card">
+          <h2 class="card-title">1. 設定連線設定</h2>
+          <div class="form-group">
+            <label for="gas-url-input">Google Apps Script (GAS) 網頁應用程式 URL</label>
+            <input type="url" id="gas-url-input" placeholder="https://script.google.com/macros/s/.../exec" value="">
+            <small style="display:block; margin-top:5px; color:var(--text-muted);">
+              請將部署好的 Apps Script「網頁應用程式」網址貼於此處。
+            </small>
+          </div>
+          <div class="form-group">
+            <label for="class-name-input">本堂課班級代號</label>
+            <input type="text" id="class-name-input" placeholder="例如：501、602" value="501">
+          </div>
+          <div class="form-group">
+            <label for="team-mode-select">組別對抗模式</label>
+            <select id="team-mode-select">
+              <option value="none">⚪ 個人對抗 (不分組)</option>
+              <option value="redblue">🔴🔵 紅藍雙打對抗</option>
+              <option value="groups">🎒 六分組對抗賽 (1~6組)</option>
+            </select>
+          </div>
+          
+          <div class="form-group" style="margin-top:15px; border-top:1px solid var(--border-color); padding-top:15px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#ff7196;">
+              <input type="checkbox" id="boss-mode-checkbox"> 👹 啟用全班合作 Raid Boss 戰
+            </label>
+            <div id="boss-setup-details" style="display:none; margin-top:10px; padding-left:22px;">
+              <div class="form-group" style="margin-bottom:8px;">
+                <label for="boss-select">選擇 Boss 魔王</label>
+                <select id="boss-select" style="width:100%; padding:8px; background:#071e36; border:1px solid var(--border-color); border-radius:8px; color:var(--text-color);">
+                  <option value="glitch-dragon">🐉 勒索病毒故障龍 (Glitch Dragon)</option>
+                  <option value="cache-golem">🗄️ 記憶體過載石巨人 (Cache Golem)</option>
+                  <option value="bot-swarm">🤖 殭屍網路蜂群 (Bot Swarm)</option>
+                  <option value="malware-mimic">👥 惡意程式偽裝怪 (Malware Mimic)</option>
+                  <option value="phishing-siren">🧜‍♀️ 網路釣魚海妖 (Phishing Siren)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:8px;">
+                <label for="boss-hp-input">Boss 總血量 (HP)</label>
+                <input type="number" id="boss-hp-input" value="5000" min="100" style="width:100%; padding:8px; background:#071e36; border:1px solid var(--border-color); border-radius:8px; color:var(--text-color);">
+                <small style="color:var(--text-muted); display:block; margin-top:4px;">推薦設定：全班人數 × 150 (例：30人設 4500)</small>
+              </div>
+            </div>
+          </div>
+
+          <div style="display:flex; gap:10px;">
+            <button id="save-setup-btn" class="btn">儲存並產生 QR Code</button>
+            <button id="clear-setup-btn" class="btn btn-secondary">重置設定</button>
+          </div>
+        </div>
+
+        <div class="card" style="display: flex; flex-direction: column;">
+          <h2 class="card-title">2. 學生端連結分發</h2>
+          <div id="qr-panel" style="display:none; flex:1; flex-direction:column; justify-content:center;">
+            <div class="qr-container">
+              <div id="qrcode"></div>
+              <p style="margin-top:10px; font-weight:700; font-size:15px; color:#333;">請用 iPad / 平板掃描 QR Code 進入對戰</p>
+              <div id="student-link-text" class="qr-link"></div>
+            </div>
+            <p style="margin-top:12px; font-size:13px; color:var(--text-muted); text-align:center;">
+              提示：網址已包含 Base64 加密的連線參數，學生進入時會自動連線，結算成績直接自動上傳。
+            </p>
+          </div>
+          <div id="qr-placeholder" style="flex:1; display:flex; align-items:center; justify-content:center; border:2px dashed var(--border-color); border-radius:12px; min-height:250px; color:var(--text-muted);">
+            請先在左側完成 GAS 連線網址設定，以生成學生端 QR Code。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 2: Live Leaderboard and Wrong Question Dashboard -->
+    <section id="tab-dashboard" class="tab-content">
+      <div class="dashboard-header">
+        <div>
+          <h2 style="font-size:24px; font-weight:800;">即時課堂看板 - <span id="current-class-title">未指定班級</span></h2>
+          <p style="color:var(--text-muted); font-size:14px;">每 5 秒自動重新整理</p>
+        </div>
+        <div style="display:flex; gap:10px;">
+          <button id="class-report-btn" class="btn btn-accent" style="background-color: #0284c7; border: 1px solid #0284c7; color: white;">📊 班級錯題大字報</button>
+          <button id="refresh-data-btn" class="btn btn-secondary">🔄 手動重新整理</button>
+          <button id="load-demo-btn" class="btn">✨ 載入 Demo 示範資料</button>
+        </div>
+      </div>
+
+      <!-- 組別積分賽對抗面板 (僅在分組模式下顯示) -->
+      <div id="team-battle-panel" class="card hidden" style="margin-bottom: 24px;">
+        <h2 class="card-title">⚔️ 隊伍積分對抗賽</h2>
+        <div id="team-bars-container" style="display:flex; flex-direction:column; gap:16px; margin-top:10px;">
+          <!-- 組別長條圖與統計將動態產生 -->
+        </div>
+      </div>
+
+      <div class="dashboard-grid">
+        <!-- 排行榜 -->
+        <div class="card">
+          <h2 class="card-title">
+            🏆 全班英雄積分排行榜 
+            <select id="leaderboard-sort" style="width:auto; padding:4px 8px; font-size:13px;">
+              <option value="correct">依答對題數</option>
+              <option value="streak">依最高連擊</option>
+              <option value="damage">依造成總傷害</option>
+            </select>
+          </h2>
+          <div id="leaderboard-container" class="leader-list">
+            <div style="text-align:center; padding:40px; color:var(--text-muted);">尚未有作答紀錄，請等待學生開始對戰或載入 Demo 資料。</div>
+          </div>
+        </div>
+
+        <!-- 錯題榜 -->
+        <div class="card">
+          <h2 class="card-title">🚨 全班最難錯題檢討榜</h2>
+          <div id="wrong-questions-container" class="accordion-list">
+            <div style="text-align:center; padding:40px; color:var(--text-muted);">尚未統計到答錯題目。</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 3: Tournament Bracket -->
+    <section id="tab-tournament" class="tab-content">
+      <div class="dashboard-header">
+        <div>
+          <h2 style="font-size:24px; font-weight:800;">對戰淘汰賽生成器</h2>
+          <p style="color:var(--text-muted); font-size:14px;">自動讀取已提交成績的學生名單，一鍵生成 8 強/16 強對戰表。</p>
+        </div>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="generate-rank-bracket-btn" class="btn">🏆 依排行榜前 8 名生成</button>
+          <button id="generate-bracket-btn" class="btn btn-secondary">🎲 隨機選取 8 人生成</button>
+          <button id="clear-bracket-btn" class="btn btn-secondary">重設對戰表</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div id="bracket-view" class="bracket-container">
+          <div style="text-align:center; padding:80px; color:var(--text-muted); width:100%;">
+            請先在「即時數據看板」載入學生名單或點擊上方按鈕隨機生成 8 強。
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 4: GAS Sheets Setup instruction -->
+    <section id="tab-gas" class="tab-content">
+      <div class="card">
+        <h2 class="card-title">⚙️ Google Apps Script 雲端建表與部署 SOP</h2>
+        <p style="margin-bottom:15px; font-size:15px;">
+          本系統不需要任何雲端主機，透過免費的 Google 試算表與 Google Apps Script (GAS) 即可完成資料收集。請依照以下步驟設定您的看板後端：
+        </p>
+        <ol style="margin-left:20px; margin-bottom:20px; display:flex; flex-direction:column; gap:10px;">
+          <li>建立一個新的 <b>Google 試算表 (Google Sheets)</b>。</li>
+          <li>點擊頂部選單的 <b>擴充功能 ＞ Apps Script</b>。</li>
+          <li>刪除原本的所有程式碼，複製並貼上底下的<b>黃金防呆 Apps Script 程式碼</b>。</li>
+          <li>點擊上方 <b>部署 ＞ 新增部署</b>。</li>
+          <li>設定類型為 <b>網頁應用程式</b>：
+            <ul style="margin-left:20px; margin-top:5px;">
+              <li>專案說明：答題快打課堂看板</li>
+              <li>執行身分：<b>我 (您的 Google 帳戶)</b></li>
+              <li>誰有權限存取：<b>所有人 (Anyone)</b> (必須是 Anyone，學生端才能免登入直接 POST 上傳)。</li>
+            </ul>
+          </li>
+          <li>點擊「部署」，授權存取 Google 帳戶後，複製產生的 <b>「網頁應用程式 URL」</b>。</li>
+          <li>將 URL 貼回控制台的「分發與設定」頁面中，點擊儲存即可使用！</li>
+        </ol>
+
+        <div class="code-wrapper">
+          <button class="code-copy-btn" id="copy-code-btn">複製程式碼</button>
+          <pre><code id="gas-script-code">// Google Apps Script 答題快打課堂版資料同步腳本 (支援跨域 CORS)
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName("對戰紀錄");
+  if (!sheet) {
+    return ContentService.createTextOutput(JSON.stringify([]))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  }
+  
+  var rows = sheet.getDataRange().getValues();
+  var data = [];
+  var headers = rows[0];
+  
+  for (var i = 1; i < rows.length; i++) {
+    var row = rows[i];
+    var record = {};
+    for (var j = 0; j < headers.length; j++) {
+      record[headers[j]] = row[j];
+    }
+    data.push(record);
+  }
+  
+  return ContentService.createTextOutput(JSON.stringify(data))
+    .setMimeType(ContentService.MimeType.JSON)
+    .setHeader("Access-Control-Allow-Origin", "*");
+}
+
+function doPost(e) {
+  try {
+    var params = JSON.parse(e.postData.contents);
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    
+    // 自動尋找或建立「對戰紀錄」工作表
+    var sheetName = "對戰紀錄";
+    var sheet = ss.getSheetByName(sheetName);
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
+      // 自動寫入繁體中文欄位標題，方便教師一覽
+      sheet.appendRow(["提交時間", "班級", "座號姓名", "答對題數", "最高連擊", "造成傷害", "錯題數", "錯題詳情"]);
+    }
+    
+    var timestamp = new Date();
+    var className = params.className || "未指定";
+    var name = params.name || "匿名學生";
+    var correct = params.correct !== undefined ? params.correct : 0;
+    var bestStreak = params.bestStreak !== undefined ? params.bestStreak : 0;
+    var damage = params.damage !== undefined ? params.damage : 0;
+    var wrongCount = params.wrongCount !== undefined ? params.wrongCount : 0;
+    var wrongList = typeof params.wrongList === "object" ? JSON.stringify(params.wrongList) : (params.wrongList || "[]");
+    
+    sheet.appendRow([timestamp, className, name, correct, bestStreak, damage, wrongCount, wrongList]);
+    
+    return ContentService.createTextOutput(JSON.stringify({ status: "success", message: "學生對戰資料已成功同步到 Google Sheet！" }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  } catch(error) {
+    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: error.toString() }))
+      .setMimeType(ContentService.MimeType.JSON)
+      .setHeader("Access-Control-Allow-Origin", "*");
+  }
+}
+
+// 處理 CORS 預檢請求
+function doOptions(e) {
+  return ContentService.createTextOutput("")
+    .setHeader("Access-Control-Allow-Origin", "*")
+    .setHeader("Access-Control-Allow-Methods", "POST, GET, OPTIONS")
+    .setHeader("Access-Control-Allow-Headers", "Content-Type");
+}</code></pre>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 5: Raid Boss Arena -->
+    <section id="tab-boss" class="tab-content">
+      <div id="boss-inactive-view" class="card" style="text-align:center; padding:80px; color:var(--text-muted);">
+        <span style="font-size: 64px; display: block; margin-bottom: 20px;">🔒</span>
+        <h3>Raid Boss 戰未啟用</h3>
+        <p style="margin-top: 10px;">請至「分發與設定」頁面啟用全班合作 Raid Boss 戰，並點擊儲存以解鎖 Boss 魔王挑戰！</p>
+      </div>
+
+      <div id="boss-active-view" class="boss-arena-container" style="display:none;">
+        <div class="boss-title-banner">
+          <h2 id="boss-giant-name">👹 終極魔王：勒索病毒故障龍</h2>
+          <p>全班合作戰：答對即可累積對魔王輸出傷害！擊敗魔王即可贏得勝利！</p>
+        </div>
+
+        <div class="boss-stage">
+          <div class="boss-floater-layer" id="boss-damage-floater-container"></div>
+          <img id="boss-giant-image" class="boss-giant-avatar" src="assets/characters/glitch-dragon.png" alt="巨型Boss">
+        </div>
+
+        <div class="boss-hp-hud">
+          <div class="boss-hp-label">
+            <span>BOSS HP</span>
+            <span id="boss-hp-text">5,000 / 5,000</span>
+          </div>
+          <div class="boss-hp-bar">
+            <div id="boss-hp-fill" class="boss-hp-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- 擊殺成功面板 -->
+        <div id="boss-victory-panel" class="boss-defeat-panel" style="display:none;">
+          <span style="font-size: 80px; filter: drop-shadow(0 0 20px #ffe477);">🏆</span>
+          <h3 style="color:#62f7bb; text-shadow:0 0 25px rgba(98,247,187,0.8);">BOSS DEFEATED!</h3>
+          <p>太強了！全班玩家同心協力，成功消滅了終極魔王，守護了校園網路安全！</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- TAB 6: Cloud Leaderboard -->
+    <section id="tab-cloud-leaderboard" class="tab-content">
+      <div class="card">
+        <h2 class="card-title">🏆 答題快打：雲端成就風雲名人堂</h2>
+        <p style="color: var(--text-muted); margin-bottom: 20px;">此處為所有使用 Google 帳號登入學生之雲端即時成績與徽章解鎖牆。</p>
+        <div id="cloud-leaderboard-loading" style="text-align: center; padding: 40px; color: var(--text-muted);">
+          正在載入雲端成就資料中...
+        </div>
+        <div id="cloud-leaderboard-list" class="cloud-leaderboard-grid">
+          <!-- 雲端名人卡 -->
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <footer class="footer">
+    桃園市龍潭區石門國民小學 · 鱻魚特色學園<br>
+    Made with ❤️ by <a href="https://www.smes.tyc.edu.tw/modules/tadnews/page.php?ncsn=11&nsn=16#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a>
+  </footer>
+
+  <!-- 學生個人錯題報告 Modal -->
+  <div id="student-report-modal" class="modal hidden">
+    <div class="modal-content student-report-card">
+      <div class="modal-header">
+        <h3 id="report-student-title">學生個人錯題報告卡</h3>
+        <button id="report-close-btn" class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="report-meta-grid">
+        <div class="report-meta-item"><strong>班級：</strong><span id="report-class"></span></div>
+        <div class="report-meta-item"><strong>座號姓名：</strong><span id="report-name"></span></div>
+        <div class="report-meta-item"><strong>答對題數：</strong><span id="report-correct"></span></div>
+        <div class="report-meta-item"><strong>最高連擊：</strong><span id="report-streak"></span></div>
+        <div class="report-meta-item"><strong>造成傷害：</strong><span id="report-damage"></span></div>
+        <div class="report-meta-item"><strong>答錯題數：</strong><span id="report-wrong-count"></span></div>
+      </div>
+      
+      <h4 style="margin-top: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">❌ 本局錯題與解析明細</h4>
+      <div id="report-wrong-list" class="report-wrong-list-container">
+        <!-- 錯題內容動態產生 -->
+      </div>
+      
+      <div class="modal-footer no-print">
+        <button id="print-student-report-btn" class="btn">🖨️ 列印此錯題卡 (A4)</button>
+        <button id="close-student-report-btn" class="btn btn-secondary">關閉</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Supabase 雲端初始化
+    const supabaseUrl = '__SUPABASE_URL__';
+    const supabaseKey = '__SUPABASE_ANON_KEY__';
+    let supabase = null;
+    try {
+      if (supabaseUrl && !supabaseUrl.startsWith('__') && typeof window.supabase !== 'undefined') {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+      }
+    } catch (e) {
+      console.warn('Supabase 初始化失敗，將安全退回訪客模式', e);
+    }
+
+    // 全域狀態
+    const state = {
+      gasUrl: localStorage.getItem('smes-battle-gas-url') || '',
+      className: localStorage.getItem('smes-battle-class-name') || '501',
+      teamMode: localStorage.getItem('smes-battle-team-mode') || 'none',
+      bossMode: localStorage.getItem('smes-battle-boss-mode') === 'true',
+      bossId: localStorage.getItem('smes-battle-boss-id') || 'glitch-dragon',
+      bossMaxHp: parseInt(localStorage.getItem('smes-battle-boss-max-hp') || '5000', 10),
+      studentsData: [],
+      activeTab: 'setup',
+      autoRefreshInterval: null,
+      prevStudentDamageMap: new Map(),
+      teamTacticalUsedCount: {},
+      teamActiveEffects: {},
+      bossAccumulatedBonusDamage: 0,
+      
+      // 🔊 P0-5 賽況播報與音樂狀態
+      announcerMuted: localStorage.getItem('smes-console-announcer-muted') === 'true',
+      bgmMuted: localStorage.getItem('smes-console-bgm-muted') !== 'false',
+      announcerTimeoutId: null,
+      prevStudentStreakMap: new Map(),
+      bossRageTriggered60: false,
+      bossRageTriggered30: false,
+      bossDefeatedTriggered: false
+    };
+
+    // DOM 元素快取
+    const $ = id => document.getElementById(id);
+
+    // Tab 切換
+    document.querySelectorAll('.tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab');
+        switchTab(tab);
+      });
+    });
+
+    function switchTab(tab) {
+      state.activeTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(b => {
+        b.classList.toggle('active', b.getAttribute('data-tab') === tab);
+        b.setAttribute('aria-selected', b.getAttribute('data-tab') === tab);
+      });
+      document.querySelectorAll('.tab-content').forEach(c => {
+        c.classList.toggle('active', c.id === `tab-${tab}`);
+      });
+
+      if (tab === 'boss') {
+        updateRaidBossStatus();
+      }
+
+      if (tab === 'cloud-leaderboard') {
+        loadCloudLeaderboard();
+      }
+
+      if (tab === 'boss' || tab === 'dashboard') {
+        playConsoleBgm();
+      } else {
+        pauseConsoleBgm();
+      }
+
+      if (tab === 'dashboard' || tab === 'boss') {
+        if (tab === 'dashboard') {
+          $('current-class-title').textContent = state.className + ' 班';
+        }
+        fetchLiveRecords();
+        startAutoRefresh();
+      } else {
+        stopAutoRefresh();
+      }
+    }
+
+    // 初始化設定
+    if (state.gasUrl) {
+      $('gas-url-input').value = state.gasUrl;
+      $('class-name-input').value = state.className;
+      $('team-mode-select').value = state.teamMode;
+      generateQrCode(state.gasUrl, state.className, state.teamMode);
+    }
+    initConsoleBgm();
+    if (supabase) {
+      const tabBtn = $('tab-btn-cloud-leaderboard');
+      if (tabBtn) tabBtn.style.display = 'inline-block';
+    }
+
+    $('boss-mode-checkbox').checked = state.bossMode;
+    $('boss-select').value = state.bossId;
+    $('boss-hp-input').value = state.bossMaxHp;
+    $('boss-setup-details').style.display = state.bossMode ? 'block' : 'none';
+    
+    $('boss-mode-checkbox').addEventListener('change', () => {
+      $('boss-setup-details').style.display = $('boss-mode-checkbox').checked ? 'block' : 'none';
+    });
+
+    // 儲存設定
+    $('save-setup-btn').addEventListener('click', () => {
+      const url = $('gas-url-input').value.trim();
+      const cls = $('class-name-input').value.trim();
+      const tm = $('team-mode-select').value;
+      const bm = $('boss-mode-checkbox').checked;
+      const bi = $('boss-select').value;
+      const bh = parseInt($('boss-hp-input').value.trim() || '5000', 10);
+
+      if (!url) {
+        alert('請輸入有效的 GAS 網頁應用程式 URL！');
+        return;
+      }
+      if (!cls) {
+        alert('請輸入班級代號！');
+        return;
+      }
+
+      state.gasUrl = url;
+      state.className = cls;
+      state.teamMode = tm;
+      state.bossMode = bm;
+      state.bossId = bi;
+      state.bossMaxHp = bh;
+      localStorage.setItem('smes-battle-gas-url', url);
+      localStorage.setItem('smes-battle-class-name', cls);
+      localStorage.setItem('smes-battle-team-mode', tm);
+      localStorage.setItem('smes-battle-boss-mode', String(bm));
+      localStorage.setItem('smes-battle-boss-id', bi);
+      localStorage.setItem('smes-battle-boss-max-hp', String(bh));
+
+      generateQrCode(url, cls, tm);
+      alert('設定儲存成功！QR Code 已生成。');
+    });
+
+    // 重設設定
+    $('clear-setup-btn').addEventListener('click', () => {
+      if (!confirm('確定要清除所有連線設定嗎？')) return;
+      state.gasUrl = '';
+      state.className = '501';
+      state.teamMode = 'none';
+      state.bossMode = false;
+      state.bossId = 'glitch-dragon';
+      state.bossMaxHp = 5000;
+      localStorage.removeItem('smes-battle-gas-url');
+      localStorage.removeItem('smes-battle-class-name');
+      localStorage.removeItem('smes-battle-team-mode');
+      localStorage.removeItem('smes-battle-boss-mode');
+      localStorage.removeItem('smes-battle-boss-id');
+      localStorage.removeItem('smes-battle-boss-max-hp');
+      $('gas-url-input').value = '';
+      $('class-name-input').value = '501';
+      $('team-mode-select').value = 'none';
+      $('boss-mode-checkbox').checked = false;
+      $('boss-select').value = 'glitch-dragon';
+      $('boss-hp-input').value = 5000;
+      $('boss-setup-details').style.display = 'none';
+      $('qrcode').innerHTML = '';
+      $('qr-panel').style.display = 'none';
+      $('qr-placeholder').style.display = 'flex';
+    });
+
+    // 生成 QR Code
+    function generateQrCode(gasUrl, className, teamMode = 'none') {
+      $('qr-placeholder').style.display = 'none';
+      $('qr-panel').style.display = 'flex';
+      $('qrcode').innerHTML = '';
+
+      // 計算學生連結 (Base64 編碼以簡化 QR Code 大小)
+      const b64Gas = btoa(gasUrl);
+      let studentUrl = `${window.location.origin}${window.location.pathname.replace('console.html', '')}index.html?gas=${encodeURIComponent(b64Gas)}&class=${encodeURIComponent(className)}`;
+      if (teamMode !== 'none') {
+        studentUrl += `&teams=${encodeURIComponent(teamMode)}`;
+      }
+      if (state.bossMode) {
+        studentUrl += `&mode=boss`;
+      }
+      
+      $('student-link-text').textContent = studentUrl;
+      $('student-link-text').onclick = () => {
+        navigator.clipboard.writeText(studentUrl);
+        alert('連結已複製至剪貼簿！');
+      };
+
+      if (typeof QRCode !== 'undefined') {
+        new QRCode($('qrcode'), {
+          text: studentUrl,
+          width: 200,
+          height: 200,
+          colorDark : "#061b33",
+          colorLight : "#ffffff",
+          correctLevel : QRCode.CorrectLevel.H
+        });
+      } else {
+        $('qrcode').innerHTML = `<p style="padding:40px 10px; color:#ef4444; font-weight:bold;">QR Code 載入失敗 (離線中)<br><span style="font-size:12px; font-weight:normal; color:#666;">您可以手動複製下方連結至發送系統</span></p>`;
+      }
+    }
+
+    // 複製程式碼
+    $('copy-code-btn').addEventListener('click', () => {
+      const code = $('gas-script-code').textContent;
+      navigator.clipboard.writeText(code);
+      alert('GAS 程式碼已成功複製！');
+    });
+
+    // 輪詢與數據處理
+    function startAutoRefresh() {
+      stopAutoRefresh();
+      state.autoRefreshInterval = setInterval(fetchLiveRecords, 5000);
+    }
+
+    function stopAutoRefresh() {
+      if (state.autoRefreshInterval) {
+        clearInterval(state.autoRefreshInterval);
+        state.autoRefreshInterval = null;
+      }
+    }
+
+    $('refresh-data-btn').addEventListener('click', () => {
+      fetchLiveRecords();
+    });
+
+    // 取得 GAS 即時資料
+    function fetchLiveRecords() {
+      if (!state.gasUrl) {
+        return;
+      }
+
+      fetch(state.gasUrl)
+        .then(res => res.json())
+        .then(data => {
+          // 篩選當前班級的資料
+          state.studentsData = data.filter(item => String(item['班級']).trim() === String(state.className).trim());
+          renderDashboard();
+          updateRaidBossStatus();
+        })
+        .catch(err => {
+          console.error('拉取資料失敗：', err);
+        });
+    }
+
+    // 載入 Demo 示範資料
+    $('load-demo-btn').addEventListener('click', () => {
+      state.studentsData = [
+        { "座號姓名": "01 陳小明", "班級": state.className, "組別": "紅隊", "答對題數": 9, "最高連擊": 6, "造成傷害": 110, "錯題數": 1, "錯題詳情": JSON.stringify([{ "q": "收到不認識的人傳來的奇怪連結，最好的做法是？", "a": ["立刻點開看看", "先告訴老師或家長，不隨意點擊", "轉傳給全班同學", "輸入帳密確認"], "correct": 1, "userAnswer": 0, "tip": "陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。" }]) },
+        { "座號姓名": "08 林阿花", "班級": state.className, "組別": "藍隊", "答對題數": 10, "最高連擊": 10, "造成傷害": 140, "錯題數": 0, "錯題詳情": "[]" },
+        { "座號姓名": "12 王大同", "班級": state.className, "組別": "紅隊", "答對題數": 8, "最高連擊": 5, "造成傷害": 96, "錯題數": 2, "錯題詳情": JSON.stringify([{ "q": "下列哪一組密碼比較安全？", "a": ["123456", "myname", "Ab!9qL#2", "生日年月日"], "correct": 2, "userAnswer": 0, "tip": "密碼應混合大小寫英文、數字與符號，並避免個人資料。" }, { "q": "使用公共電腦登入帳號後，離開前要做什麼？", "a": ["直接關掉螢幕", "登出帳號", "把密碼寫在桌上", "分享給下一位"], "correct": 1, "userAnswer": 0, "tip": "登出可以避免下一位使用者看到或使用你的帳號。" }]) },
+        { "座號姓名": "15 張小華", "班級": state.className, "組別": "藍隊", "答對題數": 7, "最高連擊": 4, "造成傷害": 80, "錯題數": 3, "錯題詳情": JSON.stringify([{ "q": "下列哪一組密碼比較安全？", "a": ["123456", "myname", "Ab!9qL#2", "生日年月日"], "correct": 2, "userAnswer": 1, "tip": "密碼應混合大小寫英文、數字與符號，並避免個人資料。" }]) },
+        { "座號姓名": "22 蔡英文", "班級": state.className, "組別": "紅隊", "答對題數": 6, "最高連擊": 3, "造成傷害": 68, "錯題數": 4, "錯題詳情": "[]" },
+        { "座號姓名": "03 賴清德", "班級": state.className, "組別": "藍隊", "答對題數": 9, "最高連擊": 7, "造成傷害": 120, "錯題數": 1, "錯題詳情": JSON.stringify([{ "q": "收到不認識的人傳來的奇怪連結，最好的做法是？", "a": ["立刻點開看看", "先告訴老師或家長，不隨意點擊", "轉傳給全班同學", "輸入帳密確認"], "correct": 1, "userAnswer": 0, "tip": "陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。" }]) }
+      ];
+      if (state.teamMode === 'groups') {
+        state.studentsData.forEach((s, idx) => {
+          s['組別'] = `第${(idx % 6) + 1}組`;
+        });
+      }
+      $('current-class-title').textContent = state.className + ' 班 (示範資料)';
+      renderDashboard();
+      updateRaidBossStatus();
+    });
+
+    // 渲染排行榜與錯題榜
+    $('leaderboard-sort').addEventListener('change', renderDashboard);
+
+        function renderDashboard() {
+      const data = state.studentsData;
+      if (!data || data.length === 0) return;
+
+      // 0. 更新分組對決看板
+      const teamPanel = $('team-battle-panel');
+      const teamMode = state.teamMode;
+      
+      if (teamMode === 'none') {
+        teamPanel.classList.add('hidden');
+      } else {
+        teamPanel.classList.remove('hidden');
+        
+        const teamStats = {};
+        if (teamMode === 'redblue') {
+          teamStats['紅隊'] = { correct: 0, streak: 0, damage: 0, count: 0, color: '#f43f5e' };
+          teamStats['藍隊'] = { correct: 0, streak: 0, damage: 0, count: 0, color: '#38bdf8' };
+        } else if (teamMode === 'groups') {
+          const colors = ['#f43f5e', '#38bdf8', '#10b981', '#fbbf24', '#a78bfa', '#ec4899'];
+          for (let i = 1; i <= 6; i++) {
+            teamStats[`第${i}組`] = { correct: 0, streak: 0, damage: 0, count: 0, color: colors[i-1] };
+          }
+        }
+        
+        data.forEach(std => {
+          const tName = std['組別'] || std['team'];
+          if (tName && teamStats[tName]) {
+            teamStats[tName].correct += Number(std['答對題數']) || 0;
+            teamStats[tName].streak = Math.max(teamStats[tName].streak, Number(std['最高連擊']) || 0);
+            teamStats[tName].damage += Number(std['造成傷害']) || 0;
+            teamStats[tName].count += 1;
+          }
+        });
+        
+        const sortBy = $('leaderboard-sort').value;
+        const statsList = Object.keys(teamStats).map(name => ({
+          name,
+          ...teamStats[name]
+        }));
+        
+        const maxVal = Math.max(...statsList.map(t => {
+          if (sortBy === 'correct') return t.correct || 1;
+          if (sortBy === 'streak') return t.streak || 1;
+          return t.damage || 1;
+        }));
+        
+        const container = $('team-bars-container');
+        container.innerHTML = statsList.map(t => {
+          let val = 0;
+          let label = '';
+          if (sortBy === 'correct') {
+            val = t.correct;
+            label = `${val} 答對`;
+          } else if (sortBy === 'streak') {
+            val = t.streak;
+            label = `最高連擊 x${val}`;
+          } else {
+            val = t.damage;
+            label = `${val} 傷害`;
+          }
+          
+          const pct = Math.min(100, Math.max(5, (val / maxVal) * 100));
+          const usedCount = state.teamTacticalUsedCount[t.name] || 0;
+          const allowedCount = Math.floor(t.correct / 12);
+          const isReady = allowedCount > usedCount;
+          let tacticalActionHtml = '';
+          if (isReady) {
+            tacticalActionHtml = `<button class="btn btn-tactical-ready" style="padding:2px 6px; font-size:11px; margin-left:8px; vertical-align:middle; border-radius:4px; cursor:pointer;" onclick="triggerTeamTactical('${t.name}')">⚡ 戰術卡 Ready</button>`;
+          } else {
+            const nextAt = 12 - (t.correct % 12);
+            tacticalActionHtml = `<span style="font-size:11px; color:var(--text-muted); margin-left:8px;">(差 ${nextAt} 題解鎖)</span>`;
+          }
+
+          const activeFx = state.teamActiveEffects ? state.teamActiveEffects[t.name] : null;
+          if (activeFx && Date.now() < activeFx.expire) {
+            const labelMap = { double: '💥 雙倍傷害', shield: '🛡️ 護盾庇護' };
+            const remainingSec = Math.ceil((activeFx.expire - Date.now()) / 1000);
+            tacticalActionHtml += ` <span style="color:#ff7196; font-size:11px; font-weight:bold; margin-left:6px; animation:pulse-glow 1s infinite alternate;">[${labelMap[activeFx.type]} ${remainingSec}s]</span>`;
+          }
+
+          return `
+            <div style="display:flex; align-items:center; gap:12px; margin-bottom: 8px;">
+              <div style="width:70px; font-weight:bold; font-size:14px; text-align:right;">${t.name}</div>
+              <div style="flex:1; background-color:#061b33; height:24px; border-radius:12px; overflow:hidden; border:1px solid var(--border-color); position:relative;">
+                <div style="width:${pct}%; background-color:${t.color}; height:100%; border-radius:12px; transition:width 0.4s ease; display:flex; align-items:center; padding-left:12px;">
+                  <span style="color:#020c1b; font-weight:bold; font-size:12px; text-shadow:0 0 2px #fff; white-space:nowrap;">${label}</span>
+                </div>
+              </div>
+              <div style="width:280px; font-size:12px; color:var(--text-muted); display:flex; align-items:center;">
+                <span>(總分: ${t.correct} | 傷: ${t.damage} | 人數: ${t.count})</span>
+                ${tacticalActionHtml}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 1. 排行榜排序
+      const sortBy = $('leaderboard-sort').value;
+      const sorted = [...data].sort((a, b) => {
+        if (sortBy === 'correct') {
+          return (Number(b['答對題數']) || 0) - (Number(a['答對題數']) || 0);
+        } else if (sortBy === 'streak') {
+          return (Number(b['最高連擊']) || 0) - (Number(a['最高連擊']) || 0);
+        } else {
+          return (Number(b['造成傷害']) || 0) - (Number(a['造成傷害']) || 0);
+        }
+      });
+
+      // 取得最大值以做百分比橫條
+      const maxVal = Math.max(...sorted.map(s => {
+        if (sortBy === 'correct') return Number(s['答對題數']) || 1;
+        if (sortBy === 'streak') return Number(s['最高連擊']) || 1;
+        return Number(s['造成傷害']) || 1;
+      }));
+
+      // 渲染排行榜
+      const leaderContainer = $('leaderboard-container');
+      leaderContainer.innerHTML = sorted.map((std, i) => {
+        let val = 0;
+        let unitText = '';
+        if (sortBy === 'correct') {
+          val = Number(std['答對題數']) || 0;
+          unitText = `${val} 題`;
+        } else if (sortBy === 'streak') {
+          val = Number(std['最高連擊']) || 0;
+          unitText = `連擊 x${val}`;
+        } else {
+          val = Number(std['造成傷害']) || 0;
+          unitText = `${val} 傷害`;
+        }
+
+        const pct = Math.min(100, Math.max(5, (val / maxVal) * 100));
+        const rankClass = i === 0 ? 'rank-1' : (i === 1 ? 'rank-2' : (i === 2 ? 'rank-3' : ''));
+
+        return `
+          <div class="leader-row">
+            <div class="leader-rank ${rankClass}">${i + 1}</div>
+            <div class="leader-info">
+              <div class="leader-name">
+                <a href="#" onclick="showStudentReport('${std['座號姓名']}'); return false;" class="student-report-link">${std['座號姓名']}</a>
+              </div>
+              <div class="leader-bar-container">
+                <div class="leader-bar" style="width: ${pct}%"></div>
+              </div>
+            </div>
+            <div class="leader-stats">
+              <span>${unitText}</span>
+              <span style="color:var(--text-muted); font-size:11px;">(共 ${std['答對題數']} 答對 · 傷 ${std['造成傷害']})</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+
+      // 2. 錯題統計
+      const wrongStats = {};
+      data.forEach(std => {
+        if (!std['錯題詳情']) return;
+        try {
+          const list = JSON.parse(std['錯題詳情']);
+          if (Array.isArray(list)) {
+            list.forEach(qItem => {
+              if (!qItem.q) return;
+              if (!wrongStats[qItem.q]) {
+                wrongStats[qItem.q] = {
+                  count: 0,
+                  details: qItem
+                };
+              }
+              wrongStats[qItem.q].count += 1;
+            });
+          }
+        } catch (e) {
+          // 容錯
+        }
+      });
+
+      const sortedWrongs = Object.keys(wrongStats)
+        .map(key => ({ q: key, count: wrongStats[key].count, details: wrongStats[key].details }))
+        .sort((a, b) => b.count - a.count);
+
+      const wrongContainer = $('wrong-questions-container');
+      if (sortedWrongs.length === 0) {
+        wrongContainer.innerHTML = `<div style="text-align:center; padding:40px; color:var(--text-muted);">🎉 太棒了！本局目前無人答錯！</div>`;
+      } else {
+        wrongContainer.innerHTML = sortedWrongs.map((wItem, index) => {
+          const details = wItem.details;
+          const optionsHtml = details.a.map((opt, optIndex) => {
+            const isCorrect = optIndex === details.correct;
+            return `<li class="opt-item ${isCorrect ? 'correct' : ''}">${optIndex + 1}. ${opt} ${isCorrect ? '✓' : ''}</li>`;
+          }).join('');
+
+          return `
+            <div class="accordion-item">
+              <div class="accordion-header" onclick="toggleAccordion(${index})">
+                <div class="accordion-header-text">
+                  <span class="accordion-count-badge">${wItem.count} 人答錯</span>
+                  <span style="font-size:14px; word-break:break-all;">${wItem.q}</span>
+                </div>
+                <span>▼</span>
+              </div>
+              <div id="accordion-body-${index}" class="accordion-body">
+                <ul class="opt-list">${optionsHtml}</ul>
+                <div class="question-tip">💡 解析說明：${details.tip || '無'}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+    }
+
+    // 手風琴切換
+    window.toggleAccordion = function(index) {
+      const el = $('accordion-body-' + index);
+      if (el) {
+        el.classList.toggle('open');
+      }
+    };
+
+    // TAB 3: Tournament Bracket Generator
+    // 依排行榜前 8 名生成對戰表
+    $('generate-rank-bracket-btn').addEventListener('click', () => {
+      const data = state.studentsData;
+      let names = [];
+      
+      if (data && data.length > 0) {
+        // 依照當前選擇的排序方式對全體資料排序
+        const sortBy = $('leaderboard-sort').value;
+        const sorted = [...data].sort((a, b) => {
+          if (sortBy === 'correct') {
+            return (Number(b['答對題數']) || 0) - (Number(a['答對題數']) || 0);
+          } else if (sortBy === 'streak') {
+            return (Number(b['最高連擊']) || 0) - (Number(a['最高連擊']) || 0);
+          } else {
+            return (Number(b['造成傷害']) || 0) - (Number(a['造成傷害']) || 0);
+          }
+        });
+        names = sorted.map(s => s['座號姓名']);
+      }
+      
+      if (names.length < 2) {
+        names = ["01 小明", "03 阿華", "05 大同", "08 美美", "12 胖虎", "15 小夫", "18 靜香", "20 大雄"];
+      }
+
+      names = names.slice(0, 8);
+      while (names.length < 8) {
+        names.push("Bye (輪空)");
+      }
+
+      renderBracket(names);
+    });
+
+    // 隨機選取 8 人生成對戰表
+    $('generate-bracket-btn').addEventListener('click', () => {
+      let names = state.studentsData.map(s => s['座號姓名']);
+      
+      if (names.length < 2) {
+        names = ["01 小明", "03 阿華", "05 大同", "08 美美", "12 胖虎", "15 小夫", "18 靜香", "20 大雄"];
+      }
+
+      names = names.sort(() => Math.random() - 0.5).slice(0, 8);
+      while (names.length < 8) {
+        names.push("Bye (輪空)");
+      }
+
+      renderBracket(names);
+    });
+
+    $('clear-bracket-btn').addEventListener('click', () => {
+      $('bracket-view').innerHTML = `
+        <div style="text-align:center; padding:80px; color:var(--text-muted); width:100%;">
+          對戰表已重設。請點擊上方按鈕重新生成。
+        </div>
+      `;
+    });
+
+    function renderBracket(names) {
+      const view = $('bracket-view');
+      view.innerHTML = '';
+
+      // 生成三個階段
+      const round1 = [
+        [names[0], names[1]],
+        [names[2], names[3]],
+        [names[4], names[5]],
+        [names[6], names[7]]
+      ];
+
+      // 建立 Round 1 HTML
+      const r1Div = document.createElement('div');
+      r1Div.className = 'bracket-round';
+      round1.forEach((match, mIdx) => {
+        const matchDiv = document.createElement('div');
+        matchDiv.className = 'bracket-match';
+
+        match.forEach((player, pIdx) => {
+          const isBye = player === 'Bye (輪空)';
+          const slot = document.createElement('div');
+          slot.className = `bracket-slot ${isBye ? 'bye' : ''}`;
+          slot.id = `r1-m${mIdx}-p${pIdx}`;
+          slot.textContent = player;
+          slot.onclick = () => selectWinner(1, mIdx, pIdx, player);
+          matchDiv.appendChild(slot);
+        });
+        r1Div.appendChild(matchDiv);
+      });
+      view.appendChild(r1Div);
+
+      // 建立 Round 2 (4強) HTML
+      const r2Div = document.createElement('div');
+      r2Div.className = 'bracket-round';
+      for (let i = 0; i < 2; i++) {
+        const matchDiv = document.createElement('div');
+        matchDiv.className = 'bracket-match';
+        for (let j = 0; j < 2; j++) {
+          const slot = document.createElement('div');
+          slot.className = 'bracket-slot';
+          slot.id = `r2-m${i}-p${j}`;
+          slot.textContent = '待定...';
+          slot.onclick = () => selectWinner(2, i, j, slot.textContent);
+          matchDiv.appendChild(slot);
+        }
+        r2Div.appendChild(matchDiv);
+      }
+      view.appendChild(r2Div);
+
+      // 建立 Round 3 (冠軍賽) HTML
+      const r3Div = document.createElement('div');
+      r3Div.className = 'bracket-round';
+      const fMatch = document.createElement('div');
+      fMatch.className = 'bracket-match';
+      for (let j = 0; j < 2; j++) {
+        const slot = document.createElement('div');
+        slot.className = 'bracket-slot';
+        slot.id = `r3-m0-p${j}`;
+        slot.textContent = '待定...';
+        slot.onclick = () => selectWinner(3, 0, j, slot.textContent);
+        fMatch.appendChild(slot);
+      }
+      r3Div.appendChild(fMatch);
+      view.appendChild(r3Div);
+
+      // 建立 冠軍寶座 HTML
+      const r4Div = document.createElement('div');
+      r4Div.className = 'bracket-round';
+      const winnerDiv = document.createElement('div');
+      winnerDiv.className = 'bracket-match';
+      winnerDiv.innerHTML = `
+        <div style="text-align:center; font-size:10px; color:var(--text-muted);">🏆 總冠軍</div>
+        <div class="bracket-slot" id="bracket-champion" style="text-align:center; background-color:#ffd700; color:#020c1b;">待定...</div>
+      `;
+      r4Div.appendChild(winnerDiv);
+      view.appendChild(r4Div);
+    }
+
+    function selectWinner(round, matchIdx, playerIdx, name) {
+      if (!name || name === '待定...' || name === 'Bye (輪空)') return;
+
+      // 標示勝者顏色
+      const opponentIdx = playerIdx === 0 ? 1 : 0;
+      const winnerSlot = $(`r${round}-m${matchIdx}-p${playerIdx}`);
+      const loserSlot = $(`r${round}-m${matchIdx}-p${opponentIdx}`);
+
+      if (winnerSlot) winnerSlot.classList.add('winner');
+      if (loserSlot) loserSlot.classList.remove('winner');
+
+      // 晉級邏輯
+      if (round === 1) {
+        const nextMatchIdx = Math.floor(matchIdx / 2);
+        const nextPlayerIdx = matchIdx % 2;
+        const nextSlot = $(`r2-m${nextMatchIdx}-p${nextPlayerIdx}`);
+        if (nextSlot) {
+          nextSlot.textContent = name;
+          nextSlot.classList.remove('winner');
+        }
+      } else if (round === 2) {
+        const nextPlayerIdx = matchIdx % 2;
+        const nextSlot = $(`r3-m0-p${nextPlayerIdx}`);
+        if (nextSlot) {
+          nextSlot.textContent = name;
+          nextSlot.classList.remove('winner');
+        }
+      } else if (round === 3) {
+        const champ = $('bracket-champion');
+        if (champ) {
+          champ.textContent = '🏆 ' + name;
+        }
+      }
+    }
+
+    // 顯示學生的個人錯題報告
+    window.showStudentReport = function(studentName) {
+      const student = state.studentsData.find(s => s['座號姓名'] === studentName);
+      if (!student) return alert('找不到該名學生的對戰資料！');
+
+      $('report-class').textContent = student['班級'] || state.className;
+      $('report-name').textContent = student['座號姓名'];
+      $('report-correct').textContent = student['答對題數'] + ' 題';
+      $('report-streak').textContent = 'x' + student['最高連擊'];
+      $('report-damage').textContent = student['造成傷害'] + ' 傷害';
+      $('report-wrong-count').textContent = student['錯題數'] + ' 題';
+
+      const listContainer = $('report-wrong-list');
+      listContainer.innerHTML = '';
+
+      try {
+        const wrongs = JSON.parse(student['錯題詳情'] || '[]');
+        if (!Array.isArray(wrongs) || wrongs.length === 0) {
+          listContainer.innerHTML = '<div style="color:var(--success); padding: 20px 0;">🎉 本局無答錯題目，表現優異！</div>';
+        } else {
+          listContainer.innerHTML = wrongs.map((entry, idx) => {
+            const optsHtml = entry.a.map((opt, optIdx) => {
+              let optClass = '';
+              if (optIdx === entry.correct) optClass = 'correct-ans';
+              else if (optIdx === entry.userAnswer) optClass = 'user-wrong';
+              return `<li class="report-wrong-opt-item ${optClass}">${'ABCD'[optIdx]}. ${opt} ${optIdx === entry.correct ? '✓' : (optIdx === entry.userAnswer ? '✗' : '')}</li>`;
+            }).join('');
+
+            return `
+              <div class="report-wrong-card">
+                <div class="report-wrong-q"><strong>第 ${idx + 1} 題：</strong>${entry.q}</div>
+                <ul class="report-wrong-opts">${optsHtml}</ul>
+                <div class="report-wrong-tip">💡 解析說明：${entry.tip || '無'}</div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        listContainer.innerHTML = '<div style="color:var(--accent); padding: 20px 0;">⚠️ 錯題格式解析錯誤，無法載入明細。</div>';
+      }
+
+      $('student-report-modal').classList.remove('hidden');
+    };
+
+    // ==========================================
+    // 🔊 P0-5 賽事進行曲與播報系統邏輯
+    // ==========================================
+    let consoleBgmAudio = null;
+    
+    function initConsoleBgm() {
+      if (!consoleBgmAudio) {
+        consoleBgmAudio = new Audio('assets/audio/battle.mp3');
+        consoleBgmAudio.loop = true;
+      }
+      
+      const bgmBtn = $('console-bgm-btn');
+      const sfxBtn = $('console-sfx-btn');
+      
+      if (bgmBtn) {
+        bgmBtn.classList.toggle('muted', state.bgmMuted);
+        bgmBtn.textContent = state.bgmMuted ? '🎵 進行曲: 關' : '🎵 進行曲: 開';
+        bgmBtn.onclick = () => {
+          state.bgmMuted = !state.bgmMuted;
+          localStorage.setItem('smes-console-bgm-muted', state.bgmMuted);
+          bgmBtn.classList.toggle('muted', state.bgmMuted);
+          bgmBtn.textContent = state.bgmMuted ? '🎵 進行曲: 關' : '🎵 進行曲: 開';
+          if (state.bgmMuted) {
+            pauseConsoleBgm();
+          } else if (state.activeTab === 'boss' || state.activeTab === 'dashboard') {
+            playConsoleBgm();
+          }
+        };
+      }
+      
+      if (sfxBtn) {
+        sfxBtn.classList.toggle('muted', state.announcerMuted);
+        sfxBtn.textContent = state.announcerMuted ? '🔊 播報音: 關' : '🔊 播報音: 開';
+        sfxBtn.onclick = () => {
+          state.announcerMuted = !state.announcerMuted;
+          localStorage.setItem('smes-console-announcer-muted', state.announcerMuted);
+          sfxBtn.classList.toggle('muted', state.announcerMuted);
+          sfxBtn.textContent = state.announcerMuted ? '🔊 播報音: 關' : '🔊 播報音: 開';
+        };
+      }
+    }
+    
+    function playConsoleBgm() {
+      if (state.bgmMuted) return;
+      if (!consoleBgmAudio) initConsoleBgm();
+      consoleBgmAudio.play().catch(e => console.warn('BGM 播放受瀏覽器自動播放限制', e));
+    }
+    
+    function pauseConsoleBgm() {
+      if (consoleBgmAudio) {
+        consoleBgmAudio.pause();
+      }
+    }
+    
+    function playAnnouncerSound() {
+      if (state.announcerMuted) return;
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const now = ctx.currentTime;
+        
+        const osc1 = ctx.createOscillator();
+        const gain1 = ctx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(880, now);
+        gain1.gain.setValueAtTime(0.1, now);
+        gain1.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
+        osc1.connect(gain1);
+        gain1.connect(ctx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.1);
+        
+        const osc2 = ctx.createOscillator();
+        const gain2 = ctx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(1320, now + 0.08);
+        gain2.gain.setValueAtTime(0.1, now + 0.08);
+        gain2.gain.exponentialRampToValueAtTime(0.01, now + 0.18);
+        osc2.connect(gain2);
+        gain2.connect(ctx.destination);
+        osc2.start(now + 0.08);
+        osc2.stop(now + 0.18);
+      } catch (e) {
+        console.warn(e);
+      }
+    }
+    
+    function announceEvent(message, icon = '🔥') {
+      const container = $('announcer-ticker-container');
+      const textEl = $('announcer-text');
+      const iconEl = container.querySelector('.announcer-icon');
+      if (!container || !textEl) return;
+      
+      container.classList.remove('show');
+      
+      setTimeout(() => {
+        iconEl.textContent = icon;
+        textEl.textContent = message;
+        container.classList.add('show');
+        playAnnouncerSound();
+        
+        if (state.announcerTimeoutId) clearTimeout(state.announcerTimeoutId);
+        state.announcerTimeoutId = setTimeout(() => {
+          container.classList.remove('show');
+        }, 5000);
+      }, container.classList.contains('show') ? 300 : 0);
+    }
+
+    // ==========================================
+    // 🏆 P0-6 Supabase 雲端風雲榜載入
+    // ==========================================
+    async function loadCloudLeaderboard() {
+      const loading = $('cloud-leaderboard-loading');
+      const list = $('cloud-leaderboard-list');
+      if (!loading || !list) return;
+      
+      loading.style.display = 'block';
+      list.innerHTML = '';
+      
+      if (!supabase) {
+        loading.textContent = '❌ 雲端同步功能未啟用或 Supabase 金鑰未設定。';
+        return;
+      }
+      
+      try {
+        const { data, error } = await supabase
+          .from('user_records')
+          .select('*')
+          .order('best_streak', { ascending: false })
+          .limit(40);
+          
+        if (error) {
+          loading.textContent = `❌ 載入失敗：${error.message}`;
+          return;
+        }
+        
+        loading.style.display = 'none';
+        if (!data || !data.length) {
+          list.innerHTML = `<div style="grid-column: 1/-1; text-align: center; color: var(--text-muted); padding: 30px;">尚無學生進行雲端同步登錄</div>`;
+          return;
+        }
+        
+        const badgeMap = {
+          'streak-5': '🎖️ 5連擊',
+          'streak-10': '🏅 10連擊',
+          'streak-15': '🥇 15連擊',
+          'correct-all': '💯 滿分大師',
+          'play-10': '🎮 十場老手',
+          'play-50': '⚔️ 百戰勇士',
+          'boss-slayer': '👑 滅魔先鋒'
+        };
+        
+        list.innerHTML = data.map((item, idx) => {
+          const badges = (item.badges || []).map(b => `<span class="cloud-badge-tiny">${badgeMap[b] || b}</span>`).join('');
+          const avatarUrl = item.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(item.email)}`;
+          
+          return `
+            <div class="cloud-leaderboard-card">
+              <div class="cloud-leaderboard-rank">#${idx + 1}</div>
+              <img class="cloud-leaderboard-avatar" src="${avatarUrl}" alt="Avatar">
+              <div class="cloud-leaderboard-info">
+                <div class="cloud-leaderboard-name">${item.display_name || item.email.split('@')[0]}</div>
+                <div class="cloud-leaderboard-stats">最高連擊: ${item.best_streak} | 累計答對: ${item.best_correct}</div>
+                <div class="cloud-leaderboard-badges">${badges || '<span style="color:var(--text-muted); font-size:10px;">尚無徽章</span>'}</div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) {
+        loading.textContent = `❌ 載入出錯：${e.message}`;
+      }
+    }
+
+    // 關閉與列印個人報告事件
+    $('report-close-btn').addEventListener('click', () => $('student-report-modal').classList.add('hidden'));
+    $('close-student-report-btn').addEventListener('click', () => $('student-report-modal').classList.add('hidden'));
+    $('print-student-report-btn').addEventListener('click', () => window.print());
+
+    // ==========================================
+    // 👹 全班合作 Raid Boss 戰控制邏輯
+    // ==========================================
+    function updateRaidBossStatus() {
+      const activeView = $('boss-active-view');
+      const inactiveView = $('boss-inactive-view');
+      if (!activeView || !inactiveView) return;
+
+      if (!state.bossMode) {
+        activeView.style.display = 'none';
+        inactiveView.style.display = 'block';
+        return;
+      }
+      activeView.style.display = 'block';
+      inactiveView.style.display = 'none';
+
+      const bossData = {
+        'glitch-dragon': { name: '勒索病毒故障龍', icon: '🐉' },
+        'cache-golem': { name: '記憶體過載石巨人', icon: '🗄️' },
+        'bot-swarm': { name: '殭屍網路蜂群', icon: '🤖' },
+        'malware-mimic': { name: '惡意程式偽裝怪', icon: '👥' },
+        'phishing-siren': { name: '網路釣魚海妖', icon: '🧜‍♀️' }
+      };
+      const b = bossData[state.bossId] || { name: '終極魔王', icon: '👹' };
+      $('boss-giant-name').textContent = `${b.icon} 終極魔王：${b.name}`;
+      $('boss-giant-image').src = `assets/characters/${state.bossId}.png`;
+
+      let totalDamage = 0;
+      state.studentsData.forEach(student => {
+        const dmg = parseInt(student['造成傷害'] || '0', 10);
+        totalDamage += dmg;
+      });
+
+      const curHp = Math.max(0, state.bossMaxHp - totalDamage - (state.bossAccumulatedBonusDamage || 0));
+      $('boss-hp-text').textContent = `${curHp.toLocaleString()} / ${state.bossMaxHp.toLocaleString()}`;
+      $('boss-hp-fill').style.width = `${(curHp / state.bossMaxHp) * 100}%`;
+
+      state.studentsData.forEach(student => {
+        const name = student['座號姓名'] || '未知學生';
+        const teamName = student['組別'] || student['team'] || '';
+        const curDmg = parseInt(student['造成傷害'] || '0', 10);
+        
+        // 追蹤連擊數
+        const curStreak = parseInt(student['最高連擊'] || '0', 10);
+        if (!state.prevStudentStreakMap) state.prevStudentStreakMap = new Map();
+        const prevStreak = state.prevStudentStreakMap.get(name) || 0;
+        if (curStreak > prevStreak) {
+          state.prevStudentStreakMap.set(name, curStreak);
+          if (curStreak >= 5) {
+            announceEvent(`🔥 連擊播報：${name} (${teamName}) 達成了 ${curStreak} 連擊，手感發燙！`, '🔥');
+          }
+        }
+        
+        if (!state.prevStudentDamageMap.has(name)) {
+          state.prevStudentDamageMap.set(name, curDmg);
+          return;
+        }
+
+        const prevDmg = state.prevStudentDamageMap.get(name);
+        if (curDmg > prevDmg) {
+          let delta = curDmg - prevDmg;
+          
+          if (state.teamActiveEffects && state.teamActiveEffects[teamName]) {
+            const fx = state.teamActiveEffects[teamName];
+            if (fx.type === 'double' && Date.now() < fx.expire) {
+              const bonus = delta;
+              state.bossAccumulatedBonusDamage = (state.bossAccumulatedBonusDamage || 0) + bonus;
+              delta = delta * 2;
+            }
+          }
+
+          if (state.activeTab === 'boss') {
+            triggerBossHitEffect(name, delta);
+          }
+          state.prevStudentDamageMap.set(name, curDmg);
+          
+          // 大傷害播報
+          if (delta >= 18) {
+            announceEvent(`⚔️ 攻擊播報：${name} (${teamName}) 爆發致命一擊，對魔王造成了 ${delta} 點高額傷害！`, '⚔️');
+          }
+        }
+      });
+
+      const victoryPanel = $('boss-victory-panel');
+      const giantImg = $('boss-giant-image');
+      if (curHp <= 0) {
+        victoryPanel.style.display = 'flex';
+        giantImg.classList.add('dead');
+        if (!state.bossDefeatedTriggered) {
+          state.bossDefeatedTriggered = true;
+          announceEvent(`👑 勝利播報：全班齊心合力，已成功消滅終極魔王 ${b.name}！守護了校園資安安全！`, '👑');
+        }
+      } else {
+        victoryPanel.style.display = 'none';
+        giantImg.classList.remove('dead');
+        state.bossDefeatedTriggered = false; // 重置
+      }
+
+      const hpPct = (curHp / state.bossMaxHp) * 100;
+      const arenaContainer = document.querySelector('.boss-arena-container');
+      
+      if (arenaContainer && state.bossMode) {
+        if (hpPct <= 60) {
+          arenaContainer.classList.add('alert');
+          if (hpPct <= 30) {
+            $('boss-giant-name').textContent = `⚡ 狂暴魔王：${b.name} (異常事件啟動！)`;
+            if (!state.bossRageTriggered30) {
+              state.bossRageTriggered30 = true;
+              announceEvent(`🚨 魔王狂暴：${b.name} 血量低於 30%！狂暴異常事件啟動，干擾頻率加速！`, '🚨');
+            }
+          } else {
+            $('boss-giant-name').textContent = `⚠️ 狂怒魔王：${b.name}`;
+            if (!state.bossRageTriggered60) {
+              state.bossRageTriggered60 = true;
+              announceEvent(`⚠️ 魔王狂怒：${b.name} 血量低於 60%！進入狂怒狀態，大螢幕紅光警報！`, '⚠️');
+            }
+          }
+        } else {
+          arenaContainer.classList.remove('alert');
+          $('boss-giant-name').textContent = `${b.icon} 終極魔王：${b.name}`;
+          state.bossRageTriggered60 = false;
+          state.bossRageTriggered30 = false;
+        }
+      }
+    }
+
+    function triggerBossHitEffect(studentName, damageAmount) {
+      const giantImg = $('boss-giant-image');
+      if (giantImg) {
+        giantImg.classList.remove('hit');
+        void giantImg.offsetWidth;
+        giantImg.classList.add('hit');
+        setTimeout(() => {
+          giantImg.classList.remove('hit');
+        }, 500);
+      }
+
+      const container = $('boss-damage-floater-container');
+      if (container) {
+        const floater = document.createElement('div');
+        floater.className = 'damage-float';
+        floater.textContent = damageAmount > 150 ? `🔥💥 -${damageAmount}!! (${studentName})` : `💥 -${damageAmount} (${studentName})`;
+        const randX = 15 + Math.random() * 65;
+        const randY = 10 + Math.random() * 50;
+        floater.style.left = `${randX}%`;
+        floater.style.top = `${randY}%`;
+        
+        container.appendChild(floater);
+        setTimeout(() => {
+          floater.remove();
+        }, 1200);
+      }
+    }
+
+    // ==========================================
+    // 🛡️ 組別戰術技能卡觸發邏輯
+    // ==========================================
+    window.triggerTeamTactical = function(teamName) {
+      if (!state.teamTacticalUsedCount) state.teamTacticalUsedCount = {};
+      state.teamTacticalUsedCount[teamName] = (state.teamTacticalUsedCount[teamName] || 0) + 1;
+
+      const effects = ['double', 'shield', 'mud'];
+      const effect = effects[Math.floor(Math.random() * effects.length)];
+      
+      if (!state.teamActiveEffects) state.teamActiveEffects = {};
+      
+      if (effect === 'double') {
+        state.teamActiveEffects[teamName] = { type: 'double', expire: Date.now() + 30000 };
+        showTacticalBanner(teamName, '💥 雙倍輸出卡！', '接下來 30 秒內，該小組所有成員造成的傷害翻倍！');
+        announceEvent(`💥 戰術播報：${teamName} 發動「雙倍輸出卡」，30秒內造成的傷害翻倍！`, '💥');
+      } else if (effect === 'shield') {
+        state.teamActiveEffects[teamName] = { type: 'shield', expire: Date.now() + 60000 };
+        showTacticalBanner(teamName, '🛡️ 全隊護盾卡！', '小組成功展開防火牆電磁護盾，抵禦魔王的資安反噬！');
+        announceEvent(`🛡️ 戰術播報：${teamName} 啟動「電磁護盾」，正在抵禦魔王所有反噬！`, '🛡️');
+        
+        const shield = document.createElement('div');
+        shield.className = 'boss-shield';
+        shield.id = `shield-${teamName}`;
+        const activeView = $('boss-active-view');
+        if (activeView) activeView.appendChild(shield);
+        setTimeout(() => { shield.remove(); }, 60000);
+      } else {
+        showTacticalBanner(teamName, '🎨 泥巴干擾彈！', '對其他小組的看板投擲了大量像素泥巴，干擾視線！');
+        announceEvent(`🎨 戰術播報：${teamName} 發射「泥巴干擾彈」，大螢幕部分視線受到遮擋！`, '🎨');
+        
+        for (let i = 0; i < 8; i++) {
+          const x = 5 + Math.random() * 90;
+          const y = 5 + Math.random() * 90;
+          const mud = document.createElement('div');
+          mud.className = 'mud-splash';
+          mud.style.left = `${x}%`;
+          mud.style.top = `${y}%`;
+          mud.style.width = `${30 + Math.random() * 40}px`;
+          mud.style.height = `${30 + Math.random() * 40}px`;
+          
+          const container = $('team-bars-container');
+          if (container) container.appendChild(mud);
+          
+          setTimeout(() => { mud.remove(); }, 10000);
+        }
+      }
+
+      renderDashboard();
+    };
+
+    function showTacticalBanner(teamName, title, desc) {
+      const banner = $('tactical-banner');
+      const bTitle = $('tactical-banner-title');
+      const bDesc = $('tactical-banner-desc');
+      if (!banner || !bTitle || !bDesc) return;
+
+      bTitle.textContent = `${teamName} 發動了 ${title}`;
+      bDesc.textContent = desc;
+      banner.style.display = 'block';
+
+      setTimeout(() => {
+        banner.style.display = 'none';
+      }, 5000);
+    }
+
+    // ==========================================
+    // 📊 班級綜合錯題檢討分析大字報
+    // ==========================================
+    window.showClassWrongAnswerReport = function() {
+      const data = state.studentsData;
+      if (!data || data.length === 0) {
+        alert('尚未有任何對戰作戰資料，請等學生開始作答或載入 Demo 資料！');
+        return;
+      }
+
+      const allWrongAnswers = [];
+      data.forEach(std => {
+        try {
+          const detail = JSON.parse(std['錯題詳情'] || '[]');
+          if (Array.isArray(detail)) {
+            detail.forEach(item => {
+              allWrongAnswers.push(item);
+            });
+          }
+        } catch (e) {
+          console.error('解析錯題失敗：', e);
+        }
+      });
+
+      const loadingEl = $('class-report-loading');
+      const contentEl = $('class-report-content');
+      loadingEl.style.display = 'block';
+      contentEl.innerHTML = '';
+      $('class-report-modal').classList.remove('hidden');
+
+      setTimeout(() => {
+        loadingEl.style.display = 'none';
+
+        if (allWrongAnswers.length === 0) {
+          contentEl.innerHTML = `
+            <div style="text-align:center; padding:80px; color:#62f7bb; font-size:18px; width:100%;">
+              🎉 太優秀了！全班本局無任何人答錯題目，資訊安全素養滿分！
+            </div>
+          `;
+          return;
+        }
+
+        const questionStats = {};
+        allWrongAnswers.forEach(ans => {
+          const qText = ans.q;
+          if (!questionStats[qText]) {
+            questionStats[qText] = {
+              q: ans.q,
+              a: ans.a,
+              correct: ans.correct,
+              tip: ans.tip || '',
+              wrongCount: 0,
+              userAnswers: {}
+            };
+          }
+          questionStats[qText].wrongCount++;
+          questionStats[qText].userAnswers[ans.userAnswer] = (questionStats[qText].userAnswers[ans.userAnswer] || 0) + 1;
+        });
+
+        const sortedQuestions = Object.values(questionStats).sort((a, b) => b.wrongCount - a.wrongCount).slice(0, 3);
+
+        contentEl.innerHTML = sortedQuestions.map((item, idx) => {
+          let maxUserWrongCount = 0;
+          let mostCommonWrongIndex = -1;
+          Object.keys(item.userAnswers).forEach(ansIdx => {
+            const count = item.userAnswers[ansIdx];
+            if (count > maxUserWrongCount) {
+              maxUserWrongCount = count;
+              mostCommonWrongIndex = parseInt(ansIdx, 10);
+            }
+          });
+
+          return `
+            <div class="class-wrong-card" style="background:#0b192f; border:1px solid var(--border-color); border-radius:16px; padding:24px; margin-bottom:20px; box-shadow:0 10px 20px rgba(0,0,0,0.4); position:relative;">
+              <span style="position:absolute; top:-12px; left:20px; background:linear-gradient(90deg, #ff3b30, #ff7196); color:white; padding:4px 12px; border-radius:12px; font-weight:bold; font-size:13px; box-shadow:0 0 10px rgba(255,59,48,0.4);">
+                🔥 盲點 ${idx + 1} (全班 ${item.wrongCount} 人答錯)
+              </span>
+              <h3 style="font-size:18px; font-weight:bold; color:#e2e8f0; margin-top:10px; margin-bottom:15px; line-height:1.5;">${item.q}</h3>
+              
+              <ul style="list-style:none; padding:0; margin:0 0 20px 0; display:flex; flex-direction:column; gap:8px;">
+                ${item.a.map((opt, optIdx) => {
+                  let borderStyle = 'border: 1px solid var(--border-color); background: rgba(255,255,255,0.02); color: #cbd5e1;';
+                  let labelMark = '';
+                  if (optIdx === item.correct) {
+                    borderStyle = 'border: 1px solid #10b981; background: rgba(16,185,129,0.1); color: #62f7bb; font-weight: bold;';
+                    labelMark = '✓ 正確答案';
+                  } else if (optIdx === mostCommonWrongIndex) {
+                    borderStyle = 'border: 1px solid #ef4444; background: rgba(239,68,68,0.1); color: #f87171;';
+                    labelMark = '⚠️ 學生最常錯選';
+                  }
+                  return `
+                    <li style="padding:10px 14px; border-radius:8px; font-size:14px; display:flex; justify-content:space-between; align-items:center; ${borderStyle}">
+                      <span><b>${'ABCD'[optIdx]}.</b> ${opt}</span>
+                      <span style="font-size:11px; opacity:0.85;">${labelMark}</span>
+                    </li>
+                  `;
+                }).join('')}
+              </ul>
+              
+              <div style="background:rgba(2,132,199,0.1); border-left:4px solid #0284c7; padding:12px 16px; border-radius:4px; font-size:14px; color:#e2e8f0; line-height:1.5;">
+                💡 <b>核心觀念解析：</b>${item.tip}
+              </div>
+            </div>
+          `;
+        }).join('');
+      }, 500);
+    };
+
+    $('class-report-btn').addEventListener('click', () => showClassWrongAnswerReport());
+    $('class-report-close-btn').addEventListener('click', () => $('class-report-modal').classList.add('hidden'));
+    $('print-class-report-btn').addEventListener('click', () => window.print());
+  </script>
+</body>
+</html>

@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#061b33">
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="答題快打">
+  <title>石門國小｜資訊科技駕駛艙：答題快打</title>
+  <link rel="stylesheet" href="style.css?v=2026.07.17-10">
+  <!-- 引入 Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+  <main class="app-shell">
+    <section id="lobby" class="screen lobby-screen" aria-labelledby="game-title">
+      <div class="topbar">
+        <a class="school-mark" href="https://www.smes.tyc.edu.tw" target="_blank" rel="noopener noreferrer" aria-label="石門國小網站">
+          <span class="mark-fish">🐟</span><span>石門國小<br><b>資訊科技駕駛艙</b></span>
+        </a>
+        <div class="top-badges">
+          <!-- 👤 雲端同步 -->
+          <div id="cloud-sync-container" class="cloud-sync-container">
+            <button id="cloud-login-btn" class="cloud-btn" type="button">👤 雲端同步</button>
+            <div id="cloud-profile" class="cloud-profile hidden">
+              <img id="cloud-avatar" class="cloud-avatar" src="" alt="Google Avatar">
+              <button id="cloud-logout-btn" class="cloud-logout-btn" type="button" title="登出">✕</button>
+            </div>
+          </div>
+          <span id="console-status-badge" class="console-status-badge">⚪ 自主練習</span><button id="lobby-sound-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🎵 開啟 BGM</button><button id="lobby-tts-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🗣️ 開啟朗讀</button><span class="online-dot">課堂版</span></div>
+      </div>
+
+      <div class="lobby-hero">
+        <div>
+          <p class="eyebrow">IT QUEST / KNOWLEDGE BATTLE</p>
+          <h1 id="game-title">答題快打 <span>⚡</span></h1>
+          <p class="hero-copy">用資訊力出招！答對題目，讓你的數位戰隊守護校園網路。</p>
+          <p id="best-record" class="best-record hidden"><span id="best-record-text"></span><button id="reset-record-btn" type="button">重置</button></p>
+          <div id="badge-shelf" class="badge-shelf hidden" aria-label="已解鎖成就徽章"></div>
+        </div>
+        <div class="hero-console" aria-hidden="true">
+          <div class="radar"><i></i><b>READY</b></div>
+          <div class="console-lines"><span></span><span></span><span></span></div>
+        </div>
+      </div>
+
+      <div class="setup-grid">
+        <section class="setup-card name-card" aria-labelledby="name-title">
+          <p class="card-kicker">00 / 戰隊身分</p>
+          <h2 id="name-title">輸入座號姓名</h2>
+          <div class="name-inputs">
+            <div class="input-wrap">
+              <input type="text" id="p1-name-input" placeholder="例如：01陳小明" maxlength="10">
+            </div>
+            <div id="p1-team-wrap" class="input-wrap hidden" style="margin-top: 10px;">
+              <select id="p1-team-select">
+                <!-- 動態注入 -->
+              </select>
+            </div>
+            <div id="p2-name-input-wrap" class="input-wrap hidden" style="margin-top: 10px;">
+              <input type="text" id="p2-name-input" placeholder="例如：02林阿花 (玩家二)" maxlength="10">
+            </div>
+            <div id="p2-team-wrap" class="input-wrap hidden" style="margin-top: 10px;">
+              <select id="p2-team-select">
+                <!-- 動態注入 -->
+              </select>
+            </div>
+          </div>
+        </section>
+
+        <section class="setup-card mode-card" aria-labelledby="mode-title">
+          <p class="card-kicker">01 / 對戰方式</p>
+          <h2 id="mode-title">選擇任務模式</h2>
+          <div class="choice-row" role="group" aria-label="對戰方式">
+            <button class="choice selected" data-mode="solo" type="button"><span>🤖</span><b>單人闖關</b><small>挑戰駕駛艙 AI</small></button>
+            <button class="choice" data-mode="duel" type="button"><span>👫</span><b>同桌對戰</b><small>輪流出題快打</small></button>
+          </div>
+        </section>
+
+        <section class="setup-card" aria-labelledby="unit-title">
+          <p class="card-kicker">02 / 本節任務</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 6px;">
+            <h2 id="unit-title" style="margin: 0;">選擇資訊主題</h2>
+            <button id="custom-quiz-btn" class="setup-action-btn" type="button">⚙️ 自訂題庫</button>
+          </div>
+          <div class="unit-grid" role="group" aria-label="資訊主題">
+            <button class="unit selected" data-unit="mixed" type="button"><span>🌟</span>綜合挑戰</button>
+            <button class="unit" data-unit="safety" type="button"><span>🛡️</span>網路安全</button>
+            <button class="unit" data-unit="coding" type="button"><span>💻</span>程式思維</button>
+            <button class="unit" data-unit="digital" type="button"><span>🌐</span>數位公民</button>
+            <button id="custom-unit-btn" class="unit hidden" data-unit="custom" type="button"><span>✨</span>[自訂] 主題</button>
+          </div>
+        </section>
+
+        <section class="setup-card difficulty-card" aria-labelledby="difficulty-title">
+          <p class="card-kicker">02B / 對戰難度</p>
+          <h2 id="difficulty-title">選擇 AI 教學模式</h2>
+          <div class="choice-row" role="group" aria-label="AI 教學模式">
+            <button class="choice" data-difficulty="practice" type="button"><span>🌱</span><b>練習</b><small>CPU 較慢，答題有提示</small></button>
+            <button class="choice selected" data-difficulty="standard" type="button"><span>⚡</span><b>標準</b><small>均衡的課堂對戰</small></button>
+            <button class="choice" data-difficulty="challenge" type="button"><span>🔥</span><b>挑戰</b><small>更積極使用戰術與大絕</small></button>
+          </div>
+        </section>
+
+        <section class="setup-card" aria-labelledby="round-time-title">
+          <p class="card-kicker">02C / 對戰節奏</p>
+          <h2 id="round-time-title">選擇回合時間</h2>
+          <div class="choice-row" role="group" aria-label="回合時間">
+            <button class="choice" data-round-time="60" type="button"><span>⏱️</span><b>60 秒</b><small>快速暖身</small></button>
+            <button class="choice selected" data-round-time="75" type="button"><span>⏱️</span><b>75 秒</b><small>標準節奏</small></button>
+            <button class="choice" data-round-time="90" type="button"><span>⏱️</span><b>90 秒</b><small>從容作答</small></button>
+            <button class="choice" data-round-time="120" type="button"><span>⏱️</span><b>120 秒</b><small>深度練習</small></button>
+          </div>
+        </section>
+
+        <section class="setup-card roster-card" aria-labelledby="hero-title">
+          <p class="card-kicker">03 / 我的駕駛員</p>
+          <h2 id="hero-title">選擇你的技能專長</h2>
+          <div id="roster" class="roster" role="group" aria-label="角色選擇"></div>
+        </section>
+
+        <section id="p2-roster-card" class="setup-card roster-card p2-roster-card hidden" aria-labelledby="hero-p2-title">
+          <p class="card-kicker">03B / 玩家二駕駛員</p>
+          <h2 id="hero-p2-title">選擇玩家二的技能專長</h2>
+          <div id="roster-p2" class="roster" role="group" aria-label="玩家二角色選擇"></div>
+        </section>
+      </div>
+
+      <aside class="lesson-note"><span>💡 教學小提醒</span><p>每次答題後會立即顯示正解與原因；可以兩人輪流，也能投影到大螢幕全班一起討論。</p></aside>
+      
+      <div id="boss-challenge-option" class="form-group" style="margin: 15px 0; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border: 1px solid rgba(255, 113, 150, 0.3); border-radius: 14px; background: rgba(70, 31, 54, 0.25);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">👹</span>
+          <div>
+            <b style="color: #ff7196; font-size: 14px; display: block;">挑戰魔王關卡 (Boss Fight)</b>
+            <small style="color: var(--muted); font-size: 11px;">CPU 魔王血量提升至 300 HP 且攻擊力增強，戰鬥更具挑戰！</small>
+          </div>
+        </div>
+        <label class="boss-switch" style="position: relative; display: inline-block; width: 46px; height: 24px;">
+          <input type="checkbox" id="boss-mode-toggle" style="opacity: 0; width: 0; height: 0;">
+          <span class="boss-slider" style="position: absolute; cursor: pointer; inset: 0; background-color: #0c2b48; border: 1px solid var(--line); border-radius: 24px; transition: .3s;"></span>
+        </label>
+      </div>
+
+      <button id="launch-btn" class="launch-btn" type="button"><span>啟動任務</span><b>→</b></button>
+    </section>
+
+    <section id="battle" class="screen battle-screen hidden" aria-live="polite">
+      <header class="battle-header">
+        <button id="back-btn" class="icon-btn" type="button" aria-label="回到任務大廳">←</button>
+        <div class="mission-label"><span id="unit-badge">綜合挑戰</span><b id="mission-title">網路世界守護戰</b></div>
+        <div class="header-actions"><button id="music-btn" class="icon-btn" type="button" aria-pressed="true" aria-label="切換背景音樂">🎵</button><button id="sound-btn" class="icon-btn" type="button" aria-pressed="true" aria-label="切換音效">🔊</button></div>
+      </header>
+
+      <section class="arena" aria-label="答題對戰場">
+        <div class="hud player-hud">
+          <div class="hud-name"><span id="p1-avatar-mini">🤖</span><div><small>玩家 1</small><b id="p1-name">程式勇者</b></div></div>
+          <div class="bar-label"><span>專注力</span><b id="p1-health-text">100</b></div>
+          <div class="health-bar"><i id="p1-health"></i></div>
+          <div class="bar-label"><span>能量</span><b id="p1-meter-text">0%</b></div>
+          <div class="meter-bar"><i id="p1-meter"></i></div>
+        </div>
+
+        <div class="round-box"><span id="round-label">ROUND 1</span><strong id="timer">75</strong><small>秒</small></div>
+
+        <div class="hud enemy-hud">
+          <div class="hud-name"><div><small id="p2-caption">駕駛艙 AI</small><b id="p2-name">防火牆怪</b></div><span id="p2-avatar-mini">🧠</span></div>
+          <div class="bar-label"><span>專注力</span><b id="p2-health-text">100</b></div>
+          <div class="health-bar enemy"><i id="p2-health"></i></div>
+          <div class="bar-label"><span>能量</span><b id="p2-meter-text">0%</b></div>
+          <div class="meter-bar enemy"><i id="p2-meter"></i></div>
+        </div>
+
+        <div id="arena-stage" class="arena-stage">
+          <div class="sky-code">&lt;safe net="on" /&gt;</div><div class="grid-floor"></div>
+          <div id="fighter-p1" class="fighter fighter-p1"><div class="fighter-aura"></div><div class="fighter-avatar">🤖</div><b id="fighter-p1-name">程式勇者</b><small>PLAYER 1</small></div>
+          <div id="vs-burst">VS</div>
+          <div id="fighter-p2" class="fighter fighter-p2"><div class="fighter-aura"></div><div class="fighter-avatar">🧠</div><b id="fighter-p2-name">防火牆怪</b><small>CPU</small></div>
+          <div id="battle-fx" class="battle-fx" aria-hidden="true"></div>
+          <div id="combo" class="combo hidden"></div>
+          <div id="ultimate-callout" class="ultimate-callout" aria-live="polite" aria-atomic="true"><span>ULTIMATE COMBO</span><b></b><small></small></div>
+        </div>
+      </section>
+
+      <section class="command-deck" aria-labelledby="turn-title">
+        <div class="turn-strip"><span id="turn-dot"></span><b id="turn-title">你的回合：選擇技能</b><span id="streak-label">連擊 x0</span></div>
+        <div id="move-deck" class="move-deck">
+          <button class="move move-light" data-move="light" type="button"><span class="move-icon">⌁</span><b>掃描衝擊</b><small>基礎題 · 傷害 8</small></button>
+          <button class="move move-heavy" data-move="heavy" type="button"><span class="move-icon">⚙</span><b>除錯連發</b><small>進階題 · 傷害 16</small></button>
+          <button class="move move-tactical" data-move="tactical" type="button"><span class="move-icon">✹</span><b>同步戰術</b><small>戰術題 · 傷害 22</small></button>
+          <button id="ultimate-btn" class="move move-ultimate locked" data-move="ultimate" type="button"><span class="move-icon">✦</span><b>終極防護</b><small>挑戰題 · 能量 100%</small></button>
+        </div>
+        <div id="cpu-move-deck" class="cpu-move-deck hidden" aria-live="polite" aria-atomic="true">
+          <div class="cpu-move-heading"><span>CPU 技能面板</span><b id="cpu-move-status">正在分析最佳招式…</b></div>
+          <div id="cpu-move-list" class="cpu-move-list"></div>
+        </div>
+
+        <div id="question-card" class="question-card hidden" tabindex="-1">
+          <div class="question-top"><span id="question-level">基礎題</span><span id="question-count">第 1 題</span><b id="question-timer" aria-live="polite">--</b></div>
+          <h2 id="question-text">題目載入中</h2>
+          <div id="answers" class="answers"></div>
+          <p id="explain" class="explain"></p>
+        </div>
+        <p id="feedback" class="feedback">先選一個技能，答對就能發動攻擊！</p>
+      </section>
+    </section>
+
+    <section id="result" class="result-screen hidden" role="dialog" aria-modal="true" aria-labelledby="result-title">
+      <div class="result-card">
+        <p id="result-kicker" class="eyebrow">MISSION COMPLETE</p><div id="result-icon" class="result-icon">🏆</div>
+        <h2 id="result-title">任務成功！</h2><p id="result-copy">你用正確的資訊觀念守護了校園網路。</p>
+        <p id="print-meta" class="print-only"></p>
+        <div class="result-stats"><span><b id="correct-count">0</b>答對</span><span><b id="best-streak">0</b>最高連擊</span><span><b id="time-left">0</b>剩餘秒數</span></div>
+        <div id="badge-unlock" class="badge-unlock hidden" aria-live="polite"></div>
+        <div id="duel-summary" class="duel-summary hidden" aria-label="同桌對戰成績"><div><b id="p1-result-name">玩家 1</b><span id="p1-result-correct">答對 0 · 連擊 0 · 傷害 0</span></div><div><b id="p2-result-name">玩家 2</b><span id="p2-result-correct">答對 0 · 連擊 0 · 傷害 0</span></div><p id="duel-highlight" class="duel-highlight">本次表現亮點</p></div>
+        <section id="review-panel" class="review-panel hidden" aria-labelledby="review-title"><div class="review-heading"><h3 id="review-title">本局錯題回顧</h3><span id="wrong-answer-count">0 題</span></div><div id="competency-chips" class="competency-chips hidden" aria-label="依能力指標複習"></div><div id="wrong-answer-list" class="wrong-answer-list"></div><button id="retry-wrong-btn" type="button">🎯 只練本局錯題</button></section>
+        <div class="result-actions"><button id="print-report-btn" class="secondary" type="button">🖨️ 列印本局報告</button><button id="retry-btn" type="button">再戰一次</button><button id="lobby-btn" class="secondary" type="button">任務大廳</button></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- 自訂題庫 Modal -->
+  <div id="custom-quiz-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+    <div class="modal-content">
+      <header class="modal-header">
+        <h3 id="modal-title">⚙️ 自訂課堂題庫設定</h3>
+        <button id="modal-close-btn" class="close-btn" type="button" aria-label="關閉對話框">✕</button>
+      </header>
+      <div class="modal-tabs">
+        <button class="modal-tab-btn active" data-modal-tab="json">貼上 JSON</button>
+        <button class="modal-tab-btn" data-modal-tab="csv">CSV 匯入</button>
+        <button class="modal-tab-btn" data-modal-tab="url">網址載入</button>
+        <button class="modal-tab-btn" data-modal-tab="ai">Gemini AI 出題</button>
+      </div>
+      
+      <!-- Tab 1: JSON -->
+      <div id="modal-tab-json" class="modal-tab-content active">
+        <div class="form-group">
+          <label for="json-textarea">請貼上符合格式的題庫 JSON 陣列：</label>
+          <textarea id="json-textarea" rows="8" placeholder='[
+  {
+    "unit": "custom",
+    "level": "light",
+    "q": "這是一題基礎題？",
+    "a": ["答案A", "答案B", "答案C", "答案D"],
+    "correct": 1,
+    "tip": "這是這題的解析說明。"
+  }
+]'></textarea>
+        </div>
+        <button id="import-json-btn" class="modal-btn" type="button">匯入題庫</button>
+      </div>
+
+      <!-- Tab 2: CSV -->
+      <div id="modal-tab-csv" class="modal-tab-content">
+        <p style="font-size:13px; color:#94a3b8; margin-bottom:12px; line-height: 1.4;">
+          請選擇您的 CSV 檔案，欄位順序必須為：<br>
+          <code style="display:block; background:#020c1b; padding:6px; border-radius:4px; margin-top:4px; color:#38bdf8; font-family: monospace;">主題(預設custom),難度(light/heavy/tactical/ultimate),題目,選項1,選項2,選項3,選項4,正確答案索引(0-3),教學提示</code>
+        </p>
+        <div class="form-group">
+          <input type="file" id="csv-file-input" accept=".csv">
+        </div>
+        <button id="import-csv-btn" class="modal-btn" type="button">解析並匯入 CSV</button>
+      </div>
+
+      <!-- Tab 3: URL -->
+      <div id="modal-tab-url" class="modal-tab-content">
+        <div class="form-group">
+          <label for="url-input">自訂題庫 JSON 網址</label>
+          <input type="url" id="url-input" placeholder="https://example.com/my-quiz.json">
+        </div>
+        <button id="import-url-btn" class="modal-btn" type="button">從網址載入</button>
+      </div>
+
+      <!-- Tab 4: AI Outport -->
+      <div id="modal-tab-ai" class="modal-tab-content">
+        <div class="form-group">
+          <label for="gemini-key-input">Gemini API Key (本機安全儲存)</label>
+          <input type="password" id="gemini-key-input" placeholder="AIzaSy...">
+          <small style="color:#94a3b8; display:block; margin-top:4px;">
+            您的 API Key 只會存在本機瀏覽器，直接呼叫 Google 官方端點，無洩漏風險。
+          </small>
+        </div>
+        <div class="form-group">
+          <label for="ai-subject-input">出題單元主題</label>
+          <input type="text" id="ai-subject-input" placeholder="例如：四年級昆蟲生態、反網路詐騙、吉他基礎樂理">
+        </div>
+        <div class="form-group">
+          <label for="ai-count-select">出題數量</label>
+          <select id="ai-count-select" style="width: 100%; background: #061b33; color: white; border: 1px solid #334155; padding: 10px; border-radius: 6px;">
+            <option value="5">5 題 (快速對戰)</option>
+            <option value="10" selected>10 題 (標準模式)</option>
+            <option value="15">15 題 (深度練習)</option>
+          </select>
+        </div>
+        <div style="display:flex; gap:10px; margin-top: 15px;">
+          <button id="generate-ai-quiz-btn" class="modal-btn" type="button">🧠 一鍵 AI 生成題庫</button>
+          <button id="copy-gold-prompt-btn" class="modal-btn modal-btn-secondary" type="button">📋 複製黃金 Prompt (無 Key 備援)</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer class="site-credit">桃園市龍潭區石門國民小學 · 鱻魚特色學園<br>Made with <span class="site-credit__heart" aria-label="愛心">❤️</span> by <a href="https://www.smes.tyc.edu.tw/modules/tadnews/page.php?ncsn=11&nsn=16#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a></footer>
+  <aside id="sw-update-toast" class="sw-update-toast" role="status" aria-live="polite" hidden>
+    <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
+    <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
+  </aside>
+  <script>window.APP_VERSION='2026.07.17-10';</script>
+  <script src="game.js?v=2026.07.17-10"></script>
+  <script src="sw-register.js?v=2026.07.17-10"></script>
+</body>
+</html>

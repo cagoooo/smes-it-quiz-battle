@@ -1,0 +1,17 @@
+{
+  "name": "石門國小資訊科技駕駛艙：答題快打",
+  "short_name": "答題快打",
+  "description": "石門國小資訊科技駕駛艙的資訊素養答題對戰遊戲，涵蓋網路安全、程式思維與數位公民題庫。",
+  "lang": "zh-Hant",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#061b33",
+  "theme_color": "#061b33",
+  "icons": [
+    { "src": "assets/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "assets/icons/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
