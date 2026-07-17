@@ -306,15 +306,71 @@ function cpuMove(){
           correct=Math.random()<Math.min(.9,Math.max(.2,base+profile.accuracy-.65+mode.accuracy+adaptiveAccuracyDelta()));
     
     state.current={skill,q};
-    renderCpuMoveDeck(actor,skill.id);
+    
+    // 渲染並顯示 CPU 題目卡，選項設為 disabled 以免玩家誤點
+    $('question-level').textContent=`${skill.label} · ${skill.name} · 傷害 ${skill.damage}`;
+    $('question-count').textContent=`${actor.name} 的挑戰`;
+    $('question-text').textContent=q.q;
+    $('answers').innerHTML=q.a.map((answer,index)=>`<button class="answer" data-answer="${index}" type="button" disabled><b>${'ABCD'[index]}.</b> ${answer}</button>`).join('');
+    $('explain').textContent='AI 正在載入並判讀核心數據…';
+    $('question-card').classList.remove('hidden');
+    $('cpu-move-deck').classList.add('hidden');
     
     $('turn-title').textContent=`駕駛艙 AI 鎖定 ${skill.name}！`;
     $('feedback').textContent=`⚡ ${actor.name} 鎖定了 ${skill.name}，正在進行資料編譯…`;
     
-    window.setTimeout(()=>resolveCpuMove(actor,mode,skill,correct), 1200);
+    window.setTimeout(()=>resolveCpuMove(actor,mode,skill,correct), 2000);
   }, thinkTime);
 }
-function resolveCpuMove(actor,mode,skill,correct){ if(!state.running||state.turn!=='p2')return; let recovery=1450; if(correct){actor.streak++;state.p1.streak=0;state.playerStats.p2.correct++;state.playerStats.p2.bestStreak=Math.max(state.playerStats.p2.bestStreak,actor.streak);const meterBefore=actor.meter;actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain);if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime();$('feedback').textContent=`${mode.label} AI 找到正解！${actor.name} 施放 ${skill.name}！`; $('feedback').className='feedback good'; recovery=attack(actor,state.p1,moveDamage(actor,skill.id),skill.id);}else{actor.streak=0;$('feedback').textContent=`AI 的資料判讀失誤：${actor.name} 選擇 ${skill.name}，這回合沒有命中！`;$('feedback').className='feedback bad';playTone(false);} updateUI();window.setTimeout(()=>{if(!state.running)return;if(state.p1.health<=0)finish('p2');else setTurn('p1');},Math.max(recovery,mode.delay)); }
+function resolveCpuMove(actor,mode,skill,correct){
+  if(!state.running||state.turn!=='p2')return;
+  const q=state.current.q;
+  let recovery=1600;
+  
+  if(correct){
+    actor.streak++;
+    state.p1.streak=0;
+    state.playerStats.p2.correct++;
+    state.playerStats.p2.bestStreak=Math.max(state.playerStats.p2.bestStreak,actor.streak);
+    const meterBefore=actor.meter;
+    actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain);
+    if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime();
+    
+    // 亮起正解按鈕並顯示詳解
+    const correctBtn = document.querySelector(`.answer[data-answer="${q.correct}"]`);
+    if(correctBtn) correctBtn.classList.add('correct');
+    $('explain').textContent=`💡 ${q.tip}`;
+    
+    $('feedback').textContent=`${mode.label} AI 找到正解！${actor.name} 施放 ${skill.name}！`;
+    $('feedback').className='feedback good';
+    recovery=attack(actor,state.p1,moveDamage(actor,skill.id),skill.id);
+  } else {
+    actor.streak=0;
+    
+    // 隨機亮出錯誤答案並揭曉正確答案
+    const wrongCandidates = [0, 1, 2, 3].filter(i => i !== q.correct);
+    const wrongChoice = wrongCandidates[Math.floor(Math.random() * wrongCandidates.length)];
+    const wrongBtn = document.querySelector(`.answer[data-answer="${wrongChoice}"]`);
+    if(wrongBtn) wrongBtn.classList.add('wrong');
+    
+    const correctBtn = document.querySelector(`.answer[data-answer="${q.correct}"]`);
+    if(correctBtn) correctBtn.classList.add('correct');
+    $('explain').textContent=`💡 ${q.tip}`;
+    
+    $('feedback').textContent=`AI 的資料判讀失誤：${actor.name} 選擇 ${skill.name}，這回合沒有命中！`;
+    $('feedback').className='feedback bad';
+    playTone(false);
+  }
+  
+  updateUI();
+  
+  // 給予充足的 3.5 秒時間讓玩家看題與檢討詳解
+  window.setTimeout(()=>{
+    if(!state.running)return;
+    if(state.p1.health<=0)finish('p2');
+    else setTurn('p1');
+  }, Math.max(recovery, mode.delay, 3500));
+}
 function renderWrongAnswerReview(){const panel=$('review-panel'), list=$('wrong-answer-list'), retry=$('retry-wrong-btn'), count=$('wrong-answer-count');panel.classList.toggle('hidden',!state.wrongAnswers.length);count.textContent=`${state.wrongAnswers.length} 題`;retry.disabled=!state.wrongAnswers.length;list.innerHTML=state.wrongAnswers.map((entry,index)=>`<article class="wrong-answer"><b>第 ${index+1} 題 · ${entry.question.q}</b><small>${entry.timedOut?'時間到，未作答。':`你的答案：${entry.question.a[entry.selectedIndex]}`}</small><p>正解：${entry.question.a[entry.question.correct]}<br>💡 ${entry.question.tip}</p><em class="competency-tag">📌 ${entry.question.tags.competency}</em></article>`).join('');renderCompetencySummary();}
 function renderCompetencySummary(){const chips=$('competency-chips'); const counts=new Map(); state.wrongAnswers.forEach(entry=>{const competency=entry.question.tags.competency; counts.set(competency,(counts.get(competency)||0)+1);}); const entries=[...counts.entries()].sort((a,b)=>b[1]-a[1]); chips.classList.toggle('hidden',entries.length<2); chips.innerHTML=entries.length<2?'':`<small>依能力指標複習：</small>${entries.map(([competency,questionCount])=>`<button class="competency-chip" data-competency-retry="${competency}" type="button">${competency}<b>${questionCount}</b></button>`).join('')}`;}
 function startCompetencyRetry(competency){const retryQuestions=state.wrongAnswers.filter(entry=>entry.question.tags.competency===competency).map(entry=>entry.question); if(retryQuestions.length)setupBattle(retryQuestions);}
