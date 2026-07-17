@@ -3,6 +3,7 @@ Set-Location (Split-Path $PSScriptRoot -Parent)
 
 node --check game.js
 node --test tests/p0-regressions.test.js
+if ($LASTEXITCODE -ne 0) { throw "Regression tests failed!" }
 
 $index = Get-Content -Raw -Encoding utf8 index.html
 $serviceWorker = Get-Content -Raw -Encoding utf8 sw.js
