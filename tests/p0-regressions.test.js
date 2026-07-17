@@ -371,9 +371,13 @@ test('戰鬥 3D 舞台渲染與立體 Canvas 粒子噴濺引擎支援', () => {
   assert.match(css, /\.arena-stage\.stage-3d/);
   assert.match(css, /#canvas-3d-sparks/);
   assert.match(css, /@keyframes hit-3d-recoil/);
+  assert.match(css, /perspective: var\(--stage-fov/);
+  assert.match(css, /\.arena-stage\.stage-shake-3d/);
 
   assert.match(game, /function spawn3DSparks\(/);
   assert.match(game, /canvas\.id\s*=\s*'canvas-3d-sparks'/);
   assert.match(game, /stage\.classList\.add\('stage-3d'\)/);
-  assert.match(game, /spawn3DSparks\(sparkX,\s*sparkY,\s*color,\s*12\)/);
+  assert.match(game, /stage\.style\.setProperty\('--stage-fov'/);
+  assert.match(game, /spawn3DSparks\(sparkX,\s*sparkY,\s*color,\s*12,\s*'slash'\)/);
+  assert.match(game, /source\.style\.transform\s*=\s*`translateZ\(160px\)/);
 });

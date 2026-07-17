@@ -259,22 +259,75 @@ function playUltimateCombo(actor, defender, damage) {
   const hits=Math.min(9,6+Math.floor(Math.random()*2)+Math.min(actor.streak,2)), color=actor.ultimate.color, intro=560, cadence=390, duration=intro+hits*cadence+760;
   const chunks=Array.from({length:hits},(_,index)=>Math.floor(damage/hits)+(index<damage%hits?1:0));
   const style={coder:'code',guardian:'shield',data:'matrix',creator:'paint','ai-explorer':'neural','green-engineer':'eco','robotics-ace':'mech','cloud-ranger':'cloud',firewall:'shield','noise-beast':'noise','bug-phantom':'glitch','phishing-siren':'wave','cache-golem':'stone','glitch-dragon':'glitch','malware-mimic':'mirror','bot-swarm':'swarm'}[actor.id] || 'code'; stage.dataset.ultimateStyle=style; stage.style.setProperty('--ultimate-color',color); stage.classList.remove('ultimate-showcase'); void stage.offsetWidth; stage.classList.add('ultimate-showcase');
+  
+  // 初始化舞台 3D 變焦變數
+  stage.style.setProperty('--stage-fov', '1000px');
+  stage.style.setProperty('--stage-rx', '15deg');
+  stage.style.setProperty('--stage-ry', '-4deg');
+  stage.style.setProperty('--stage-tz', '0px');
+
   callout.style.setProperty('--ultimate-color',color); callout.querySelector('b').textContent=actor.ultimate.name; callout.querySelector('small').textContent=`準備連招 · 0 / ${hits} HIT`; callout.classList.remove('active'); void callout.offsetWidth; callout.classList.add('active');
   const created=[];
+  
+  const source=actor===state.p1?$('fighter-p1'):$('fighter-p2');
+  const target=defender===state.p1?$('fighter-p1'):$('fighter-p2');
+
   for(let index=0;index<hits;index++){
     const delay=intro+index*cadence, slash=document.createElement('i'); slash.className='ultimate-slash'; slash.style.setProperty('--ultimate-color',color); slash.style.setProperty('--delay',`${delay}ms`); slash.style.setProperty('--rotate',`${index%2?38:-38}deg`); effects.append(slash); created.push(slash);
+    
+    const isFinish = index === hits - 1;
+    const ratio = index / hits;
+    const fovVal = Math.round(1000 - ratio * 400); // 1000px -> 600px
+    const rxVal = Math.round(15 + ratio * 15); // 15deg -> 30deg
+    const ryVal = Math.round(-4 + ratio * 12); // -4deg -> 8deg
+    const tzVal = Math.round(ratio * 30); // 0px -> 30px
+
+    // 1. 卡牌 3D 躍起與 3D 運鏡平滑變焦
+    window.setTimeout(()=>{
+      if(!state.running)return;
+      stage.style.setProperty('--stage-fov', `${fovVal}px`);
+      stage.style.setProperty('--stage-rx', `${rxVal}deg`);
+      stage.style.setProperty('--stage-ry', `${ryVal}deg`);
+      stage.style.setProperty('--stage-tz', `${tzVal}px`);
+
+      // 卡牌躍出打擊
+      if (isFinish) {
+        source.style.transform = `translateZ(160px) rotateY(${actor===state.p1?12:-12}deg) rotateX(-25deg) scale(1.18)`;
+      } else {
+        const side = index % 2 === 0 ? -1 : 1;
+        source.style.transform = `translateX(${actor===state.p1?60:-60}px) translateZ(80px) rotateY(${side*18}deg) rotateX(${side*8}deg)`;
+      }
+    }, Math.max(0, delay - 140));
+
+    // 2. 命中時間點
     window.setTimeout(()=>{
       if(!state.running)return;
       defender.health=Math.max(0,defender.health-chunks[index]); state.playerStats[fighterKey(actor)].damage+=chunks[index]; updateUI();
       const target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit');
       
+      // 3D 粒子與光刃噴濺
       try {
         const containerRect = $('battle-fx').getBoundingClientRect();
         const targetRect = target.getBoundingClientRect();
         const sparkX = targetRect.left - containerRect.left + targetRect.width / 2;
         const sparkY = targetRect.top - containerRect.top + targetRect.height * 0.45;
-        spawn3DSparks(sparkX, sparkY, color, 12);
+        
+        if (isFinish) {
+          // 最後一擊：觸發 3D 立體光刃與大火花，舞台強烈晃動
+          spawn3DSparks(sparkX, sparkY, color, 12, 'slash');
+          spawn3DSparks(sparkX, sparkY, color, 65, 'spark');
+          stage.classList.add('stage-shake-3d');
+          window.setTimeout(() => stage.classList.remove('stage-shake-3d'), 500);
+        } else {
+          // 一般擊：觸發普通火花
+          spawn3DSparks(sparkX, sparkY, color, 12, 'spark');
+        }
       } catch(e) {}
+
+      // 卡牌恢復原位
+      window.setTimeout(()=>{
+        source.style.transform = '';
+      }, 200);
 
       callout.querySelector('small').textContent=`${index+1} / ${hits} HIT · -${chunks[index]} HP`;
       $('combo').textContent=`${index+1} HIT COMBO!`; $('combo').classList.remove('hidden');
@@ -1069,7 +1122,7 @@ function saveCustomQuestions(data, title) {
   alert(`題庫「${title}」已成功匯入！現已切換至該題庫。`);
 }
 
-function spawn3DSparks(x, y, color, count) {
+function spawn3DSparks(x, y, color, count, type = 'spark') {
   const container = $('battle-fx');
   if (!container) return;
 
@@ -1095,27 +1148,34 @@ function spawn3DSparks(x, y, color, count) {
 
   for (let i = 0; i < particleCount; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = 2 + Math.random() * 6;
+    const speed = type === 'slash' ? (4 + Math.random() * 8) : (2 + Math.random() * 6);
     const vx = Math.cos(angle) * speed * (0.8 + Math.random() * 0.4);
-    const vy = (Math.sin(angle) * speed - (1 + Math.random() * 4)) * (0.8 + Math.random() * 0.4);
-    const vz = -3 - Math.random() * 10;
+    const vy = (Math.sin(angle) * speed - (type === 'slash' ? 2 : 1 + Math.random() * 4)) * (0.8 + Math.random() * 0.4);
+    const vz = type === 'slash' ? (-5 - Math.random() * 15) : (-3 - Math.random() * 10);
+
+    const dx = type === 'slash' ? (Math.random() - 0.5) * 80 : 0;
+    const dy = type === 'slash' ? (Math.random() - 0.5) * 80 : 0;
+    const dz = type === 'slash' ? (Math.random() - 0.5) * 60 : 0;
 
     particles.push({
-      x: 0,
-      y: 0,
+      x: (Math.random() - 0.5) * 20,
+      y: (Math.random() - 0.5) * 20,
       z: 0,
       vx,
       vy,
       vz,
-      size: 2.5 + Math.random() * 3.5,
-      life: 0.9 + Math.random() * 0.5,
-      maxLife: 0.9 + Math.random() * 0.5,
+      dx,
+      dy,
+      dz,
+      size: type === 'slash' ? (1.5 + Math.random() * 2.5) : (2.5 + Math.random() * 3.5),
+      life: type === 'slash' ? (0.6 + Math.random() * 0.4) : (0.9 + Math.random() * 0.5),
+      maxLife: type === 'slash' ? (0.6 + Math.random() * 0.4) : (0.9 + Math.random() * 0.5),
       color: color || '#ff5a79'
     });
   }
 
   let animationId;
-  const gravity = 0.12;
+  const gravity = type === 'slash' ? 0.05 : 0.12;
 
   function render() {
     ctx.clearRect(0, 0, rect.width, rect.height);
@@ -1140,22 +1200,45 @@ function spawn3DSparks(x, y, color, count) {
       const scale = fov / (fov + p.z);
       const screenX = centerX + p.x * scale;
       const screenY = centerY + p.y * scale;
-      const radius = p.size * scale;
-
-      if (radius > 80 || screenX < -100 || screenX > rect.width + 100 || screenY < -100 || screenY > rect.height + 100) {
-        p.life = 0;
-        return;
-      }
-
-      ctx.beginPath();
-      ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
-      ctx.fillStyle = p.color;
-      ctx.shadowBlur = Math.max(2, 6 * scale);
-      ctx.shadowColor = p.color;
 
       const alpha = Math.max(0, p.life / p.maxLife);
       ctx.globalAlpha = alpha;
-      ctx.fill();
+
+      if (type === 'slash') {
+        const scale2 = fov / (fov + p.z + p.dz);
+        const screenX2 = centerX + (p.x + p.dx) * scale2;
+        const screenY2 = centerY + (p.y + p.dy) * scale2;
+
+        const lineWidth = p.size * scale;
+        if (lineWidth > 35 || screenX < -150 || screenX > rect.width + 150 || screenY < -150 || screenY > rect.height + 150) {
+          p.life = 0;
+          return;
+        }
+
+        ctx.beginPath();
+        ctx.moveTo(screenX, screenY);
+        ctx.lineTo(screenX2, screenY2);
+        
+        ctx.strokeStyle = p.color;
+        ctx.lineWidth = lineWidth;
+        ctx.lineCap = 'round';
+        ctx.shadowBlur = Math.max(3, 10 * scale);
+        ctx.shadowColor = p.color;
+        ctx.stroke();
+      } else {
+        const radius = p.size * scale;
+        if (radius > 80 || screenX < -100 || screenX > rect.width + 100 || screenY < -100 || screenY > rect.height + 100) {
+          p.life = 0;
+          return;
+        }
+
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = Math.max(2, 6 * scale);
+        ctx.shadowColor = p.color;
+        ctx.fill();
+      }
     });
 
     ctx.shadowBlur = 0;

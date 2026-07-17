@@ -604,9 +604,23 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
 
 /* 戰鬥畫面 3D 渲染系統樣式 */
 .arena-stage.stage-3d {
-  perspective: 1000px;
+  perspective: var(--stage-fov, 1000px);
   transform-style: preserve-3d;
-  animation: stage-3d-tilt-dynamic 2.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+  transform: rotateX(var(--stage-rx, 0deg)) rotateY(var(--stage-ry, 0deg)) translateZ(var(--stage-tz, 0px));
+  transition: transform 0.3s cubic-bezier(0.25, 0.8, 0.25, 1), perspective 0.3s ease-out;
+}
+
+/* 3D 舞台大震動特效 */
+.arena-stage.stage-shake-3d {
+  animation: stage-3d-shake-anim 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes stage-3d-shake-anim {
+  0%, 100% { transform: rotateX(var(--stage-rx, 25deg)) rotateY(var(--stage-ry, 0deg)) translateZ(var(--stage-tz, 20px)) translate(0, 0); }
+  10%, 90% { transform: rotateX(calc(var(--stage-rx, 25deg) + 3deg)) rotateY(calc(var(--stage-ry, 0deg) - 2deg)) translateZ(calc(var(--stage-tz, 20px) + 8px)) translate(-3px, 2px); }
+  20%, 80% { transform: rotateX(calc(var(--stage-rx, 25deg) - 2deg)) rotateY(calc(var(--stage-ry, 0deg) + 3deg)) translateZ(calc(var(--stage-tz, 20px) - 6px)) translate(3px, -2px); }
+  30%, 50%, 70% { transform: rotateX(calc(var(--stage-rx, 25deg) + 4deg)) rotateY(calc(var(--stage-ry, 0deg) - 3deg)) translateZ(calc(var(--stage-tz, 20px) + 12px)) translate(-4px, -3px); }
+  40%, 60% { transform: rotateX(calc(var(--stage-rx, 25deg) - 3deg)) rotateY(calc(var(--stage-ry, 0deg) + 2deg)) translateZ(calc(var(--stage-tz, 20px) - 10px)) translate(4px, 3px); }
 }
 
 /* 3D 模式下的卡牌立體景深 */
@@ -615,7 +629,7 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-/* 3D 攻擊躍擊特效 */
+/* 3D 攻擊躍擊特效 (Fallback) */
 .arena-stage.stage-3d .fighter-p1.attack {
   animation: attack-3d-p1 0.6s cubic-bezier(0.25, 0.8, 0.25, 1.1) forwards;
 }
