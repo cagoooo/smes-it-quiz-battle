@@ -233,6 +233,21 @@ function renderCpuMoveDeck(actor, selectedId=null) { const skills=[...actor.skil
 function updateUI() { for (const id of ['p1','p2']) { const f=state[id]; const maxHp=(id==='p2'&&state.mode==='solo'&&state.bossMode)?300:100; $(`${id}-health`).style.width=`${Math.min(100,Math.max(0,(f.health/maxHp)*100))}%`; $(`${id}-health-text`).textContent=f.health; $(`${id}-meter`).style.width=`${f.meter}%`; $(`${id}-meter-text`).textContent=`${f.meter}%`; } const player=state[state.turn]; $('streak-label').textContent=`連擊 x${player.streak}`; $('ultimate-btn').classList.toggle('locked',player.meter<100); $('ultimate-btn').disabled=player.meter<100; }
 function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
 function setTurn(turn) { if(!state.running)return; state.resolving=false; state.turn=turn; state.current=null; const actor=state[turn]; $('turn-title').textContent=actor.isCpu?'駕駛艙 AI 正在分析資料…':`${actor.name} 的回合：選擇技能`; document.querySelector('.turn-strip').classList.toggle('cpu',actor.isCpu); $('move-deck').classList.toggle('hidden',actor.isCpu); $('cpu-move-deck').classList.toggle('hidden',!actor.isCpu); if(actor.isCpu)renderCpuMoveDeck(actor); else renderMoveDeck(actor); $('question-card').classList.add('hidden'); $('feedback').textContent=actor.isCpu?'AI 正在挑選它的招式…':'選擇四種專屬技能之一，答對就能發動攻擊！'; $('feedback').className='feedback'; updateUI(); if(actor.isCpu){ const cpuScene=cpuBattleSceneKey(actor.id); if(cpuScene)playMusicScene(cpuScene); window.setTimeout(cpuMove,difficultyModes[state.difficulty].delay); } else { playMusicScene(battleSceneKey()); } }
+function shuffleQuestion(originalQ) {
+  if (!originalQ) return originalQ;
+  const q = JSON.parse(JSON.stringify(originalQ));
+  const originalAnswers = [...q.a];
+  const correctText = originalAnswers[q.correct];
+  
+  for (let i = q.a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [q.a[i], q.a[j]] = [q.a[j], q.a[i]];
+  }
+  
+  q.correct = q.a.indexOf(correctText);
+  return q;
+}
+
 function getQuestion(level, useRetry=false) {
   if(useRetry&&state.retryQueue.length)return state.retryQueue.shift();
   let pool;
@@ -246,7 +261,7 @@ function getQuestion(level, useRetry=false) {
   if(!unused.length){state.used=[];unused=pool;}
   const q=random(unused);
   state.used.push(q);
-  return q;
+  return shuffleQuestion(q);
 }
 function clearQuestionTimer(){window.clearInterval(state.questionTimerId);state.questionTimerId=null;}
 function startQuestionTimer(skill){clearQuestionTimer();let seconds=skill.id==='light'?14:skill.id==='heavy'?17:skill.id==='tactical'?20:24;if(state.bossGlitchActive)seconds=15;const output=$('question-timer');const tick=()=>output.textContent=`⏱ ${seconds}s`;tick();state.questionTimerId=window.setInterval(()=>{seconds--;tick();if(seconds<=0){clearQuestionTimer();answer(-1,true);}},1000);}

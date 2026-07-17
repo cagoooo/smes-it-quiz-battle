@@ -381,3 +381,8 @@ test('戰鬥 3D 舞台渲染與立體 Canvas 粒子噴濺引擎支援', () => {
   assert.match(game, /spawn3DSparks\(sparkX,\s*sparkY,\s*color,\s*12,\s*'slash'\)/);
   assert.match(game, /source\.style\.transform\s*=\s*`translateZ\(160px\)/);
 });
+
+test('題庫選項隨機打亂與 correct 索引同步更新', () => {
+  assert.match(game, /function shuffleQuestion\(/);
+  assert.match(game, /return shuffleQuestion\(q\)/);
+});
