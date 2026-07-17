@@ -428,6 +428,19 @@ function playUltimateCombo(actor, defender, damage) {
   const chunks=Array.from({length:hits},(_,index)=>Math.floor(damage/hits)+(index<damage%hits?1:0));
   const style={coder:'code',guardian:'shield',data:'matrix',creator:'paint','ai-explorer':'neural','green-engineer':'eco','robotics-ace':'mech','cloud-ranger':'cloud',firewall:'shield','noise-beast':'noise','bug-phantom':'glitch','phishing-siren':'wave','cache-golem':'stone','glitch-dragon':'glitch','malware-mimic':'mirror','bot-swarm':'swarm'}[actor.id] || 'code'; stage.dataset.ultimateStyle=style; stage.style.setProperty('--ultimate-color',color); stage.classList.remove('ultimate-showcase'); void stage.offsetWidth; stage.classList.add('ultimate-showcase');
   
+  // 啟動電影暗幕與 3D 震撼大字招式
+  const overlay = $('cinematic-overlay');
+  if (overlay) overlay.classList.add('active');
+  const created=[];
+  try {
+    const ultTitle = document.createElement('div');
+    ultTitle.className = 'ultimate-title-3d';
+    ultTitle.style.setProperty('--ultimate-color', color);
+    ultTitle.textContent = actor.ultimate.name;
+    effects.appendChild(ultTitle);
+    created.push(ultTitle);
+  } catch(e) {}
+
   // 初始化舞台 3D 變焦變數
   stage.style.setProperty('--stage-fov', '1000px');
   stage.style.setProperty('--stage-rx', '15deg');
@@ -435,7 +448,6 @@ function playUltimateCombo(actor, defender, damage) {
   stage.style.setProperty('--stage-tz', '0px');
 
   callout.style.setProperty('--ultimate-color',color); callout.querySelector('b').textContent=actor.ultimate.name; callout.querySelector('small').textContent=`準備連招 · 0 / ${hits} HIT`; callout.classList.remove('active'); void callout.offsetWidth; callout.classList.add('active');
-  const created=[];
   
   const source=actor===state.p1?$('fighter-p1'):$('fighter-p2');
   const target=defender===state.p1?$('fighter-p1'):$('fighter-p2');
@@ -505,7 +517,10 @@ function playUltimateCombo(actor, defender, damage) {
   for(let index=0;index<6;index++){const signature=document.createElement('i');signature.className=`ultimate-signature ${style}`;signature.style.setProperty('--ultimate-color',color);signature.style.setProperty('--delay',`${300+index*360}ms`);signature.style.setProperty('--x',`${(index-2.5)*52}px`);effects.append(signature);created.push(signature);}
   const ring=document.createElement('i'); ring.className='ultimate-ring'; ring.style.setProperty('--ultimate-color',color); effects.append(ring); created.push(ring);
   window.setTimeout(()=>{ $('combo').classList.add('hidden'); callout.querySelector('small').textContent=`${hits} HIT FINISH · ${damage} DAMAGE`; },intro+hits*cadence);
-  window.setTimeout(()=>created.forEach(effect=>effect.remove()),duration); window.setTimeout(()=>stage.classList.remove('ultimate-showcase'),duration-220); window.setTimeout(()=>callout.classList.remove('active'),duration);
+  window.setTimeout(()=>created.forEach(effect=>effect.remove()),duration); window.setTimeout(()=>stage.classList.remove('ultimate-showcase'),duration-220); window.setTimeout(()=>{
+    callout.classList.remove('active');
+    if (overlay) overlay.classList.remove('active');
+  },duration);
   return duration;
 }
 function focusQuestionCard(delay=0) { window.setTimeout(()=>{ const card=$('question-card'), reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches; card.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'}); card.classList.remove('question-focus'); void card.offsetWidth; card.classList.add('question-focus'); card.focus({preventScroll:true}); window.setTimeout(()=>card.classList.remove('question-focus'),900); },delay); }
@@ -597,11 +612,34 @@ function answer(index,timedOut=false) {
       $('feedback').className='feedback good'; 
     }
     attackRecovery=attack(actor,defender,damage,skill.id); 
-  } else { 
     actor.streak=0; 
     actor.meter=Math.max(0,actor.meter-8); 
     state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); 
     
+    // 答錯卡牌 3D 故障反噬受傷與 3D 方塊粒子
+    const targetCard = actor===state.p1 ? $('fighter-p1') : $('fighter-p2');
+    if (targetCard) {
+      targetCard.classList.remove('glitch-damage');
+      void targetCard.offsetWidth;
+      targetCard.classList.add('glitch-damage');
+      window.setTimeout(() => targetCard.classList.remove('glitch-damage'), 600);
+    }
+    const stage = document.querySelector('.arena-stage');
+    if (stage) {
+      stage.classList.add('stage-3d', 'stage-shake-3d');
+      window.setTimeout(() => {
+        if (!state.resolving) stage.classList.remove('stage-3d');
+        stage.classList.remove('stage-shake-3d');
+      }, 600);
+    }
+    try {
+      const containerRect = $('battle-fx').getBoundingClientRect();
+      const targetRect = targetCard.getBoundingClientRect();
+      const sparkX = targetRect.left - containerRect.left + targetRect.width / 2;
+      const sparkY = targetRect.top - containerRect.top + targetRect.height * 0.45;
+      spawn3DSparks(sparkX, sparkY, '#ff3b30', 35, 'shatter');
+    } catch(e) {}
+
     if(state.bossGlitchActive) {
       const selfDmg = 30;
       actor.health = Math.max(0, actor.health - selfDmg);
@@ -658,6 +696,26 @@ function attack(actor,defender,damage,skillId) {
   state.playerStats[fighterKey(actor)].damage+=damage; 
   $('battle-fx').append(blast); 
   window.setTimeout(()=>blast.remove(),700); 
+
+  // 普通攻擊的 3D 招式名稱字卡躍出
+  try {
+    const moveCallout = document.createElement('div');
+    moveCallout.className = 'move-name-callout';
+    const skillColor = actor.skills.find(s => s.id === skillId)?.color || '#38bdf8';
+    moveCallout.style.setProperty('--move-color', skillColor);
+    moveCallout.textContent = moveName(actor, skillId);
+    
+    const containerRect = $('battle-fx').getBoundingClientRect();
+    const sourceRect = source.getBoundingClientRect();
+    const calloutX = sourceRect.left - containerRect.left + sourceRect.width / 2;
+    const calloutY = sourceRect.top - containerRect.top + sourceRect.height * 0.15;
+    
+    moveCallout.style.left = `${calloutX}px`;
+    moveCallout.style.top = `${calloutY}px`;
+    
+    $('battle-fx').appendChild(moveCallout);
+    window.setTimeout(() => moveCallout.remove(), 1200);
+  } catch(e) {} 
   
   // 一般攻擊的 3D 粒子火花噴濺
   try {
@@ -1370,14 +1428,31 @@ function spawn3DSparks(x, y, color, count, type = 'spark') {
 
   for (let i = 0; i < particleCount; i++) {
     const angle = Math.random() * Math.PI * 2;
-    const speed = type === 'slash' ? (4 + Math.random() * 8) : (2 + Math.random() * 6);
-    const vx = Math.cos(angle) * speed * (0.8 + Math.random() * 0.4);
-    const vy = (Math.sin(angle) * speed - (type === 'slash' ? 2 : 1 + Math.random() * 4)) * (0.8 + Math.random() * 0.4);
-    const vz = type === 'slash' ? (-5 - Math.random() * 15) : (-3 - Math.random() * 10);
+    let speed = 2 + Math.random() * 6;
+    if (type === 'slash') speed = 4 + Math.random() * 8;
+    else if (type === 'shatter') speed = 1.5 + Math.random() * 5.5;
+
+    let vx = Math.cos(angle) * speed * (0.8 + Math.random() * 0.4);
+    let vy = (Math.sin(angle) * speed - (type === 'slash' ? 2 : 1 + Math.random() * 4)) * (0.8 + Math.random() * 0.4);
+    let vz = type === 'slash' ? (-5 - Math.random() * 15) : (-3 - Math.random() * 10);
+    
+    if (type === 'shatter') {
+      vx = (Math.random() - 0.5) * speed * 2.2;
+      vy = (Math.random() - 0.5) * speed * 2 - 2;
+      vz = -2 - Math.random() * 8;
+    }
 
     const dx = type === 'slash' ? (Math.random() - 0.5) * 80 : 0;
     const dy = type === 'slash' ? (Math.random() - 0.5) * 80 : 0;
     const dz = type === 'slash' ? (Math.random() - 0.5) * 60 : 0;
+
+    let size = 2.5 + Math.random() * 3.5;
+    if (type === 'slash') size = 1.5 + Math.random() * 2.5;
+    else if (type === 'shatter') size = 6 + Math.random() * 7;
+
+    let life = 0.9 + Math.random() * 0.5;
+    if (type === 'slash') life = 0.6 + Math.random() * 0.4;
+    else if (type === 'shatter') life = 0.7 + Math.random() * 0.5;
 
     particles.push({
       x: (Math.random() - 0.5) * 20,
@@ -1389,10 +1464,12 @@ function spawn3DSparks(x, y, color, count, type = 'spark') {
       dx,
       dy,
       dz,
-      size: type === 'slash' ? (1.5 + Math.random() * 2.5) : (2.5 + Math.random() * 3.5),
-      life: type === 'slash' ? (0.6 + Math.random() * 0.4) : (0.9 + Math.random() * 0.5),
-      maxLife: type === 'slash' ? (0.6 + Math.random() * 0.4) : (0.9 + Math.random() * 0.5),
-      color: color || '#ff5a79'
+      size,
+      life,
+      maxLife: life,
+      color: color || '#ff5a79',
+      rotation: type === 'shatter' ? Math.random() * Math.PI * 2 : 0,
+      rotSpeed: type === 'shatter' ? (Math.random() - 0.5) * 0.25 : 0
     });
   }
 
@@ -1447,6 +1524,21 @@ function spawn3DSparks(x, y, color, count, type = 'spark') {
         ctx.shadowBlur = Math.max(3, 10 * scale);
         ctx.shadowColor = p.color;
         ctx.stroke();
+      } else if (type === 'shatter') {
+        const side = p.size * scale;
+        if (side > 90 || screenX < -120 || screenX > rect.width + 120 || screenY < -120 || screenY > rect.height + 120) {
+          p.life = 0;
+          return;
+        }
+        p.rotation += p.rotSpeed;
+        ctx.save();
+        ctx.translate(screenX, screenY);
+        ctx.rotate(p.rotation);
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = Math.max(2, 8 * scale);
+        ctx.shadowColor = p.color;
+        ctx.fillRect(-side / 2, -side / 2, side, side);
+        ctx.restore();
       } else {
         const radius = p.size * scale;
         if (radius > 80 || screenX < -100 || screenX > rect.width + 100 || screenY < -100 || screenY > rect.height + 100) {

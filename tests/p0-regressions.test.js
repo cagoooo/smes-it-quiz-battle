@@ -407,3 +407,20 @@ test('Supabase 雲端成就徽章同步與一鍵登入', () => {
   assert.match(game, /initCloudSync\(\)/);
   assert.match(game, /async function syncFromCloud\(/);
 });
+
+test('答錯的特效3D渲染故障受傷與shatter立體方塊', () => {
+  const styleCss = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(styleCss, /\.glitch-damage/);
+  assert.match(game, /type === 'shatter'/);
+  assert.match(game, /spawn3DSparks\(sparkX,\s*sparkY,\s*'#ff3b30',\s*35,\s*'shatter'\)/);
+});
+
+test('出招3D招式字卡與大絕招電影暗幕/震撼文字3D呈現', () => {
+  const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const styleCss = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(indexHtml, /id="cinematic-overlay"/);
+  assert.match(styleCss, /\.move-name-callout/);
+  assert.match(styleCss, /\.ultimate-title-3d/);
+  assert.match(game, /document\.createElement\('div'\);\s*moveCallout\.className = 'move-name-callout'/);
+  assert.match(game, /document\.createElement\('div'\);\s*ultTitle\.className = 'ultimate-title-3d'/);
+});
