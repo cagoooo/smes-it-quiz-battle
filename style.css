@@ -601,3 +601,67 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   0% { transform: scale(0.2); opacity: 0; }
   100% { transform: scale(1); opacity: 0.88; }
 }
+
+/* 戰鬥畫面 3D 渲染系統樣式 */
+.arena-stage.stage-3d {
+  perspective: 1000px;
+  transform-style: preserve-3d;
+  animation: stage-3d-tilt-dynamic 2.5s cubic-bezier(0.25, 0.8, 0.25, 1) forwards;
+}
+
+/* 3D 模式下的卡牌立體景深 */
+.arena-stage.stage-3d .fighter {
+  transform-style: preserve-3d;
+  transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* 3D 攻擊躍擊特效 */
+.arena-stage.stage-3d .fighter-p1.attack {
+  animation: attack-3d-p1 0.6s cubic-bezier(0.25, 0.8, 0.25, 1.1) forwards;
+}
+.arena-stage.stage-3d .fighter-p2.attack {
+  animation: attack-3d-p2 0.6s cubic-bezier(0.25, 0.8, 0.25, 1.1) forwards;
+}
+
+/* 3D 被擊中倒伏震盪特效 */
+.arena-stage.stage-3d .fighter.hit {
+  animation: hit-3d-recoil 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards;
+}
+
+@keyframes stage-3d-tilt-dynamic {
+  0% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
+  25% { transform: rotateX(16deg) rotateY(-6deg) translateZ(10px); }
+  75% { transform: rotateX(18deg) rotateY(6deg) translateZ(15px); }
+  100% { transform: rotateX(0deg) rotateY(0deg) translateZ(0); }
+}
+
+@keyframes attack-3d-p1 {
+  0% { transform: translateX(0) translateZ(0) rotateY(0deg); }
+  40% { transform: translateX(80px) translateZ(70px) rotateY(-12deg) scale(1.05); }
+  100% { transform: translateX(0) translateZ(0) rotateY(0deg); }
+}
+
+@keyframes attack-3d-p2 {
+  0% { transform: translateX(0) translateZ(0) rotateY(0deg) scale(1); }
+  40% { transform: translateX(-80px) translateZ(70px) rotateY(12deg) scale(1.05); }
+  100% { transform: translateX(0) translateZ(0) rotateY(0deg); }
+}
+
+@keyframes hit-3d-recoil {
+  0% { transform: translateZ(0) rotateX(0deg) translateY(0); }
+  15% { transform: translateZ(-90px) rotateX(24deg) translateY(-10px) rotateY(5deg); filter: brightness(1.8) drop-shadow(0 0 15px #ef4444); }
+  30% { transform: translateZ(-40px) rotateX(-12deg) translateY(4px) rotateY(-3deg); }
+  45% { transform: translateZ(-20px) rotateX(8deg) translateY(-2px); }
+  60% { transform: translateZ(-8px) rotateX(-4deg) translateY(1px); }
+  100% { transform: translateZ(0) rotateX(0deg) translateY(0); }
+}
+
+/* 3D 粒子 Canvas 容器 */
+#canvas-3d-sparks {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 20;
+}

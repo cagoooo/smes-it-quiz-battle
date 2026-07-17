@@ -365,3 +365,15 @@ test('Boss 戰模式支援 (全班 Raid 與單人魔王挑戰)', () => {
   assert.match(consoleHtml, /id="class-report-btn"/);
   assert.match(consoleHtml, /showClassWrongAnswerReport/);
 });
+
+test('戰鬥 3D 舞台渲染與立體 Canvas 粒子噴濺引擎支援', () => {
+  const css = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(css, /\.arena-stage\.stage-3d/);
+  assert.match(css, /#canvas-3d-sparks/);
+  assert.match(css, /@keyframes hit-3d-recoil/);
+
+  assert.match(game, /function spawn3DSparks\(/);
+  assert.match(game, /canvas\.id\s*=\s*'canvas-3d-sparks'/);
+  assert.match(game, /stage\.classList\.add\('stage-3d'\)/);
+  assert.match(game, /spawn3DSparks\(sparkX,\s*sparkY,\s*color,\s*12\)/);
+});

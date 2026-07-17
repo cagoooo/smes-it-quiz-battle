@@ -267,6 +267,15 @@ function playUltimateCombo(actor, defender, damage) {
       if(!state.running)return;
       defender.health=Math.max(0,defender.health-chunks[index]); state.playerStats[fighterKey(actor)].damage+=chunks[index]; updateUI();
       const target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit');
+      
+      try {
+        const containerRect = $('battle-fx').getBoundingClientRect();
+        const targetRect = target.getBoundingClientRect();
+        const sparkX = targetRect.left - containerRect.left + targetRect.width / 2;
+        const sparkY = targetRect.top - containerRect.top + targetRect.height * 0.45;
+        spawn3DSparks(sparkX, sparkY, color, 12);
+      } catch(e) {}
+
       callout.querySelector('small').textContent=`${index+1} / ${hits} HIT · -${chunks[index]} HP`;
       $('combo').textContent=`${index+1} HIT COMBO!`; $('combo').classList.remove('hidden');
       for(let sparkIndex=0;sparkIndex<4;sparkIndex++){const spark=document.createElement('i');spark.className='ultimate-spark';spark.style.setProperty('--ultimate-color',color);spark.style.setProperty('--delay',`${delay+sparkIndex*34}ms`);spark.style.setProperty('--x',`${Math.round((Math.random()-.5)*300)}px`);spark.style.setProperty('--y',`${Math.round((Math.random()-.5)*220)}px`);effects.append(spark);created.push(spark);}
@@ -389,7 +398,70 @@ function answer(index,timedOut=false) {
   $('question-card').classList.remove('boss-glitched');
   updateUI(); const recovery=correct ? attackRecovery : 1600; window.setTimeout(()=>{ if(!state.running)return; if(state.retryMode&&state.retryQueue.length===0)finish('p1','錯題再練完成！'); else if(defender.health<=0)finish(state.turn); else setTurn(state.turn==='p1'?'p2':'p1'); },recovery);
 }
-function attack(actor,defender,damage,skillId) { const source=actor===state.p1?$('fighter-p1'):$('fighter-p2'), target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); focusBattleScene(40); source.classList.remove('attack','ultimate'); void source.offsetWidth; source.classList.add(skillId==='ultimate'?'ultimate':'attack'); const blast=document.createElement('i'); blast.className=`blast ${skillId==='heavy'||skillId==='tactical'?'heavy':''} ${skillId==='ultimate'?'ultimate':''}`; if(skillId==='ultimate'){state.resolving=true;$('feedback').textContent='連招施放中，請觀察每一段命中！';blast.style.setProperty('--blast-color',actor.ultimate.color); const duration=playUltimateCombo(actor,defender,damage); $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),duration); playMusicStinger(ultimateSceneKey(actor.id)); playTone(true,skillId,actor.streak); return duration; } target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit'); defender.health=Math.max(0,defender.health-damage); state.playerStats[fighterKey(actor)].damage+=damage; $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),700); if(actor.streak>=2){const combo=$('combo');combo.textContent=`${actor.streak} HIT COMBO!`;combo.classList.remove('hidden');window.setTimeout(()=>combo.classList.add('hidden'),800);} playTone(true,skillId,actor.streak); return 1600; }
+function attack(actor,defender,damage,skillId) { 
+  const source=actor===state.p1?$('fighter-p1'):$('fighter-p2'), target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); 
+  focusBattleScene(40); 
+  source.classList.remove('attack','ultimate'); 
+  void source.offsetWidth; 
+  source.classList.add(skillId==='ultimate'?'ultimate':'attack'); 
+  
+  // 3D 舞台透視切換啟用
+  const stage = document.querySelector('.arena-stage');
+  if(stage) stage.classList.add('stage-3d');
+
+  const blast=document.createElement('i'); 
+  blast.className=`blast ${skillId==='heavy'||skillId==='tactical'?'heavy':''} ${skillId==='ultimate'?'ultimate':''}`; 
+  
+  if(skillId==='ultimate'){
+    state.resolving=true;
+    $('feedback').textContent='連招施放中，請觀察每一段命中！';
+    blast.style.setProperty('--blast-color',actor.ultimate.color); 
+    const duration=playUltimateCombo(actor,defender,damage); 
+    $('battle-fx').append(blast); 
+    window.setTimeout(()=>blast.remove(),duration); 
+    
+    // 大絕招結束後恢復 3D 舞台
+    window.setTimeout(()=>{
+      if(stage) stage.classList.remove('stage-3d');
+    }, duration);
+
+    playMusicStinger(ultimateSceneKey(actor.id)); 
+    playTone(true,skillId,actor.streak); 
+    return duration; 
+  } 
+  
+  target.classList.remove('hit'); 
+  void target.offsetWidth; 
+  target.classList.add('hit'); 
+  defender.health=Math.max(0,defender.health-damage); 
+  state.playerStats[fighterKey(actor)].damage+=damage; 
+  $('battle-fx').append(blast); 
+  window.setTimeout(()=>blast.remove(),700); 
+  
+  // 一般攻擊的 3D 粒子火花噴濺
+  try {
+    const containerRect = $('battle-fx').getBoundingClientRect();
+    const targetRect = target.getBoundingClientRect();
+    const sparkX = targetRect.left - containerRect.left + targetRect.width / 2;
+    const sparkY = targetRect.top - containerRect.top + targetRect.height * 0.45;
+    const skillColor = actor.skills.find(s => s.id === skillId)?.color || '#ff5a79';
+    spawn3DSparks(sparkX, sparkY, skillColor);
+  } catch(e) {}
+
+  // 一般攻擊 1600ms 後恢復 3D 舞台
+  window.setTimeout(()=>{
+    if(stage) stage.classList.remove('stage-3d');
+  }, 1600);
+
+  if(actor.streak>=2){
+    const combo=$('combo');
+    combo.textContent=`${actor.streak} HIT COMBO!`;
+    combo.classList.remove('hidden');
+    window.setTimeout(()=>combo.classList.add('hidden'),800);
+  } 
+  playTone(true,skillId,actor.streak); 
+  return 1600; 
+}
 function adaptiveAccuracyDelta(){ const recent=state.recentResults; if(recent.length<3)return 0; const correctCount=recent.filter(Boolean).length; if(correctCount===recent.length)return .08; if(correctCount<=Math.ceil(recent.length*.25))return -.08; return 0; }
 function cpuMove(){
   if(!state.running||state.turn!=='p2')return;
@@ -995,4 +1067,114 @@ function saveCustomQuestions(data, title) {
   
   $('custom-quiz-modal').classList.add('hidden');
   alert(`題庫「${title}」已成功匯入！現已切換至該題庫。`);
+}
+
+function spawn3DSparks(x, y, color, count) {
+  const container = $('battle-fx');
+  if (!container) return;
+
+  const canvas = document.createElement('canvas');
+  canvas.id = 'canvas-3d-sparks';
+  container.appendChild(canvas);
+
+  const rect = container.getBoundingClientRect();
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = rect.width * dpr;
+  canvas.height = rect.height * dpr;
+  canvas.style.width = '100%';
+  canvas.style.height = '100%';
+
+  const ctx = canvas.getContext('2d');
+  ctx.scale(dpr, dpr);
+
+  const particles = [];
+  const particleCount = count || (45 + Math.floor(Math.random() * 15));
+  const centerX = x;
+  const centerY = y;
+  const fov = 350;
+
+  for (let i = 0; i < particleCount; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const speed = 2 + Math.random() * 6;
+    const vx = Math.cos(angle) * speed * (0.8 + Math.random() * 0.4);
+    const vy = (Math.sin(angle) * speed - (1 + Math.random() * 4)) * (0.8 + Math.random() * 0.4);
+    const vz = -3 - Math.random() * 10;
+
+    particles.push({
+      x: 0,
+      y: 0,
+      z: 0,
+      vx,
+      vy,
+      vz,
+      size: 2.5 + Math.random() * 3.5,
+      life: 0.9 + Math.random() * 0.5,
+      maxLife: 0.9 + Math.random() * 0.5,
+      color: color || '#ff5a79'
+    });
+  }
+
+  let animationId;
+  const gravity = 0.12;
+
+  function render() {
+    ctx.clearRect(0, 0, rect.width, rect.height);
+    let activeParticles = 0;
+
+    particles.forEach(p => {
+      if (p.life <= 0) return;
+
+      p.x += p.vx;
+      p.y += p.vy;
+      p.z += p.vz;
+      p.vy += gravity;
+
+      p.life -= 0.016;
+      activeParticles++;
+
+      if (p.z <= -fov) {
+        p.life = 0;
+        return;
+      }
+
+      const scale = fov / (fov + p.z);
+      const screenX = centerX + p.x * scale;
+      const screenY = centerY + p.y * scale;
+      const radius = p.size * scale;
+
+      if (radius > 80 || screenX < -100 || screenX > rect.width + 100 || screenY < -100 || screenY > rect.height + 100) {
+        p.life = 0;
+        return;
+      }
+
+      ctx.beginPath();
+      ctx.arc(screenX, screenY, radius, 0, Math.PI * 2);
+      ctx.fillStyle = p.color;
+      ctx.shadowBlur = Math.max(2, 6 * scale);
+      ctx.shadowColor = p.color;
+
+      const alpha = Math.max(0, p.life / p.maxLife);
+      ctx.globalAlpha = alpha;
+      ctx.fill();
+    });
+
+    ctx.shadowBlur = 0;
+    ctx.globalAlpha = 1;
+
+    if (activeParticles > 0 && canvas.parentNode) {
+      animationId = requestAnimationFrame(render);
+    } else {
+      cleanup();
+    }
+  }
+
+  function cleanup() {
+    cancelAnimationFrame(animationId);
+    if (canvas.parentNode) {
+      canvas.remove();
+    }
+  }
+
+  setTimeout(cleanup, 2000);
+  animationId = requestAnimationFrame(render);
 }
