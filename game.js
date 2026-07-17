@@ -275,7 +275,45 @@ function answer(index,timedOut=false) { if(!state.current||!state.running)return
 }
 function attack(actor,defender,damage,skillId) { const source=actor===state.p1?$('fighter-p1'):$('fighter-p2'), target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); focusBattleScene(40); source.classList.remove('attack','ultimate'); void source.offsetWidth; source.classList.add(skillId==='ultimate'?'ultimate':'attack'); const blast=document.createElement('i'); blast.className=`blast ${skillId==='heavy'||skillId==='tactical'?'heavy':''} ${skillId==='ultimate'?'ultimate':''}`; if(skillId==='ultimate'){state.resolving=true;$('feedback').textContent='連招施放中，請觀察每一段命中！';blast.style.setProperty('--blast-color',actor.ultimate.color); const duration=playUltimateCombo(actor,defender,damage); $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),duration); playMusicStinger(ultimateSceneKey(actor.id)); playTone(true,skillId,actor.streak); return duration; } target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit'); defender.health=Math.max(0,defender.health-damage); state.playerStats[fighterKey(actor)].damage+=damage; $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),700); if(actor.streak>=2){const combo=$('combo');combo.textContent=`${actor.streak} HIT COMBO!`;combo.classList.remove('hidden');window.setTimeout(()=>combo.classList.add('hidden'),800);} playTone(true,skillId,actor.streak); return 1600; }
 function adaptiveAccuracyDelta(){ const recent=state.recentResults; if(recent.length<3)return 0; const correctCount=recent.filter(Boolean).length; if(correctCount===recent.length)return .08; if(correctCount<=Math.ceil(recent.length*.25))return -.08; return 0; }
-function cpuMove(){ if(!state.running||state.turn!=='p2')return; const actor=state.p2, mode=difficultyModes[state.difficulty], profile=actor.cpuProfile, weighted=actor.skills.flatMap(skill=>Array(Math.max(1,Math.round(profile[skill.id]*10))).fill(skill)), skill=actor.meter>=100&&Math.random()<mode.ultimateChance?getSkill(actor,'ultimate'):random(weighted), q=getQuestion(skill.questionLevel), base=skill.id==='light'?.78:skill.id==='heavy'?.62:.52, correct=Math.random()<Math.min(.9,Math.max(.2,base+profile.accuracy-.65+mode.accuracy+adaptiveAccuracyDelta())); state.current={skill,q}; renderCpuMoveDeck(actor,skill.id); $('turn-title').textContent=`駕駛艙 AI 鎖定 ${skill.name}！`; $('feedback').textContent=`⚡ CPU 選擇 ${skill.name}，準備施放！`; $('feedback').className='feedback cpu-select'; window.setTimeout(()=>resolveCpuMove(actor,mode,skill,correct),680); }
+function cpuMove(){
+  if(!state.running||state.turn!=='p2')return;
+  const actor=state.p2;
+  $('turn-title').textContent=`${actor.name} 正在讀題思考中…`;
+  $('feedback').textContent=`⚡ ${actor.name} 正在分析防火牆題目…`;
+  $('feedback').className='feedback cpu-select';
+  
+  let dots = 1;
+  const dotsInterval = setInterval(() => {
+    if (state.turn !== 'p2' || !state.running) {
+      clearInterval(dotsInterval);
+      return;
+    }
+    dots = (dots % 3) + 1;
+    $('feedback').textContent = `⚡ ${actor.name} 正在分析防火牆題目${'.'.repeat(dots)}`;
+  }, 500);
+
+  const thinkTime = 1800 + Math.random() * 1200;
+  
+  window.setTimeout(() => {
+    clearInterval(dotsInterval);
+    if(!state.running||state.turn!=='p2')return;
+    
+    const mode=difficultyModes[state.difficulty], profile=actor.cpuProfile,
+          weighted=actor.skills.flatMap(skill=>Array(Math.max(1,Math.round(profile[skill.id]*10))).fill(skill)),
+          skill=actor.meter>=100&&Math.random()<mode.ultimateChance?getSkill(actor,'ultimate'):random(weighted),
+          q=getQuestion(skill.questionLevel),
+          base=skill.id==='light'?.78:skill.id==='heavy'?.62:.52,
+          correct=Math.random()<Math.min(.9,Math.max(.2,base+profile.accuracy-.65+mode.accuracy+adaptiveAccuracyDelta()));
+    
+    state.current={skill,q};
+    renderCpuMoveDeck(actor,skill.id);
+    
+    $('turn-title').textContent=`駕駛艙 AI 鎖定 ${skill.name}！`;
+    $('feedback').textContent=`⚡ ${actor.name} 鎖定了 ${skill.name}，正在進行資料編譯…`;
+    
+    window.setTimeout(()=>resolveCpuMove(actor,mode,skill,correct), 1200);
+  }, thinkTime);
+}
 function resolveCpuMove(actor,mode,skill,correct){ if(!state.running||state.turn!=='p2')return; let recovery=1450; if(correct){actor.streak++;state.p1.streak=0;state.playerStats.p2.correct++;state.playerStats.p2.bestStreak=Math.max(state.playerStats.p2.bestStreak,actor.streak);const meterBefore=actor.meter;actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain);if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime();$('feedback').textContent=`${mode.label} AI 找到正解！${actor.name} 施放 ${skill.name}！`; $('feedback').className='feedback good'; recovery=attack(actor,state.p1,moveDamage(actor,skill.id),skill.id);}else{actor.streak=0;$('feedback').textContent=`AI 的資料判讀失誤：${actor.name} 選擇 ${skill.name}，這回合沒有命中！`;$('feedback').className='feedback bad';playTone(false);} updateUI();window.setTimeout(()=>{if(!state.running)return;if(state.p1.health<=0)finish('p2');else setTurn('p1');},Math.max(recovery,mode.delay)); }
 function renderWrongAnswerReview(){const panel=$('review-panel'), list=$('wrong-answer-list'), retry=$('retry-wrong-btn'), count=$('wrong-answer-count');panel.classList.toggle('hidden',!state.wrongAnswers.length);count.textContent=`${state.wrongAnswers.length} 題`;retry.disabled=!state.wrongAnswers.length;list.innerHTML=state.wrongAnswers.map((entry,index)=>`<article class="wrong-answer"><b>第 ${index+1} 題 · ${entry.question.q}</b><small>${entry.timedOut?'時間到，未作答。':`你的答案：${entry.question.a[entry.selectedIndex]}`}</small><p>正解：${entry.question.a[entry.question.correct]}<br>💡 ${entry.question.tip}</p><em class="competency-tag">📌 ${entry.question.tags.competency}</em></article>`).join('');renderCompetencySummary();}
 function renderCompetencySummary(){const chips=$('competency-chips'); const counts=new Map(); state.wrongAnswers.forEach(entry=>{const competency=entry.question.tags.competency; counts.set(competency,(counts.get(competency)||0)+1);}); const entries=[...counts.entries()].sort((a,b)=>b[1]-a[1]); chips.classList.toggle('hidden',entries.length<2); chips.innerHTML=entries.length<2?'':`<small>依能力指標複習：</small>${entries.map(([competency,questionCount])=>`<button class="competency-chip" data-competency-retry="${competency}" type="button">${competency}<b>${questionCount}</b></button>`).join('')}`;}
