@@ -522,3 +522,82 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   transform: scale(1.25);
   transform-origin: bottom center;
 }
+
+/* 魔王病毒干擾/異常網路事件樣式 */
+.question-card.boss-glitched {
+  border-color: #ff7196 !important;
+  box-shadow: 0 0 25px #ff7196, inset 0 0 15px rgba(255, 113, 150, 0.3) !important;
+  transform: rotate(-2.5deg);
+  filter: hue-rotate(120deg);
+  animation: glitch-fast-shake 0.3s infinite ease-in-out;
+}
+.question-card.boss-glitched .answer {
+  transform: scaleX(-1);
+  direction: rtl;
+  unicode-bidi: bidi-override;
+}
+.question-card.boss-glitched .answer b {
+  transform: scaleX(-1);
+  display: inline-block;
+}
+
+/* 控制台組別對抗 - 戰術 Ready 與大螢幕特效 */
+.btn-tactical-ready {
+  position: relative;
+  background: linear-gradient(90deg, #ff7196, #ff9a5e) !important;
+  color: #fff !important;
+  border: none !important;
+  box-shadow: 0 0 15px #ff7196, 0 0 25px rgba(255, 113, 150, 0.4);
+  animation: pulse-glow 1.2s infinite alternate;
+}
+.boss-arena-container.alert {
+  border-color: #ff3b30 !important;
+  background: radial-gradient(circle at 50% 30%, #5d0f19, #09172c 75%) !important;
+  animation: boss-alert-pulse 1.5s infinite alternate;
+}
+.boss-shield {
+  position: absolute;
+  inset: 0;
+  border: 4px solid #52e6ff;
+  border-radius: 24px;
+  box-shadow: 0 0 30px #52e6ff, inset 0 0 20px #52e6ff;
+  opacity: 0.8;
+  pointer-events: none;
+  z-index: 15;
+  animation: shield-glow 1.2s infinite alternate;
+}
+.mud-splash {
+  position: absolute;
+  pointer-events: none;
+  z-index: 18;
+  border-radius: 50%;
+  background: #3e2511;
+  filter: blur(3px);
+  box-shadow: inset 0 0 15px #211105;
+  opacity: 0.88;
+  animation: mud-hit 0.4s ease-out forwards;
+}
+
+@keyframes glitch-fast-shake {
+  0%, 100% { transform: rotate(-2.5deg) translate(0, 0); }
+  20% { transform: rotate(-2.5deg) translate(-2px, 1px); }
+  40% { transform: rotate(-2.5deg) translate(2px, -1px); }
+  60% { transform: rotate(-2.5deg) translate(-1px, -2px); }
+  80% { transform: rotate(-2.5deg) translate(1px, 2px); }
+}
+@keyframes pulse-glow {
+  0% { transform: scale(1); box-shadow: 0 0 10px #ff7196; }
+  100% { transform: scale(1.08); box-shadow: 0 0 25px #ff7196, 0 0 35px #ff9a5e; }
+}
+@keyframes boss-alert-pulse {
+  0% { box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 10px rgba(255, 59, 48, 0.2); }
+  100% { box-shadow: 0 20px 50px rgba(0,0,0,0.6), inset 0 0 40px rgba(255, 59, 48, 0.6); }
+}
+@keyframes shield-glow {
+  0% { opacity: 0.4; }
+  100% { opacity: 0.95; }
+}
+@keyframes mud-hit {
+  0% { transform: scale(0.2); opacity: 0; }
+  100% { transform: scale(1); opacity: 0.88; }
+}

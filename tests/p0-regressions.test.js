@@ -347,4 +347,20 @@ test('Boss 戰模式支援 (全班 Raid 與單人魔王挑戰)', () => {
   assert.match(game, /👹 終極魔王：/);
   assert.match(game, /finalDamage\s*=\s*Math\.ceil\(finalDamage\*1\.3\)/);
   assert.match(game, /wonBoss:\s*state\.bossMode/);
+
+  // P0-1 異常干擾與定時器覆蓋
+  assert.match(game, /bossGlitchActive:false/);
+  assert.match(game, /state\.bossGlitchActive\s*=\s*state\.bossMode/);
+  assert.match(game, /if\(state\.bossGlitchActive\)seconds=15/);
+  assert.match(game, /damage\s*=\s*damage\s*\*\s*2/);
+
+  // P0-2 戰術 Ready 按鈕與大螢幕
+  assert.match(consoleHtml, /class="btn-tactical-ready"/);
+  assert.match(consoleHtml, /triggerTeamTactical/);
+  assert.match(consoleHtml, /showTacticalBanner/);
+
+  // P0-3 班級錯題大字報
+  assert.match(consoleHtml, /id="class-report-modal"/);
+  assert.match(consoleHtml, /id="class-report-btn"/);
+  assert.match(consoleHtml, /showClassWrongAnswerReport/);
 });

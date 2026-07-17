@@ -178,7 +178,7 @@ const questions = [
 const questionTags = { safety:{grade:'三至六年級',competency:'網路安全與隱私',misconception:'陌生連結與帳密可隨意分享'}, coding:{grade:'三至六年級',competency:'運算思維',misconception:'除錯只靠猜測'}, digital:{grade:'四至六年級',competency:'數位公民與 AI 素養',misconception:'網路資訊與 AI 輸出一定正確'}, mixed:{grade:'三至六年級',competency:'資訊應用與合作',misconception:'整理資料不影響作品品質'} };
 questions.forEach(question=>question.tags={...questionTags[question.unit],difficulty:question.level});
 
-const state = { mode:'solo', unit:'mixed', difficulty:'standard', roundTime:75, character:characters[0], character2:characters[1], turn:'p1', running:false, resolving:false, time:75, timerId:null, questionTimerId:null, current:null, used:[], sound:true, correct:0, bestStreak:0, round:1, p1:null, p2:null, playerStats:null, wrongAnswers:[], retryQueue:[], retryMode:false, recentResults:[], gasUrl:'', className:'501', isConsoleConnected:false, customQuestions:[], teamMode:'none', ttsEnabled:false, bossMode:false };
+const state = { mode:'solo', unit:'mixed', difficulty:'standard', roundTime:75, character:characters[0], character2:characters[1], turn:'p1', running:false, resolving:false, time:75, timerId:null, questionTimerId:null, current:null, used:[], sound:true, correct:0, bestStreak:0, round:1, p1:null, p2:null, playerStats:null, wrongAnswers:[], retryQueue:[], retryMode:false, recentResults:[], gasUrl:'', className:'501', isConsoleConnected:false, customQuestions:[], teamMode:'none', ttsEnabled:false, bossMode:false, bossGlitchActive:false };
 const $ = (id) => document.getElementById(id);
 const random = (items) => items[Math.floor(Math.random() * items.length)];
 
@@ -249,7 +249,7 @@ function getQuestion(level, useRetry=false) {
   return q;
 }
 function clearQuestionTimer(){window.clearInterval(state.questionTimerId);state.questionTimerId=null;}
-function startQuestionTimer(skill){clearQuestionTimer();let seconds=skill.id==='light'?14:skill.id==='heavy'?17:skill.id==='tactical'?20:24;const output=$('question-timer');const tick=()=>output.textContent=`⏱ ${seconds}s`;tick();state.questionTimerId=window.setInterval(()=>{seconds--;tick();if(seconds<=0){clearQuestionTimer();answer(-1,true);}},1000);}
+function startQuestionTimer(skill){clearQuestionTimer();let seconds=skill.id==='light'?14:skill.id==='heavy'?17:skill.id==='tactical'?20:24;if(state.bossGlitchActive)seconds=15;const output=$('question-timer');const tick=()=>output.textContent=`⏱ ${seconds}s`;tick();state.questionTimerId=window.setInterval(()=>{seconds--;tick();if(seconds<=0){clearQuestionTimer();answer(-1,true);}},1000);}
 function getSkill(actor, skillId) { return skillId==='ultimate' ? { id:'ultimate', name:actor.ultimate.name, damage:actor.ultimate.damage, meterGain:0, questionLevel:'ultimate', label:'專屬大絕' } : actor.skills.find(skill=>skill.id===skillId); }
 function moveName(actor, skillId) { return getSkill(actor,skillId).name; }
 function moveDamage(actor, skillId) { return getSkill(actor,skillId).damage + Math.min((actor.streak-1)*2,8); }
@@ -279,8 +279,114 @@ function playUltimateCombo(actor, defender, damage) {
   return duration;
 }
 function focusQuestionCard(delay=0) { window.setTimeout(()=>{ const card=$('question-card'), reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches; card.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'}); card.classList.remove('question-focus'); void card.offsetWidth; card.classList.add('question-focus'); card.focus({preventScroll:true}); window.setTimeout(()=>card.classList.remove('question-focus'),900); },delay); }
-function chooseMove(skillId) { if(!state.running||state.resolving||state.turn!=='p1' && state.mode==='solo')return; const actor=state[state.turn], skill=getSkill(actor,skillId); if(skillId==='ultimate'&&actor.meter<100)return; state.current={skill,q:getQuestion(skill.questionLevel,true)}; const q=state.current.q; $('question-level').textContent=`${skill.label} · ${skill.name} · 傷害 ${skill.damage}`; $('question-count').textContent=`已答對 ${state.playerStats[fighterKey(actor)].correct} 題`; $('question-text').textContent=q.q; $('answers').innerHTML=q.a.map((answer,index)=>`<button class="answer" data-answer="${index}" type="button"><b>${'ABCD'[index]}.</b> ${answer}</button>`).join(''); $('explain').textContent=state.difficulty==='practice'?difficultyModes.practice.hint:''; $('question-card').classList.remove('hidden'); $('move-deck').classList.add('hidden'); $('feedback').textContent='題目已就位，選出最合適的答案！'; startQuestionTimer(skill); focusQuestionCard(100); if (state.ttsEnabled && !actor.isCpu && typeof SpeechSynthesisUtterance !== 'undefined') { try { window.speechSynthesis.cancel(); const speakText = `${q.q}。選項A：${q.a[0]}。選項B：${q.a[1]}。選項C：${q.a[2]}。選項D：${q.a[3]}`; const utterance = new SpeechSynthesisUtterance(speakText); utterance.lang = 'zh-TW'; utterance.rate = 1.0; window.speechSynthesis.speak(utterance); } catch(e) {} } }
-function answer(index,timedOut=false) { if(!state.current||!state.running)return; clearQuestionTimer(); try{window.speechSynthesis.cancel();}catch(e){} const {q,skill}=state.current; document.querySelectorAll('.answer').forEach(btn=>btn.disabled=true); const correct=!timedOut&&index===q.correct, selected=document.querySelector(`.answer[data-answer="${index}"]`); if(selected)selected.classList.add(correct?'correct':'wrong'); if(state.turn==='p1'){state.recentResults.push(correct); if(state.recentResults.length>4)state.recentResults.shift();} if(!correct)document.querySelector(`.answer[data-answer="${q.correct}"]`).classList.add('correct'); $('explain').textContent=`💡 ${q.tip}`; const actor=state[state.turn], defender=state.turn==='p1'?state.p2:state.p1, actorKey=fighterKey(actor); let attackRecovery=1600; if(correct){state.correct++; actor.streak++; defender.streak=0; state.bestStreak=Math.max(state.bestStreak,actor.streak); state.playerStats[actorKey].correct++; state.playerStats[actorKey].bestStreak=Math.max(state.playerStats[actorKey].bestStreak,actor.streak); const damage=moveDamage(actor,skill.id), meterBefore=actor.meter; actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain); if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime(); $('feedback').textContent=actor.isCpu?`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`:`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`; $('feedback').className='feedback good'; attackRecovery=attack(actor,defender,damage,skill.id); } else { actor.streak=0; actor.meter=Math.max(0,actor.meter-8); state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); $('feedback').textContent=timedOut?'時間到！這題先記下來。':'這題先記下來！攻擊沒有命中。'; $('feedback').className='feedback bad'; playTone(false); }
+function chooseMove(skillId) { 
+  if(!state.running||state.resolving||state.turn!=='p1' && state.mode==='solo')return; 
+  const actor=state[state.turn], skill=getSkill(actor,skillId); 
+  if(skillId==='ultimate'&&actor.meter<100)return; 
+  
+  const actorKey = fighterKey(actor);
+  const correctCount = state.playerStats[actorKey] ? state.playerStats[actorKey].correct : 0;
+  state.bossGlitchActive = state.bossMode && (correctCount === 4 || correctCount === 8);
+  
+  state.current={skill,q:getQuestion(skill.questionLevel,true)}; 
+  const q=state.current.q;
+  
+  let labelText = `${skill.label} · ${skill.name} · 傷害 ${skill.damage}`;
+  if (state.bossGlitchActive) {
+    labelText = `🚨 警告：防火牆遭系統入侵！【${skill.name}】`;
+  }
+  $('question-level').textContent=labelText;
+  $('question-count').textContent=state.bossGlitchActive ? `⚠️ 勒索病毒干擾中！` : `已答對 ${correctCount} 題`;
+  $('question-text').textContent=q.q; 
+  $('answers').innerHTML=q.a.map((answer,index)=>`<button class="answer" data-answer="${index}" type="button"><b>${'ABCD'[index]}.</b> ${answer}</button>`).join(''); 
+  $('explain').textContent=state.difficulty==='practice'?difficultyModes.practice.hint:''; 
+  
+  const card = $('question-card');
+  if (state.bossGlitchActive) {
+    card.classList.add('boss-glitched');
+    $('feedback').textContent = '⚠️ 系統遭受入侵！文字已反轉偏向，必須在 15 秒內完成防禦！';
+    $('feedback').className = 'feedback bad';
+  } else {
+    card.classList.remove('boss-glitched');
+    $('feedback').textContent = '題目已就位，選出最合適的答案！';
+    $('feedback').className = 'feedback';
+  }
+  
+  card.classList.remove('hidden'); 
+  $('move-deck').classList.add('hidden'); 
+  startQuestionTimer(skill); 
+  focusQuestionCard(100); 
+  
+  if (state.ttsEnabled && !actor.isCpu && typeof SpeechSynthesisUtterance !== 'undefined') { 
+    try { 
+      window.speechSynthesis.cancel(); 
+      const speakText = `${q.q}。選項A：${q.a[0]}。選項B：${q.a[1]}。選項C：${q.a[2]}。選項D：${q.a[3]}`; 
+      const utterance = new SpeechSynthesisUtterance(speakText); 
+      utterance.lang = 'zh-TW'; 
+      utterance.rate = state.bossGlitchActive ? 1.25 : 1.0;
+      window.speechSynthesis.speak(utterance); 
+    } catch(e) {} 
+  } 
+}
+function answer(index,timedOut=false) { 
+  if(!state.current||!state.running)return; 
+  clearQuestionTimer(); 
+  try{window.speechSynthesis.cancel();}catch(e){} 
+  const {q,skill}=state.current; 
+  document.querySelectorAll('.answer').forEach(btn=>btn.disabled=true); 
+  const correct=!timedOut&&index===q.correct, selected=document.querySelector(`.answer[data-answer="${index}"]`); 
+  if(selected)selected.classList.add(correct?'correct':'wrong'); 
+  if(state.turn==='p1'){state.recentResults.push(correct); if(state.recentResults.length>4)state.recentResults.shift();} 
+  if(!correct)document.querySelector(`.answer[data-answer="${q.correct}"]`).classList.add('correct'); 
+  $('explain').textContent=`💡 ${q.tip}`; 
+  const actor=state[state.turn], defender=state.turn==='p1'?state.p2:state.p1, actorKey=fighterKey(actor); 
+  let attackRecovery=1600; 
+  
+  if(correct){
+    state.correct++; 
+    actor.streak++; 
+    defender.streak=0; 
+    state.bestStreak=Math.max(state.bestStreak,actor.streak); 
+    state.playerStats[actorKey].correct++; 
+    state.playerStats[actorKey].bestStreak=Math.max(state.playerStats[actorKey].bestStreak,actor.streak); 
+    
+    let damage=moveDamage(actor,skill.id);
+    if(state.bossGlitchActive) {
+      damage = damage * 2;
+    }
+    
+    const meterBefore=actor.meter; 
+    actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain); 
+    if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime(); 
+    
+    if(state.bossGlitchActive) {
+      $('feedback').textContent = `🛡️ 解毒成功！防火牆恢復正常，對 ${defender.name} 造成雙倍爆擊 ${damage} 點傷害！`;
+      $('feedback').className = 'feedback good';
+    } else {
+      $('feedback').textContent=actor.isCpu?`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`:`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`; 
+      $('feedback').className='feedback good'; 
+    }
+    attackRecovery=attack(actor,defender,damage,skill.id); 
+  } else { 
+    actor.streak=0; 
+    actor.meter=Math.max(0,actor.meter-8); 
+    state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); 
+    
+    if(state.bossGlitchActive) {
+      const selfDmg = 30;
+      actor.health = Math.max(0, actor.health - selfDmg);
+      $('feedback').textContent = `💀 解毒失敗！系統遭受病毒入侵，您受到了 ${selfDmg} 點資安反噬傷害！`;
+      $('feedback').className = 'feedback bad';
+      playTone(false);
+    } else {
+      $('feedback').textContent=timedOut?'時間到！這題先記下來。':'這題先記下來！攻擊沒有命中。'; 
+      $('feedback').className='feedback bad'; 
+      playTone(false); 
+    }
+  }
+  
+  state.bossGlitchActive = false;
+  $('question-card').classList.remove('boss-glitched');
   updateUI(); const recovery=correct ? attackRecovery : 1600; window.setTimeout(()=>{ if(!state.running)return; if(state.retryMode&&state.retryQueue.length===0)finish('p1','錯題再練完成！'); else if(defender.health<=0)finish(state.turn); else setTurn(state.turn==='p1'?'p2':'p1'); },recovery);
 }
 function attack(actor,defender,damage,skillId) { const source=actor===state.p1?$('fighter-p1'):$('fighter-p2'), target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); focusBattleScene(40); source.classList.remove('attack','ultimate'); void source.offsetWidth; source.classList.add(skillId==='ultimate'?'ultimate':'attack'); const blast=document.createElement('i'); blast.className=`blast ${skillId==='heavy'||skillId==='tactical'?'heavy':''} ${skillId==='ultimate'?'ultimate':''}`; if(skillId==='ultimate'){state.resolving=true;$('feedback').textContent='連招施放中，請觀察每一段命中！';blast.style.setProperty('--blast-color',actor.ultimate.color); const duration=playUltimateCombo(actor,defender,damage); $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),duration); playMusicStinger(ultimateSceneKey(actor.id)); playTone(true,skillId,actor.streak); return duration; } target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit'); defender.health=Math.max(0,defender.health-damage); state.playerStats[fighterKey(actor)].damage+=damage; $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),700); if(actor.streak>=2){const combo=$('combo');combo.textContent=`${actor.streak} HIT COMBO!`;combo.classList.remove('hidden');window.setTimeout(()=>combo.classList.add('hidden'),800);} playTone(true,skillId,actor.streak); return 1600; }
