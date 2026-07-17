@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="答題快打">
   <title>石門國小｜資訊科技駕駛艙：答題快打</title>
-  <link rel="stylesheet" href="style.css?v=2026.07.17-3">
+  <link rel="stylesheet" href="style.css?v=2026.07.17-4">
 </head>
 <body>
   <main class="app-shell">
@@ -121,6 +121,21 @@
       </div>
 
       <aside class="lesson-note"><span>💡 教學小提醒</span><p>每次答題後會立即顯示正解與原因；可以兩人輪流，也能投影到大螢幕全班一起討論。</p></aside>
+      
+      <div id="boss-challenge-option" class="form-group" style="margin: 15px 0; display: flex; align-items: center; justify-content: space-between; padding: 12px 18px; border: 1px solid rgba(255, 113, 150, 0.3); border-radius: 14px; background: rgba(70, 31, 54, 0.25);">
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 24px;">👹</span>
+          <div>
+            <b style="color: #ff7196; font-size: 14px; display: block;">挑戰魔王關卡 (Boss Fight)</b>
+            <small style="color: var(--muted); font-size: 11px;">CPU 魔王血量提升至 300 HP 且攻擊力增強，戰鬥更具挑戰！</small>
+          </div>
+        </div>
+        <label class="boss-switch" style="position: relative; display: inline-block; width: 46px; height: 24px;">
+          <input type="checkbox" id="boss-mode-toggle" style="opacity: 0; width: 0; height: 0;">
+          <span class="boss-slider" style="position: absolute; cursor: pointer; inset: 0; background-color: #0c2b48; border: 1px solid var(--line); border-radius: 24px; transition: .3s;"></span>
+        </label>
+      </div>
+
       <button id="launch-btn" class="launch-btn" type="button"><span>啟動任務</span><b>→</b></button>
     </section>
 
@@ -285,8 +300,8 @@
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
     <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
   </aside>
-  <script>window.APP_VERSION='2026.07.17-3';</script>
-  <script src="game.js?v=2026.07.17-3"></script>
-  <script src="sw-register.js?v=2026.07.17-3"></script>
+  <script>window.APP_VERSION='2026.07.17-4';</script>
+  <script src="game.js?v=2026.07.17-4"></script>
+  <script src="sw-register.js?v=2026.07.17-4"></script>
 </body>
 </html>

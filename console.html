@@ -802,6 +802,7 @@
       <button class="tab-btn" data-tab="dashboard" role="tab" aria-selected="false">即時數據看板</button>
       <button class="tab-btn" data-tab="tournament" role="tab" aria-selected="false">淘汰賽對戰表</button>
       <button class="tab-btn" data-tab="gas" role="tab" aria-selected="false">GAS 雲端同步教學</button>
+      <button class="tab-btn" data-tab="boss" role="tab" aria-selected="false">👹 Boss 挑戰賽</button>
     </div>
   </header>
 
@@ -831,6 +832,30 @@
               <option value="groups">🎒 六分組對抗賽 (1~6組)</option>
             </select>
           </div>
+          
+          <div class="form-group" style="margin-top:15px; border-top:1px solid var(--border-color); padding-top:15px;">
+            <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:bold; color:#ff7196;">
+              <input type="checkbox" id="boss-mode-checkbox"> 👹 啟用全班合作 Raid Boss 戰
+            </label>
+            <div id="boss-setup-details" style="display:none; margin-top:10px; padding-left:22px;">
+              <div class="form-group" style="margin-bottom:8px;">
+                <label for="boss-select">選擇 Boss 魔王</label>
+                <select id="boss-select" style="width:100%; padding:8px; background:#071e36; border:1px solid var(--border-color); border-radius:8px; color:var(--text-color);">
+                  <option value="glitch-dragon">🐉 勒索病毒故障龍 (Glitch Dragon)</option>
+                  <option value="cache-golem">🗄️ 記憶體過載石巨人 (Cache Golem)</option>
+                  <option value="bot-swarm">🤖 殭屍網路蜂群 (Bot Swarm)</option>
+                  <option value="malware-mimic">👥 惡意程式偽裝怪 (Malware Mimic)</option>
+                  <option value="phishing-siren">🧜‍♀️ 網路釣魚海妖 (Phishing Siren)</option>
+                </select>
+              </div>
+              <div class="form-group" style="margin-bottom:8px;">
+                <label for="boss-hp-input">Boss 總血量 (HP)</label>
+                <input type="number" id="boss-hp-input" value="5000" min="100" style="width:100%; padding:8px; background:#071e36; border:1px solid var(--border-color); border-radius:8px; color:var(--text-color);">
+                <small style="color:var(--text-muted); display:block; margin-top:4px;">推薦設定：全班人數 × 150 (例：30人設 4500)</small>
+              </div>
+            </div>
+          </div>
+
           <div style="display:flex; gap:10px;">
             <button id="save-setup-btn" class="btn">儲存並產生 QR Code</button>
             <button id="clear-setup-btn" class="btn btn-secondary">重置設定</button>
@@ -1024,6 +1049,44 @@ function doOptions(e) {
       </div>
     </section>
 
+    <!-- TAB 5: Raid Boss Arena -->
+    <section id="tab-boss" class="tab-content">
+      <div id="boss-inactive-view" class="card" style="text-align:center; padding:80px; color:var(--text-muted);">
+        <span style="font-size: 64px; display: block; margin-bottom: 20px;">🔒</span>
+        <h3>Raid Boss 戰未啟用</h3>
+        <p style="margin-top: 10px;">請至「分發與設定」頁面啟用全班合作 Raid Boss 戰，並點擊儲存以解鎖 Boss 魔王挑戰！</p>
+      </div>
+
+      <div id="boss-active-view" class="boss-arena-container" style="display:none;">
+        <div class="boss-title-banner">
+          <h2 id="boss-giant-name">👹 終極魔王：勒索病毒故障龍</h2>
+          <p>全班合作戰：答對即可累積對魔王輸出傷害！擊敗魔王即可贏得勝利！</p>
+        </div>
+
+        <div class="boss-stage">
+          <div class="boss-floater-layer" id="boss-damage-floater-container"></div>
+          <img id="boss-giant-image" class="boss-giant-avatar" src="assets/characters/glitch-dragon.png" alt="巨型Boss">
+        </div>
+
+        <div class="boss-hp-hud">
+          <div class="boss-hp-label">
+            <span>BOSS HP</span>
+            <span id="boss-hp-text">5,000 / 5,000</span>
+          </div>
+          <div class="boss-hp-bar">
+            <div id="boss-hp-fill" class="boss-hp-fill" style="width: 100%;"></div>
+          </div>
+        </div>
+
+        <!-- 擊殺成功面板 -->
+        <div id="boss-victory-panel" class="boss-defeat-panel" style="display:none;">
+          <span style="font-size: 80px; filter: drop-shadow(0 0 20px #ffe477);">🏆</span>
+          <h3 style="color:#62f7bb; text-shadow:0 0 25px rgba(98,247,187,0.8);">BOSS DEFEATED!</h3>
+          <p>太強了！全班玩家同心協力，成功消滅了終極魔王，守護了校園網路安全！</p>
+        </div>
+      </div>
+    </section>
+
   </div>
 
   <footer class="footer">
@@ -1065,9 +1128,13 @@ function doOptions(e) {
       gasUrl: localStorage.getItem('smes-battle-gas-url') || '',
       className: localStorage.getItem('smes-battle-class-name') || '501',
       teamMode: localStorage.getItem('smes-battle-team-mode') || 'none',
+      bossMode: localStorage.getItem('smes-battle-boss-mode') === 'true',
+      bossId: localStorage.getItem('smes-battle-boss-id') || 'glitch-dragon',
+      bossMaxHp: parseInt(localStorage.getItem('smes-battle-boss-max-hp') || '5000', 10),
       studentsData: [],
       activeTab: 'setup',
-      autoRefreshInterval: null
+      autoRefreshInterval: null,
+      prevStudentDamageMap: new Map()
     };
 
     // DOM 元素快取
@@ -1091,9 +1158,14 @@ function doOptions(e) {
         c.classList.toggle('active', c.id === `tab-${tab}`);
       });
 
-      // 如果切換到看板，開啟自動輪詢；否則關閉
-      if (tab === 'dashboard') {
-        $('current-class-title').textContent = state.className + ' 班';
+      if (tab === 'boss') {
+        updateRaidBossStatus();
+      }
+
+      if (tab === 'dashboard' || tab === 'boss') {
+        if (tab === 'dashboard') {
+          $('current-class-title').textContent = state.className + ' 班';
+        }
         fetchLiveRecords();
         startAutoRefresh();
       } else {
@@ -1109,11 +1181,23 @@ function doOptions(e) {
       generateQrCode(state.gasUrl, state.className, state.teamMode);
     }
 
+    $('boss-mode-checkbox').checked = state.bossMode;
+    $('boss-select').value = state.bossId;
+    $('boss-hp-input').value = state.bossMaxHp;
+    $('boss-setup-details').style.display = state.bossMode ? 'block' : 'none';
+    
+    $('boss-mode-checkbox').addEventListener('change', () => {
+      $('boss-setup-details').style.display = $('boss-mode-checkbox').checked ? 'block' : 'none';
+    });
+
     // 儲存設定
     $('save-setup-btn').addEventListener('click', () => {
       const url = $('gas-url-input').value.trim();
       const cls = $('class-name-input').value.trim();
       const tm = $('team-mode-select').value;
+      const bm = $('boss-mode-checkbox').checked;
+      const bi = $('boss-select').value;
+      const bh = parseInt($('boss-hp-input').value.trim() || '5000', 10);
 
       if (!url) {
         alert('請輸入有效的 GAS 網頁應用程式 URL！');
@@ -1127,9 +1211,15 @@ function doOptions(e) {
       state.gasUrl = url;
       state.className = cls;
       state.teamMode = tm;
+      state.bossMode = bm;
+      state.bossId = bi;
+      state.bossMaxHp = bh;
       localStorage.setItem('smes-battle-gas-url', url);
       localStorage.setItem('smes-battle-class-name', cls);
       localStorage.setItem('smes-battle-team-mode', tm);
+      localStorage.setItem('smes-battle-boss-mode', String(bm));
+      localStorage.setItem('smes-battle-boss-id', bi);
+      localStorage.setItem('smes-battle-boss-max-hp', String(bh));
 
       generateQrCode(url, cls, tm);
       alert('設定儲存成功！QR Code 已生成。');
@@ -1141,12 +1231,22 @@ function doOptions(e) {
       state.gasUrl = '';
       state.className = '501';
       state.teamMode = 'none';
+      state.bossMode = false;
+      state.bossId = 'glitch-dragon';
+      state.bossMaxHp = 5000;
       localStorage.removeItem('smes-battle-gas-url');
       localStorage.removeItem('smes-battle-class-name');
       localStorage.removeItem('smes-battle-team-mode');
+      localStorage.removeItem('smes-battle-boss-mode');
+      localStorage.removeItem('smes-battle-boss-id');
+      localStorage.removeItem('smes-battle-boss-max-hp');
       $('gas-url-input').value = '';
       $('class-name-input').value = '501';
       $('team-mode-select').value = 'none';
+      $('boss-mode-checkbox').checked = false;
+      $('boss-select').value = 'glitch-dragon';
+      $('boss-hp-input').value = 5000;
+      $('boss-setup-details').style.display = 'none';
       $('qrcode').innerHTML = '';
       $('qr-panel').style.display = 'none';
       $('qr-placeholder').style.display = 'flex';
@@ -1163,6 +1263,9 @@ function doOptions(e) {
       let studentUrl = `${window.location.origin}${window.location.pathname.replace('console.html', '')}index.html?gas=${encodeURIComponent(b64Gas)}&class=${encodeURIComponent(className)}`;
       if (teamMode !== 'none') {
         studentUrl += `&teams=${encodeURIComponent(teamMode)}`;
+      }
+      if (state.bossMode) {
+        studentUrl += `&mode=boss`;
       }
       
       $('student-link-text').textContent = studentUrl;
@@ -1221,6 +1324,7 @@ function doOptions(e) {
           // 篩選當前班級的資料
           state.studentsData = data.filter(item => String(item['班級']).trim() === String(state.className).trim());
           renderDashboard();
+          updateRaidBossStatus();
         })
         .catch(err => {
           console.error('拉取資料失敗：', err);
@@ -1244,6 +1348,7 @@ function doOptions(e) {
       }
       $('current-class-title').textContent = state.className + ' 班 (示範資料)';
       renderDashboard();
+      updateRaidBossStatus();
     });
 
     // 渲染排行榜與錯題榜
@@ -1668,6 +1773,101 @@ function doOptions(e) {
     $('report-close-btn').addEventListener('click', () => $('student-report-modal').classList.add('hidden'));
     $('close-student-report-btn').addEventListener('click', () => $('student-report-modal').classList.add('hidden'));
     $('print-student-report-btn').addEventListener('click', () => window.print());
+
+    // ==========================================
+    // 👹 全班合作 Raid Boss 戰控制邏輯
+    // ==========================================
+    function updateRaidBossStatus() {
+      const activeView = $('boss-active-view');
+      const inactiveView = $('boss-inactive-view');
+      if (!activeView || !inactiveView) return;
+
+      if (!state.bossMode) {
+        activeView.style.display = 'none';
+        inactiveView.style.display = 'block';
+        return;
+      }
+      activeView.style.display = 'block';
+      inactiveView.style.display = 'none';
+
+      const bossData = {
+        'glitch-dragon': { name: '勒索病毒故障龍', icon: '🐉' },
+        'cache-golem': { name: '記憶體過載石巨人', icon: '🗄️' },
+        'bot-swarm': { name: '殭屍網路蜂群', icon: '🤖' },
+        'malware-mimic': { name: '惡意程式偽裝怪', icon: '👥' },
+        'phishing-siren': { name: '網路釣魚海妖', icon: '🧜‍♀️' }
+      };
+      const b = bossData[state.bossId] || { name: '終極魔王', icon: '👹' };
+      $('boss-giant-name').textContent = `${b.icon} 終極魔王：${b.name}`;
+      $('boss-giant-image').src = `assets/characters/${state.bossId}.png`;
+
+      let totalDamage = 0;
+      state.studentsData.forEach(student => {
+        const dmg = parseInt(student['造成傷害'] || '0', 10);
+        totalDamage += dmg;
+      });
+
+      const curHp = Math.max(0, state.bossMaxHp - totalDamage);
+      $('boss-hp-text').textContent = `${curHp.toLocaleString()} / ${state.bossMaxHp.toLocaleString()}`;
+      $('boss-hp-fill').style.width = `${(curHp / state.bossMaxHp) * 100}%`;
+
+      state.studentsData.forEach(student => {
+        const name = student['座號姓名'] || '未知學生';
+        const curDmg = parseInt(student['造成傷害'] || '0', 10);
+        
+        if (!state.prevStudentDamageMap.has(name)) {
+          state.prevStudentDamageMap.set(name, curDmg);
+          return;
+        }
+
+        const prevDmg = state.prevStudentDamageMap.get(name);
+        if (curDmg > prevDmg) {
+          const delta = curDmg - prevDmg;
+          if (state.activeTab === 'boss') {
+            triggerBossHitEffect(name, delta);
+          }
+          state.prevStudentDamageMap.set(name, curDmg);
+        }
+      });
+
+      const victoryPanel = $('boss-victory-panel');
+      const giantImg = $('boss-giant-image');
+      if (curHp <= 0) {
+        victoryPanel.style.display = 'flex';
+        giantImg.classList.add('dead');
+      } else {
+        victoryPanel.style.display = 'none';
+        giantImg.classList.remove('dead');
+      }
+    }
+
+    function triggerBossHitEffect(studentName, damageAmount) {
+      const giantImg = $('boss-giant-image');
+      if (giantImg) {
+        giantImg.classList.remove('hit');
+        void giantImg.offsetWidth;
+        giantImg.classList.add('hit');
+        setTimeout(() => {
+          giantImg.classList.remove('hit');
+        }, 500);
+      }
+
+      const container = $('boss-damage-floater-container');
+      if (container) {
+        const floater = document.createElement('div');
+        floater.className = 'damage-float';
+        floater.textContent = `💥 -${damageAmount} (${studentName})`;
+        const randX = 15 + Math.random() * 65;
+        const randY = 10 + Math.random() * 50;
+        floater.style.left = `${randX}%`;
+        floater.style.top = `${randY}%`;
+        
+        container.appendChild(floater);
+        setTimeout(() => {
+          floater.remove();
+        }, 1200);
+      }
+    }
   </script>
 </body>
 </html>

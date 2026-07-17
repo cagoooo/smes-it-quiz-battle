@@ -335,3 +335,16 @@ test('自訂題庫語音朗讀支援', () => {
   assert.match(html, /id="lobby-tts-btn"/);
   assert.match(game, /SpeechSynthesisUtterance/);
 });
+
+test('Boss 戰模式支援 (全班 Raid 與單人魔王挑戰)', () => {
+  assert.match(html, /id="boss-mode-toggle"/);
+  assert.match(html, /id="tab-boss"/);
+  assert.match(html, /id="boss-giant-image"/);
+  assert.match(html, /id="boss-hp-fill"/);
+
+  assert.match(game, /bossMode:\s*false/);
+  assert.match(game, /state\.p2\.health\s*=\s*300/);
+  assert.match(game, /👹 終極魔王：/);
+  assert.match(game, /finalDamage\s*=\s*Math\.ceil\(finalDamage\*1\.3\)/);
+  assert.match(game, /wonBoss:\s*state\.bossMode/);
+});

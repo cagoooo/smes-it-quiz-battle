@@ -47,6 +47,7 @@ const BADGES = [
   { id:'perfect', name:'單局全對', icon:'🎯', check:(records,battle)=>battle.wrongCount===0&&battle.correct>=5 },
   { id:'battles10', name:'挑戰 10 場', icon:'🥉', check:(records)=>records.battles>=10 },
   { id:'battles50', name:'資深玩家', icon:'🏅', check:(records)=>records.battles>=50 },
+  { id:'boss-slayer', name:'魔王終結者', icon:'👹', check:(records,battle)=>battle.wonBoss===true },
 ];
 function loadRecords(){ try{ const saved=JSON.parse(localStorage.getItem(RECORDS_KEY)); if(saved&&typeof saved==='object')return {battles:0,bestStreak:0,bestCorrect:0,bestDamage:0,badges:[],...saved}; }catch(e){} return {battles:0,bestStreak:0,bestCorrect:0,bestDamage:0,badges:[]}; }
 function saveRecords(records){ try{ localStorage.setItem(RECORDS_KEY,JSON.stringify(records)); }catch(e){} }
@@ -54,7 +55,7 @@ function renderBestRecord(){ const el=$('best-record'); let records; try{ record
 function renderBadgeShelf(){ const el=$('badge-shelf'); let records; try{ records=loadRecords(); }catch(e){ el.classList.add('hidden'); return; } if(!records.badges.length){ el.classList.add('hidden'); return; } el.classList.remove('hidden'); el.innerHTML=records.badges.map(id=>{ const badge=BADGES.find(b=>b.id===id); return badge?`<span class="badge-icon" title="${badge.name}">${badge.icon}</span>`:''; }).join(''); }
 function renderBadgeUnlock(newBadges){ const el=$('badge-unlock'); if(!newBadges.length){ el.classList.add('hidden'); el.textContent=''; return; } el.classList.remove('hidden'); el.textContent=`🎉 新徽章解鎖：${newBadges.map(b=>`${b.icon} ${b.name}`).join('、')}`; }
 function resetRecords(){ if(!window.confirm('確定要重置本機的歷史最佳紀錄嗎？這個動作無法復原。'))return; try{ localStorage.removeItem(RECORDS_KEY); }catch(e){} renderBestRecord(); renderBadgeShelf(); }
-function updateRecords(){ const records=loadRecords(); records.battles+=1; records.bestStreak=Math.max(records.bestStreak,state.playerStats.p1.bestStreak); records.bestCorrect=Math.max(records.bestCorrect,state.playerStats.p1.correct); records.bestDamage=Math.max(records.bestDamage,state.playerStats.p1.damage); const battleStats={bestStreak:state.playerStats.p1.bestStreak,correct:state.playerStats.p1.correct,wrongCount:state.wrongAnswers.length}; const newBadges=[]; for(const badge of BADGES){ if(!records.badges.includes(badge.id)&&badge.check(records,battleStats)){ records.badges.push(badge.id); newBadges.push(badge); } } saveRecords(records); renderBestRecord(); renderBadgeShelf(); renderBadgeUnlock(newBadges); }
+function updateRecords(){ const records=loadRecords(); records.battles+=1; records.bestStreak=Math.max(records.bestStreak,state.playerStats.p1.bestStreak); records.bestCorrect=Math.max(records.bestCorrect,state.playerStats.p1.correct); records.bestDamage=Math.max(records.bestDamage,state.playerStats.p1.damage); const battleStats={bestStreak:state.playerStats.p1.bestStreak,correct:state.playerStats.p1.correct,wrongCount:state.wrongAnswers.length,wonBoss:state.bossMode&&(state.p1.health>state.p2.health)}; const newBadges=[]; for(const badge of BADGES){ if(!records.badges.includes(badge.id)&&badge.check(records,battleStats)){ records.badges.push(badge.id); newBadges.push(badge); } } saveRecords(records); renderBestRecord(); renderBadgeShelf(); renderBadgeUnlock(newBadges); }
 const questions = [
   { unit:'safety', level:'light', q:'收到不認識的人傳來的奇怪連結，最好的做法是？', a:['立刻點開看看','先告訴老師或家長，不隨意點擊','轉傳給全班同學','輸入帳密確認'], correct:1, tip:'陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。' },
   { unit:'safety', level:'light', q:'下列哪一組密碼比較安全？', a:['123456','myname','Ab!9qL#2','生日年月日'], correct:2, tip:'密碼應混合大小寫英文、數字與符號，並避免個人資料。' },
@@ -177,12 +178,12 @@ const questions = [
 const questionTags = { safety:{grade:'三至六年級',competency:'網路安全與隱私',misconception:'陌生連結與帳密可隨意分享'}, coding:{grade:'三至六年級',competency:'運算思維',misconception:'除錯只靠猜測'}, digital:{grade:'四至六年級',competency:'數位公民與 AI 素養',misconception:'網路資訊與 AI 輸出一定正確'}, mixed:{grade:'三至六年級',competency:'資訊應用與合作',misconception:'整理資料不影響作品品質'} };
 questions.forEach(question=>question.tags={...questionTags[question.unit],difficulty:question.level});
 
-const state = { mode:'solo', unit:'mixed', difficulty:'standard', roundTime:75, character:characters[0], character2:characters[1], turn:'p1', running:false, resolving:false, time:75, timerId:null, questionTimerId:null, current:null, used:[], sound:true, correct:0, bestStreak:0, round:1, p1:null, p2:null, playerStats:null, wrongAnswers:[], retryQueue:[], retryMode:false, recentResults:[], gasUrl:'', className:'501', isConsoleConnected:false, customQuestions:[], teamMode:'none', ttsEnabled:false };
+const state = { mode:'solo', unit:'mixed', difficulty:'standard', roundTime:75, character:characters[0], character2:characters[1], turn:'p1', running:false, resolving:false, time:75, timerId:null, questionTimerId:null, current:null, used:[], sound:true, correct:0, bestStreak:0, round:1, p1:null, p2:null, playerStats:null, wrongAnswers:[], retryQueue:[], retryMode:false, recentResults:[], gasUrl:'', className:'501', isConsoleConnected:false, customQuestions:[], teamMode:'none', ttsEnabled:false, bossMode:false };
 const $ = (id) => document.getElementById(id);
 const random = (items) => items[Math.floor(Math.random() * items.length)];
 
 function rosterCards(selected, dataAttribute) { return characters.map(hero => `<button class="hero-card ${hero.id===selected.id?'selected':''}" ${dataAttribute}="${hero.id}" type="button"><span class="hero-portrait" style="--hero-color:${hero.color}">${hero.image ? `<img src="${hero.image}" alt="${hero.name}角色圖">` : `<i aria-hidden="true">${hero.icon}</i>`}</span><span class="hero-content"><b>${hero.name}</b><small>${hero.skill}</small></span><em>選擇</em></button>`).join(''); }
-function renderRoster() { $('roster').innerHTML=rosterCards(state.character,'data-hero'); $('roster-p2').innerHTML=rosterCards(state.character2,'data-hero-p2'); $('p2-roster-card').classList.toggle('hidden',state.mode!=='duel'); $('p2-name-input-wrap').classList.toggle('hidden',state.mode!=='duel'); const showTeams = state.teamMode !== 'none'; $('p1-team-wrap').classList.toggle('hidden', !showTeams); $('p2-team-wrap').classList.toggle('hidden', !showTeams || state.mode !== 'duel'); }
+function renderRoster() { $('roster').innerHTML=rosterCards(state.character,'data-hero'); $('roster-p2').innerHTML=rosterCards(state.character2,'data-hero-p2'); $('p2-roster-card').classList.toggle('hidden',state.mode!=='duel'); $('p2-name-input-wrap').classList.toggle('hidden',state.mode!=='duel'); const showTeams = state.teamMode !== 'none'; $('p1-team-wrap').classList.toggle('hidden', !showTeams); $('p2-team-wrap').classList.toggle('hidden', !showTeams || state.mode !== 'duel'); const bossChallengeOpt = $('boss-challenge-option'); if (bossChallengeOpt) { bossChallengeOpt.classList.toggle('hidden', state.mode !== 'solo'); } }
 function choose(selector, value, key) { document.querySelectorAll(selector).forEach(el => el.classList.toggle('selected', el.dataset[key] === value)); }
 
 function createFighter(profile, isCpu=false) { return { id:profile.id, name:profile.name, icon:profile.icon, image:profile.image, health:100, meter:0, streak:0, isCpu, cpuProfile:cpuProfiles[profile.id] || cpuProfiles.firewall, skills:skillSets[profile.id] || skillSet('掃描衝擊',8,'除錯連發',16,'同步戰術',22), ultimate:random(profile.ultimates?.length ? profile.ultimates : [{ name:'同步衝擊', damage:30, color:'#ffe479' }]) }; }
@@ -208,6 +209,15 @@ function setupBattle(retryQuestions=[]) {
   state.p2 = state.mode === 'solo' ? createFighter(enemy, true) : createFighter(state.character2);
   if (state.mode === 'duel' && p2NameVal) state.p2.name = p2NameVal;
   state.p2.team = p2TeamVal;
+  
+  if (state.mode === 'solo' && state.bossMode) {
+    state.p2.health = 300;
+    state.p2.name = `👹 終極魔王：${state.p2.name}`;
+  }
+  const p2FighterEl = $('fighter-p2');
+  if (p2FighterEl) {
+    p2FighterEl.classList.toggle('boss-mode', state.mode === 'solo' && state.bossMode);
+  }
 
   state.turn='p1'; state.running=true; state.time=state.roundTime; state.current=null; state.used=[]; state.correct=0; state.bestStreak=0; state.playerStats={p1:{correct:0,bestStreak:0,damage:0},p2:{correct:0,bestStreak:0,damage:0}}; state.wrongAnswers=[]; state.retryQueue=[...retryQuestions]; state.retryMode=retryQuestions.length>0; state.recentResults=[];
   $('p1-name').textContent=state.p1.name; $('fighter-p1-name').textContent=state.p1.name; renderAvatar('p1-avatar-mini',state.p1); renderArenaAvatar('#fighter-p1 .fighter-avatar',state.p1);
@@ -220,7 +230,7 @@ function setupBattle(retryQuestions=[]) {
 }
 function renderMoveDeck(actor) { actor.skills.forEach(skill => { const button=document.querySelector(`[data-move="${skill.id}"]`); button.querySelector('.move-icon').textContent=skill.icon; button.querySelector('b').textContent=skill.name; button.querySelector('small').textContent=`${skill.label} · 傷害 ${skill.damage} · 能量 +${skill.meterGain}`; }); const ultimateButton=$('ultimate-btn'); ultimateButton.querySelector('b').textContent=actor.ultimate.name; ultimateButton.querySelector('small').textContent=`專屬大絕 · 傷害 ${actor.ultimate.damage} · 能量 100%`; ultimateButton.style.setProperty('--ultimate-color',actor.ultimate.color); }
 function renderCpuMoveDeck(actor, selectedId=null) { const skills=[...actor.skills, ...(actor.meter>=100?[getSkill(actor,'ultimate')]:[])]; $('cpu-move-list').innerHTML=skills.map(skill=>`<div class="cpu-move ${skill.id===selectedId?'selected':''} ${skill.id==='ultimate'?'ultimate':''}"><span>${skill.icon || '✦'}</span><div><b>${skill.name}</b><small>${skill.label} · 傷害 ${moveDamage(actor,skill.id)}</small></div><em>${skill.id===selectedId?'已鎖定':'分析中'}</em></div>`).join(''); $('cpu-move-status').textContent=selectedId?`已鎖定：${getSkill(actor,selectedId).name}`:'正在分析最佳招式…'; }
-function updateUI() { for (const id of ['p1','p2']) { const f=state[id]; $(`${id}-health`).style.width=`${f.health}%`; $(`${id}-health-text`).textContent=f.health; $(`${id}-meter`).style.width=`${f.meter}%`; $(`${id}-meter-text`).textContent=`${f.meter}%`; } const player=state[state.turn]; $('streak-label').textContent=`連擊 x${player.streak}`; $('ultimate-btn').classList.toggle('locked',player.meter<100); $('ultimate-btn').disabled=player.meter<100; }
+function updateUI() { for (const id of ['p1','p2']) { const f=state[id]; const maxHp=(id==='p2'&&state.mode==='solo'&&state.bossMode)?300:100; $(`${id}-health`).style.width=`${Math.min(100,Math.max(0,(f.health/maxHp)*100))}%`; $(`${id}-health-text`).textContent=f.health; $(`${id}-meter`).style.width=`${f.meter}%`; $(`${id}-meter-text`).textContent=`${f.meter}%`; } const player=state[state.turn]; $('streak-label').textContent=`連擊 x${player.streak}`; $('ultimate-btn').classList.toggle('locked',player.meter<100); $('ultimate-btn').disabled=player.meter<100; }
 function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
 function setTurn(turn) { if(!state.running)return; state.resolving=false; state.turn=turn; state.current=null; const actor=state[turn]; $('turn-title').textContent=actor.isCpu?'駕駛艙 AI 正在分析資料…':`${actor.name} 的回合：選擇技能`; document.querySelector('.turn-strip').classList.toggle('cpu',actor.isCpu); $('move-deck').classList.toggle('hidden',actor.isCpu); $('cpu-move-deck').classList.toggle('hidden',!actor.isCpu); if(actor.isCpu)renderCpuMoveDeck(actor); else renderMoveDeck(actor); $('question-card').classList.add('hidden'); $('feedback').textContent=actor.isCpu?'AI 正在挑選它的招式…':'選擇四種專屬技能之一，答對就能發動攻擊！'; $('feedback').className='feedback'; updateUI(); if(actor.isCpu){ const cpuScene=cpuBattleSceneKey(actor.id); if(cpuScene)playMusicScene(cpuScene); window.setTimeout(cpuMove,difficultyModes[state.difficulty].delay); } else { playMusicScene(battleSceneKey()); } }
 function getQuestion(level, useRetry=false) {
@@ -343,7 +353,11 @@ function resolveCpuMove(actor,mode,skill,correct){
     
     $('feedback').textContent=`${mode.label} AI 找到正解！${actor.name} 施放 ${skill.name}！`;
     $('feedback').className='feedback good';
-    recovery=attack(actor,state.p1,moveDamage(actor,skill.id),skill.id);
+    let finalDamage=moveDamage(actor,skill.id);
+    if(state.mode==='solo'&&state.bossMode){
+      finalDamage=Math.ceil(finalDamage*1.3);
+    }
+    recovery=attack(actor,state.p1,finalDamage,skill.id);
   } else {
     actor.streak=0;
     
@@ -376,7 +390,36 @@ function renderCompetencySummary(){const chips=$('competency-chips'); const coun
 function startCompetencyRetry(competency){const retryQuestions=state.wrongAnswers.filter(entry=>entry.question.tags.competency===competency).map(entry=>entry.question); if(retryQuestions.length)setupBattle(retryQuestions);}
 function renderDuelSummary(winner){const duel=state.mode==='duel', panel=$('duel-summary');panel.classList.toggle('hidden',!duel);if(!duel)return;for(const key of ['p1','p2']){const fighter=state[key],stats=state.playerStats[key];$(`${key}-result-name`).textContent=fighter.name;$(`${key}-result-correct`).textContent=`答對 ${stats.correct} · 連擊 ${stats.bestStreak} · 傷害 ${stats.damage}`;}const highlightKey=state.playerStats.p1.bestStreak===state.playerStats.p2.bestStreak?winner:(state.playerStats.p1.bestStreak>state.playerStats.p2.bestStreak?'p1':'p2'),damageKey=state.playerStats.p1.damage===state.playerStats.p2.damage?winner:(state.playerStats.p1.damage>state.playerStats.p2.damage?'p1':'p2');$('duel-highlight').textContent=`本次表現亮點：${state[highlightKey].name} 最高連擊 x${state.playerStats[highlightKey].bestStreak}；${state[damageKey].name} 造成 ${state.playerStats[damageKey].damage} 點傷害。`;}
 function startWrongAnswerRetry(){const retryQuestions=state.wrongAnswers.map(entry=>entry.question);if(retryQuestions.length)setupBattle(retryQuestions);}
-function finish(winner, reason='') { if(!state.running)return; state.running=false;clearInterval(state.timerId);const solo=state.mode==='solo', won=winner==='p1';$('result-kicker').textContent=solo?(won?'MISSION COMPLETE':'再整理一下資訊力'):'DUEL COMPLETE';$('result-icon').textContent=solo?(won?'🏆':'🧩'):'⚔️';$('result-title').textContent=solo?(won?'任務成功！':'任務暫停，重新挑戰！'):`${state[winner].name} 獲勝！`;$('result-copy').textContent=solo?(won?`${reason?'時間到！':''}你用正確的資訊觀念守護了校園網路。`:'別灰心，每一題的說明都是下一次更強的技能。'):'兩位玩家都完成了資訊力挑戰，看看下方的個別表現吧！';$('correct-count').textContent=state.playerStats.p1.correct;$('best-streak').textContent=state.playerStats.p1.bestStreak;$('time-left').textContent=Math.max(0,state.time);renderDuelSummary(winner);renderWrongAnswerReview();renderPrintMeta();updateRecords();$('result').classList.remove('hidden');playMusicScene(solo&&won?'victory':'retry',true);playTone(solo&&won,'ultimate'); syncRecordToConsole(); }
+function finish(winner, reason='') {
+  if(!state.running)return;
+  state.running=false;
+  clearInterval(state.timerId);
+  const solo=state.mode==='solo', won=winner==='p1';
+  
+  if (solo && state.bossMode) {
+    $('result-kicker').textContent=won?'BOSS DEFEATED':'BOSS ENRAGED';
+    $('result-icon').textContent=won?'👹':'💀';
+    $('result-title').textContent=won?'魔王討伐成功！':'挑戰失敗，再接再厲！';
+    $('result-copy').textContent=won?'太厲害了！你運用卓越的資訊素養擊敗了終極魔王，並解鎖了魔王終結者徽章！':'終極魔王的防火牆太穩固了。別灰心，詳研錯題解析是下一次討伐魔王的最強武器！';
+  } else {
+    $('result-kicker').textContent=solo?(won?'MISSION COMPLETE':'再整理一下資訊力'):'DUEL COMPLETE';
+    $('result-icon').textContent=solo?(won?'🏆':'🧩'):'⚔️';
+    $('result-title').textContent=solo?(won?'任務成功！':'任務暫停，重新挑戰！'):`${state[winner].name} 獲勝！`;
+    $('result-copy').textContent=solo?(won?`${reason?'時間到！':''}你用正確的資訊觀念守護了校園網路。`:'別灰心，每一題的說明都是下一次更強的技能。'):'兩位玩家都完成了資訊力挑戰，看看下方的個別表現吧！';
+  }
+  
+  $('correct-count').textContent=state.playerStats.p1.correct;
+  $('best-streak').textContent=state.playerStats.p1.bestStreak;
+  $('time-left').textContent=Math.max(0,state.time);
+  renderDuelSummary(winner);
+  renderWrongAnswerReview();
+  renderPrintMeta();
+  updateRecords();
+  $('result').classList.remove('hidden');
+  playMusicScene(solo&&won?'victory':'retry',true);
+  playTone(solo&&won,'ultimate');
+  syncRecordToConsole();
+}
 function renderPrintMeta(){const now=new Date(), pad=n=>String(n).padStart(2,'0'), dateStr=`${now.getFullYear()}/${pad(now.getMonth()+1)}/${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}`, modeLabel=state.mode==='solo'?'單人闖關':'同桌對戰', names=state.mode==='solo'?state.p1.name:`${state.p1.name} vs ${state.p2.name}`; $('print-meta').textContent=`${unitNames[state.unit]} · ${modeLabel} · ${names} · 列印時間 ${dateStr}`; }
 function playTone(good,level='light',streak=0){if(!state.sound)return;try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.type=good?'sine':'sawtooth';const comboBoost=good?Math.min(streak,6)*18:0;o.frequency.value=(good?(level==='ultimate'?740:level==='heavy'?520:390):145)+comboBoost;g.gain.setValueAtTime(.0001,ac.currentTime);g.gain.exponentialRampToValueAtTime(.06,ac.currentTime+.015);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.22);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.24);}catch(e){}}
 function playUltimateReadyChime(){if(!state.sound)return;try{const ac=new(window.AudioContext||window.webkitAudioContext)(),o=ac.createOscillator(),g=ac.createGain();o.type='triangle';o.frequency.setValueAtTime(660,ac.currentTime);o.frequency.exponentialRampToValueAtTime(990,ac.currentTime+.18);g.gain.setValueAtTime(.0001,ac.currentTime);g.gain.exponentialRampToValueAtTime(.07,ac.currentTime+.02);g.gain.exponentialRampToValueAtTime(.0001,ac.currentTime+.5);o.connect(g).connect(ac.destination);o.start();o.stop(ac.currentTime+.52);}catch(e){}}
@@ -538,6 +581,33 @@ function initEdTechFeatures() {
   updateConsoleStatusUI();
   updateCustomUnitButton();
   initCustomQuizListeners();
+  
+  const bossParam = params.get('mode');
+  if (bossParam === 'boss') {
+    state.bossMode = true;
+    localStorage.setItem('smes-battle-boss-mode', 'true');
+  } else if (bossParam === 'normal') {
+    state.bossMode = false;
+    localStorage.setItem('smes-battle-boss-mode', 'false');
+  } else {
+    state.bossMode = localStorage.getItem('smes-battle-boss-mode') === 'true';
+  }
+  
+  const bossToggle = $('boss-mode-toggle');
+  if (bossToggle) {
+    bossToggle.checked = state.bossMode;
+    bossToggle.addEventListener('change', () => {
+      state.bossMode = bossToggle.checked;
+      localStorage.setItem('smes-battle-boss-mode', String(state.bossMode));
+    });
+  }
+  
+  if (state.bossMode) {
+    const copyEl = document.querySelector('.hero-copy');
+    if (copyEl) {
+      copyEl.innerHTML = '👹 <b>全班 Raid Boss 戰開啟！</b>你的每一次正確答題傷害，都將累積並直接扣減大螢幕上巨型 Boss 的血量，一起集火守護網路世界吧！';
+    }
+  }
 }
 
 function updateConsoleStatusUI() {

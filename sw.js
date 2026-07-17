@@ -1,4 +1,4 @@
-const BUILD_VERSION = '2026.07.17-3';
+const BUILD_VERSION = '2026.07.17-4';
 const CACHE_NAME = `smes-it-quiz-battle-${BUILD_VERSION}`;
 const PRECACHE = [
   './',
