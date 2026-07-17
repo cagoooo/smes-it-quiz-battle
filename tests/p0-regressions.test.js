@@ -311,3 +311,27 @@ test('支援自訂題庫的隨機選題', () => {
   assert.match(game, /if\s*\(state\.unit\s*===\s*'custom'\)/);
   assert.match(game, /pool\s*=\s*state\.customQuestions\.filter/);
 });
+
+test('學生個人錯題報告與列印', () => {
+  assert.match(html, /id="student-report-modal"/);
+  assert.match(html, /id="print-student-report-btn"/);
+  assert.match(game, /window\.showStudentReport\s*=\s*function/);
+});
+
+test('多班級/組別對抗賽設定與同步', () => {
+  assert.match(html, /id="team-mode-select"/);
+  assert.match(html, /id="p1-team-select"/);
+  assert.match(html, /id="p2-team-select"/);
+  assert.match(game, /teamsParam\s*=\s*params\.get\('teams'\)/);
+  assert.match(game, /team:\s*state\.p1\.team\s*\|\|\s*""/);
+});
+
+test('對戰表一鍵隨機與排行前 8 名生成', () => {
+  assert.match(html, /id="generate-rank-bracket-btn"/);
+  assert.match(game, /\$\('generate-rank-bracket-btn'\)\.addEventListener\('click'/);
+});
+
+test('自訂題庫語音朗讀支援', () => {
+  assert.match(html, /id="lobby-tts-btn"/);
+  assert.match(game, /SpeechSynthesisUtterance/);
+});

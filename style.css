@@ -315,3 +315,26 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
 .modal-btn-secondary:hover {
   background: rgba(255, 255, 255, 0.05);
 }
+
+/* EdTech Stage 2 大廳組別選單與朗讀按鈕樣式 */
+.input-wrap select {
+  width: 100%;
+  padding: 12px;
+  background-color: #0c2b48a8;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  color: var(--ink);
+  font: 800 13px "Noto Sans TC", sans-serif;
+  cursor: pointer;
+  transition: border-color 0.2s;
+}
+.input-wrap select:focus {
+  border-color: var(--cyan);
+  outline: none;
+}
+.lobby-sound-btn.active {
+  border-color: var(--yellow);
+  background-color: rgba(255, 228, 119, 0.15);
+  color: var(--yellow);
+  box-shadow: 0 0 10px rgba(255, 228, 119, 0.2);
+}

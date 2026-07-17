@@ -531,6 +531,258 @@
     .footer a:hover {
       text-decoration: underline;
     }
+
+    /* Modal 通用與學生報告 Modal 樣式 */
+    .modal {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(2, 12, 27, 0.85);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+      backdrop-filter: blur(5px);
+      transition: opacity 0.3s;
+    }
+
+    .modal.hidden {
+      display: none !important;
+    }
+
+    .modal-content {
+      background-color: var(--card-bg);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      width: 90%;
+      max-width: 700px;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5);
+    }
+
+    .student-report-card {
+      padding: 24px;
+    }
+
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid var(--border-color);
+      padding-bottom: 12px;
+      margin-bottom: 16px;
+    }
+
+    .modal-header h3 {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 24px;
+      cursor: pointer;
+      line-height: 1;
+    }
+
+    .modal-close:hover {
+      color: var(--accent);
+    }
+
+    .report-meta-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+      background-color: #061b33;
+      padding: 16px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+    }
+
+    .report-meta-item {
+      font-size: 14px;
+    }
+
+    .report-meta-item strong {
+      color: var(--text-muted);
+    }
+
+    .report-wrong-card {
+      background-color: #0b192c;
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .report-wrong-q {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-color);
+    }
+
+    .report-wrong-opts {
+      list-style-type: none;
+      padding-left: 0;
+      margin-bottom: 8px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 8px;
+    }
+
+    .report-wrong-opt-item {
+      font-size: 13px;
+      padding: 6px 10px;
+      border-radius: 4px;
+      border: 1px solid #1e293b;
+      background-color: #0f172a;
+    }
+
+    .report-wrong-opt-item.user-wrong {
+      border-color: var(--accent);
+      background-color: rgba(244, 63, 94, 0.1);
+      color: #fda4af;
+      text-decoration: line-through;
+    }
+
+    .report-wrong-opt-item.correct-ans {
+      border-color: var(--success);
+      background-color: rgba(16, 185, 129, 0.1);
+      color: #6ee7b7;
+    }
+
+    .report-wrong-tip {
+      font-size: 13px;
+      color: #38bdf8;
+      background-color: rgba(56, 189, 248, 0.08);
+      padding: 8px 12px;
+      border-radius: 4px;
+      border-left: 3px solid var(--primary);
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+      margin-top: 24px;
+      border-top: 1px solid var(--border-color);
+      padding-top: 16px;
+    }
+
+    /* 排行榜名字連結樣式 */
+    .student-report-link {
+      color: var(--text-color);
+      text-decoration: underline dotted var(--primary);
+      cursor: pointer;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+
+    .student-report-link:hover {
+      color: var(--primary);
+      text-decoration: underline solid var(--primary);
+    }
+
+    /* A4 PDF 列印專用 CSS */
+    @media print {
+      body {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+
+      /* 隱藏網頁上除了 Modal 以外的所有東西 */
+      header, .container, .footer, .no-print, .modal-close {
+        display: none !important;
+      }
+
+      .modal {
+        position: relative !important;
+        top: auto !important;
+        left: auto !important;
+        width: 100% !important;
+        height: auto !important;
+        background: none !important;
+        display: block !important;
+        backdrop-filter: none !important;
+        z-index: auto !important;
+      }
+
+      .modal-content {
+        background-color: #ffffff !important;
+        color: #000000 !important;
+        border: none !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        max-height: none !important;
+        overflow-y: visible !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+      }
+
+      .modal-header h3 {
+        color: #000000 !important;
+        font-size: 24px !important;
+        border-bottom: 2px solid #000000 !important;
+        padding-bottom: 8px !important;
+      }
+
+      .report-meta-grid {
+        background-color: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #000000 !important;
+        grid-template-columns: repeat(3, 1fr) !important;
+      }
+
+      .report-meta-item strong {
+        color: #475569 !important;
+      }
+
+      .report-wrong-card {
+        background-color: #ffffff !important;
+        border: 1px solid #e2e8f0 !important;
+        color: #000000 !important;
+        page-break-inside: avoid; /* 防止跨頁截斷 */
+      }
+
+      .report-wrong-q {
+        color: #0f172a !important;
+      }
+
+      .report-wrong-opt-item {
+        background-color: #f8fafc !important;
+        border: 1px solid #cbd5e1 !important;
+        color: #0f172a !important;
+      }
+
+      .report-wrong-opt-item.user-wrong {
+        border-color: #ef4444 !important;
+        background-color: #fef2f2 !important;
+        color: #991b1b !important;
+      }
+
+      .report-wrong-opt-item.correct-ans {
+        border-color: #22c55e !important;
+        background-color: #f0fdf4 !important;
+        color: #166534 !important;
+        font-weight: bold !important;
+      }
+
+      .report-wrong-tip {
+        color: #0284c7 !important;
+        background-color: #f0f9ff !important;
+        border-left-color: #0284c7 !important;
+        border: 1px solid #bae6fd !important;
+        border-left: 4px solid #0284c7 !important;
+      }
+    }
   </style>
   <!-- 引入 QR Code js 庫 -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
@@ -571,6 +823,14 @@
             <label for="class-name-input">本堂課班級代號</label>
             <input type="text" id="class-name-input" placeholder="例如：501、602" value="501">
           </div>
+          <div class="form-group">
+            <label for="team-mode-select">組別對抗模式</label>
+            <select id="team-mode-select">
+              <option value="none">⚪ 個人對抗 (不分組)</option>
+              <option value="redblue">🔴🔵 紅藍雙打對抗</option>
+              <option value="groups">🎒 六分組對抗賽 (1~6組)</option>
+            </select>
+          </div>
           <div style="display:flex; gap:10px;">
             <button id="save-setup-btn" class="btn">儲存並產生 QR Code</button>
             <button id="clear-setup-btn" class="btn btn-secondary">重置設定</button>
@@ -609,6 +869,14 @@
         </div>
       </div>
 
+      <!-- 組別積分賽對抗面板 (僅在分組模式下顯示) -->
+      <div id="team-battle-panel" class="card hidden" style="margin-bottom: 24px;">
+        <h2 class="card-title">⚔️ 隊伍積分對抗賽</h2>
+        <div id="team-bars-container" style="display:flex; flex-direction:column; gap:16px; margin-top:10px;">
+          <!-- 組別長條圖與統計將動態產生 -->
+        </div>
+      </div>
+
       <div class="dashboard-grid">
         <!-- 排行榜 -->
         <div class="card">
@@ -642,8 +910,9 @@
           <h2 style="font-size:24px; font-weight:800;">對戰淘汰賽生成器</h2>
           <p style="color:var(--text-muted); font-size:14px;">自動讀取已提交成績的學生名單，一鍵生成 8 強/16 強對戰表。</p>
         </div>
-        <div style="display:flex; gap:10px;">
-          <button id="generate-bracket-btn" class="btn">🎮 隨機生成 8 強對戰表</button>
+        <div style="display:flex; gap:10px; flex-wrap:wrap;">
+          <button id="generate-rank-bracket-btn" class="btn">🏆 依排行榜前 8 名生成</button>
+          <button id="generate-bracket-btn" class="btn btn-secondary">🎲 隨機選取 8 人生成</button>
           <button id="clear-bracket-btn" class="btn btn-secondary">重設對戰表</button>
         </div>
       </div>
@@ -762,11 +1031,40 @@ function doOptions(e) {
     Made with ❤️ by <a href="https://www.smes.tyc.edu.tw/modules/tadnews/page.php?ncsn=11&nsn=16#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a>
   </footer>
 
+  <!-- 學生個人錯題報告 Modal -->
+  <div id="student-report-modal" class="modal hidden">
+    <div class="modal-content student-report-card">
+      <div class="modal-header">
+        <h3 id="report-student-title">學生個人錯題報告卡</h3>
+        <button id="report-close-btn" class="modal-close" type="button">&times;</button>
+      </div>
+      <div class="report-meta-grid">
+        <div class="report-meta-item"><strong>班級：</strong><span id="report-class"></span></div>
+        <div class="report-meta-item"><strong>座號姓名：</strong><span id="report-name"></span></div>
+        <div class="report-meta-item"><strong>答對題數：</strong><span id="report-correct"></span></div>
+        <div class="report-meta-item"><strong>最高連擊：</strong><span id="report-streak"></span></div>
+        <div class="report-meta-item"><strong>造成傷害：</strong><span id="report-damage"></span></div>
+        <div class="report-meta-item"><strong>答錯題數：</strong><span id="report-wrong-count"></span></div>
+      </div>
+      
+      <h4 style="margin-top: 20px; border-bottom: 1px solid var(--border-color); padding-bottom: 8px;">❌ 本局錯題與解析明細</h4>
+      <div id="report-wrong-list" class="report-wrong-list-container">
+        <!-- 錯題內容動態產生 -->
+      </div>
+      
+      <div class="modal-footer no-print">
+        <button id="print-student-report-btn" class="btn">🖨️ 列印此錯題卡 (A4)</button>
+        <button id="close-student-report-btn" class="btn btn-secondary">關閉</button>
+      </div>
+    </div>
+  </div>
+
   <script>
     // 全域狀態
     const state = {
       gasUrl: localStorage.getItem('smes-battle-gas-url') || '',
       className: localStorage.getItem('smes-battle-class-name') || '501',
+      teamMode: localStorage.getItem('smes-battle-team-mode') || 'none',
       studentsData: [],
       activeTab: 'setup',
       autoRefreshInterval: null
@@ -807,13 +1105,15 @@ function doOptions(e) {
     if (state.gasUrl) {
       $('gas-url-input').value = state.gasUrl;
       $('class-name-input').value = state.className;
-      generateQrCode(state.gasUrl, state.className);
+      $('team-mode-select').value = state.teamMode;
+      generateQrCode(state.gasUrl, state.className, state.teamMode);
     }
 
     // 儲存設定
     $('save-setup-btn').addEventListener('click', () => {
       const url = $('gas-url-input').value.trim();
       const cls = $('class-name-input').value.trim();
+      const tm = $('team-mode-select').value;
 
       if (!url) {
         alert('請輸入有效的 GAS 網頁應用程式 URL！');
@@ -826,10 +1126,12 @@ function doOptions(e) {
 
       state.gasUrl = url;
       state.className = cls;
+      state.teamMode = tm;
       localStorage.setItem('smes-battle-gas-url', url);
       localStorage.setItem('smes-battle-class-name', cls);
+      localStorage.setItem('smes-battle-team-mode', tm);
 
-      generateQrCode(url, cls);
+      generateQrCode(url, cls, tm);
       alert('設定儲存成功！QR Code 已生成。');
     });
 
@@ -838,24 +1140,30 @@ function doOptions(e) {
       if (!confirm('確定要清除所有連線設定嗎？')) return;
       state.gasUrl = '';
       state.className = '501';
+      state.teamMode = 'none';
       localStorage.removeItem('smes-battle-gas-url');
       localStorage.removeItem('smes-battle-class-name');
+      localStorage.removeItem('smes-battle-team-mode');
       $('gas-url-input').value = '';
       $('class-name-input').value = '501';
+      $('team-mode-select').value = 'none';
       $('qrcode').innerHTML = '';
       $('qr-panel').style.display = 'none';
       $('qr-placeholder').style.display = 'flex';
     });
 
     // 生成 QR Code
-    function generateQrCode(gasUrl, className) {
+    function generateQrCode(gasUrl, className, teamMode = 'none') {
       $('qr-placeholder').style.display = 'none';
       $('qr-panel').style.display = 'flex';
       $('qrcode').innerHTML = '';
 
       // 計算學生連結 (Base64 編碼以簡化 QR Code 大小)
       const b64Gas = btoa(gasUrl);
-      const studentUrl = `${window.location.origin}${window.location.pathname.replace('console.html', '')}index.html?gas=${encodeURIComponent(b64Gas)}&class=${encodeURIComponent(className)}`;
+      let studentUrl = `${window.location.origin}${window.location.pathname.replace('console.html', '')}index.html?gas=${encodeURIComponent(b64Gas)}&class=${encodeURIComponent(className)}`;
+      if (teamMode !== 'none') {
+        studentUrl += `&teams=${encodeURIComponent(teamMode)}`;
+      }
       
       $('student-link-text').textContent = studentUrl;
       $('student-link-text').onclick = () => {
@@ -922,13 +1230,18 @@ function doOptions(e) {
     // 載入 Demo 示範資料
     $('load-demo-btn').addEventListener('click', () => {
       state.studentsData = [
-        { "座號姓名": "01 陳小明", "班級": state.className, "答對題數": 9, "最高連擊": 6, "造成傷害": 110, "錯題數": 1, "錯題詳情": JSON.stringify([{ "q": "收到不認識的人傳來的奇怪連結，最好的做法是？", "a": ["立刻點開看看", "先告訴老師或家長，不隨意點擊", "轉傳給全班同學", "輸入帳密確認"], "correct": 1, "userAnswer": 0, "tip": "陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。" }]) },
-        { "座號姓名": "08 林阿花", "班級": state.className, "答對題數": 10, "最高連擊": 10, "造成傷害": 140, "錯題數": 0, "錯題詳情": "[]" },
-        { "座號姓名": "12 王大同", "班級": state.className, "答對題數": 8, "最高連擊": 5, "造成傷害": 96, "錯題數": 2, "錯題詳情": JSON.stringify([{ "q": "下列哪一組密碼比較安全？", "a": ["123456", "myname", "Ab!9qL#2", "生日年月日"], "correct": 2, "userAnswer": 0, "tip": "密碼應混合大小寫英文、數字與符號，並避免個人資料。" }, { "q": "使用公共電腦登入帳號後，離開前要做什麼？", "a": ["直接關掉螢幕", "登出帳號", "把密碼寫在桌上", "分享給下一位"], "correct": 1, "userAnswer": 0, "tip": "登出可以避免下一位使用者看到或使用你的帳號。" }]) },
-        { "座號姓名": "15 張小華", "班級": state.className, "答對題數": 7, "最高連擊": 4, "造成傷害": 80, "錯題數": 3, "錯題詳情": JSON.stringify([{ "q": "下列哪一組密碼比較安全？", "a": ["123456", "myname", "Ab!9qL#2", "生日年月日"], "correct": 2, "userAnswer": 1, "tip": "密碼應混合大小寫英文、數字與符號，並避免個人資料。" }]) },
-        { "座號姓名": "22 蔡英文", "班級": state.className, "答對題數": 6, "最高連擊": 3, "造成傷害": 68, "錯題數": 4, "錯題詳情": "[]" },
-        { "座號姓名": "03 賴清德", "班級": state.className, "答對題數": 9, "最高連擊": 7, "造成傷害": 120, "錯題數": 1, "錯題詳情": JSON.stringify([{ "q": "收到不認識的人傳來的奇怪連結，最好的做法是？", "a": ["立刻點開看看", "先告訴老師或家長，不隨意點擊", "轉傳給全班同學", "輸入帳密確認"], "correct": 1, "userAnswer": 0, "tip": "陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。" }]) }
+        { "座號姓名": "01 陳小明", "班級": state.className, "組別": "紅隊", "答對題數": 9, "最高連擊": 6, "造成傷害": 110, "錯題數": 1, "錯題詳情": JSON.stringify([{ "q": "收到不認識的人傳來的奇怪連結，最好的做法是？", "a": ["立刻點開看看", "先告訴老師或家長，不隨意點擊", "轉傳給全班同學", "輸入帳密確認"], "correct": 1, "userAnswer": 0, "tip": "陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。" }]) },
+        { "座號姓名": "08 林阿花", "班級": state.className, "組別": "藍隊", "答對題數": 10, "最高連擊": 10, "造成傷害": 140, "錯題數": 0, "錯題詳情": "[]" },
+        { "座號姓名": "12 王大同", "班級": state.className, "組別": "紅隊", "答對題數": 8, "最高連擊": 5, "造成傷害": 96, "錯題數": 2, "錯題詳情": JSON.stringify([{ "q": "下列哪一組密碼比較安全？", "a": ["123456", "myname", "Ab!9qL#2", "生日年月日"], "correct": 2, "userAnswer": 0, "tip": "密碼應混合大小寫英文、數字與符號，並避免個人資料。" }, { "q": "使用公共電腦登入帳號後，離開前要做什麼？", "a": ["直接關掉螢幕", "登出帳號", "把密碼寫在桌上", "分享給下一位"], "correct": 1, "userAnswer": 0, "tip": "登出可以避免下一位使用者看到或使用你的帳號。" }]) },
+        { "座號姓名": "15 張小華", "班級": state.className, "組別": "藍隊", "答對題數": 7, "最高連擊": 4, "造成傷害": 80, "錯題數": 3, "錯題詳情": JSON.stringify([{ "q": "下列哪一組密碼比較安全？", "a": ["123456", "myname", "Ab!9qL#2", "生日年月日"], "correct": 2, "userAnswer": 1, "tip": "密碼應混合大小寫英文、數字與符號，並避免個人資料。" }]) },
+        { "座號姓名": "22 蔡英文", "班級": state.className, "組別": "紅隊", "答對題數": 6, "最高連擊": 3, "造成傷害": 68, "錯題數": 4, "錯題詳情": "[]" },
+        { "座號姓名": "03 賴清德", "班級": state.className, "組別": "藍隊", "答對題數": 9, "最高連擊": 7, "造成傷害": 120, "錯題數": 1, "錯題詳情": JSON.stringify([{ "q": "收到不認識的人傳來的奇怪連結，最好的做法是？", "a": ["立刻點開看看", "先告訴老師或家長，不隨意點擊", "轉傳給全班同學", "輸入帳密確認"], "correct": 1, "userAnswer": 0, "tip": "陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。" }]) }
       ];
+      if (state.teamMode === 'groups') {
+        state.studentsData.forEach((s, idx) => {
+          s['組別'] = `第${(idx % 6) + 1}組`;
+        });
+      }
       $('current-class-title').textContent = state.className + ' 班 (示範資料)';
       renderDashboard();
     });
@@ -936,9 +1249,83 @@ function doOptions(e) {
     // 渲染排行榜與錯題榜
     $('leaderboard-sort').addEventListener('change', renderDashboard);
 
-    function renderDashboard() {
+        function renderDashboard() {
       const data = state.studentsData;
       if (!data || data.length === 0) return;
+
+      // 0. 更新分組對決看板
+      const teamPanel = $('team-battle-panel');
+      const teamMode = state.teamMode;
+      
+      if (teamMode === 'none') {
+        teamPanel.classList.add('hidden');
+      } else {
+        teamPanel.classList.remove('hidden');
+        
+        const teamStats = {};
+        if (teamMode === 'redblue') {
+          teamStats['紅隊'] = { correct: 0, streak: 0, damage: 0, count: 0, color: '#f43f5e' };
+          teamStats['藍隊'] = { correct: 0, streak: 0, damage: 0, count: 0, color: '#38bdf8' };
+        } else if (teamMode === 'groups') {
+          const colors = ['#f43f5e', '#38bdf8', '#10b981', '#fbbf24', '#a78bfa', '#ec4899'];
+          for (let i = 1; i <= 6; i++) {
+            teamStats[`第${i}組`] = { correct: 0, streak: 0, damage: 0, count: 0, color: colors[i-1] };
+          }
+        }
+        
+        data.forEach(std => {
+          const tName = std['組別'] || std['team'];
+          if (tName && teamStats[tName]) {
+            teamStats[tName].correct += Number(std['答對題數']) || 0;
+            teamStats[tName].streak = Math.max(teamStats[tName].streak, Number(std['最高連擊']) || 0);
+            teamStats[tName].damage += Number(std['造成傷害']) || 0;
+            teamStats[tName].count += 1;
+          }
+        });
+        
+        const sortBy = $('leaderboard-sort').value;
+        const statsList = Object.keys(teamStats).map(name => ({
+          name,
+          ...teamStats[name]
+        }));
+        
+        const maxVal = Math.max(...statsList.map(t => {
+          if (sortBy === 'correct') return t.correct || 1;
+          if (sortBy === 'streak') return t.streak || 1;
+          return t.damage || 1;
+        }));
+        
+        const container = $('team-bars-container');
+        container.innerHTML = statsList.map(t => {
+          let val = 0;
+          let label = '';
+          if (sortBy === 'correct') {
+            val = t.correct;
+            label = `${val} 答對`;
+          } else if (sortBy === 'streak') {
+            val = t.streak;
+            label = `最高連擊 x${val}`;
+          } else {
+            val = t.damage;
+            label = `${val} 傷害`;
+          }
+          
+          const pct = Math.min(100, Math.max(5, (val / maxVal) * 100));
+          return `
+            <div style="display:flex; align-items:center; gap:12px;">
+              <div style="width:70px; font-weight:bold; font-size:14px; text-align:right;">${t.name}</div>
+              <div style="flex:1; background-color:#061b33; height:24px; border-radius:12px; overflow:hidden; border:1px solid var(--border-color);">
+                <div style="width:${pct}%; background-color:${t.color}; height:100%; border-radius:12px; transition:width 0.4s ease; display:flex; align-items:center; padding-left:12px;">
+                  <span style="color:#020c1b; font-weight:bold; font-size:12px; text-shadow:0 0 2px #fff; white-space:nowrap;">${label}</span>
+                </div>
+              </div>
+              <div style="width:140px; font-size:12px; color:var(--text-muted);">
+                (總分: ${t.correct} | 傷: ${t.damage} | 人數: ${t.count})
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
 
       // 1. 排行榜排序
       const sortBy = $('leaderboard-sort').value;
@@ -982,7 +1369,9 @@ function doOptions(e) {
           <div class="leader-row">
             <div class="leader-rank ${rankClass}">${i + 1}</div>
             <div class="leader-info">
-              <div class="leader-name">${std['座號姓名']}</div>
+              <div class="leader-name">
+                <a href="#" onclick="showStudentReport('${std['座號姓名']}'); return false;" class="student-report-link">${std['座號姓名']}</a>
+              </div>
               <div class="leader-bar-container">
                 <div class="leader-bar" style="width: ${pct}%"></div>
               </div>
@@ -1061,16 +1450,46 @@ function doOptions(e) {
     };
 
     // TAB 3: Tournament Bracket Generator
-    $('generate-bracket-btn').addEventListener('click', () => {
-      // 收集名單
-      let names = state.studentsData.map(s => s['座號姓名']);
+    // 依排行榜前 8 名生成對戰表
+    $('generate-rank-bracket-btn').addEventListener('click', () => {
+      const data = state.studentsData;
+      let names = [];
       
-      // 如果名單太少，給予預設測試名單
+      if (data && data.length > 0) {
+        // 依照當前選擇的排序方式對全體資料排序
+        const sortBy = $('leaderboard-sort').value;
+        const sorted = [...data].sort((a, b) => {
+          if (sortBy === 'correct') {
+            return (Number(b['答對題數']) || 0) - (Number(a['答對題數']) || 0);
+          } else if (sortBy === 'streak') {
+            return (Number(b['最高連擊']) || 0) - (Number(a['最高連擊']) || 0);
+          } else {
+            return (Number(b['造成傷害']) || 0) - (Number(a['造成傷害']) || 0);
+          }
+        });
+        names = sorted.map(s => s['座號姓名']);
+      }
+      
       if (names.length < 2) {
         names = ["01 小明", "03 阿華", "05 大同", "08 美美", "12 胖虎", "15 小夫", "18 靜香", "20 大雄"];
       }
 
-      // 限制 8 強對戰
+      names = names.slice(0, 8);
+      while (names.length < 8) {
+        names.push("Bye (輪空)");
+      }
+
+      renderBracket(names);
+    });
+
+    // 隨機選取 8 人生成對戰表
+    $('generate-bracket-btn').addEventListener('click', () => {
+      let names = state.studentsData.map(s => s['座號姓名']);
+      
+      if (names.length < 2) {
+        names = ["01 小明", "03 阿華", "05 大同", "08 美美", "12 胖虎", "15 小夫", "18 靜香", "20 大雄"];
+      }
+
       names = names.sort(() => Math.random() - 0.5).slice(0, 8);
       while (names.length < 8) {
         names.push("Bye (輪空)");
@@ -1200,6 +1619,55 @@ function doOptions(e) {
         }
       }
     }
+
+    // 顯示學生的個人錯題報告
+    window.showStudentReport = function(studentName) {
+      const student = state.studentsData.find(s => s['座號姓名'] === studentName);
+      if (!student) return alert('找不到該名學生的對戰資料！');
+
+      $('report-class').textContent = student['班級'] || state.className;
+      $('report-name').textContent = student['座號姓名'];
+      $('report-correct').textContent = student['答對題數'] + ' 題';
+      $('report-streak').textContent = 'x' + student['最高連擊'];
+      $('report-damage').textContent = student['造成傷害'] + ' 傷害';
+      $('report-wrong-count').textContent = student['錯題數'] + ' 題';
+
+      const listContainer = $('report-wrong-list');
+      listContainer.innerHTML = '';
+
+      try {
+        const wrongs = JSON.parse(student['錯題詳情'] || '[]');
+        if (!Array.isArray(wrongs) || wrongs.length === 0) {
+          listContainer.innerHTML = '<div style="color:var(--success); padding: 20px 0;">🎉 本局無答錯題目，表現優異！</div>';
+        } else {
+          listContainer.innerHTML = wrongs.map((entry, idx) => {
+            const optsHtml = entry.a.map((opt, optIdx) => {
+              let optClass = '';
+              if (optIdx === entry.correct) optClass = 'correct-ans';
+              else if (optIdx === entry.userAnswer) optClass = 'user-wrong';
+              return `<li class="report-wrong-opt-item ${optClass}">${'ABCD'[optIdx]}. ${opt} ${optIdx === entry.correct ? '✓' : (optIdx === entry.userAnswer ? '✗' : '')}</li>`;
+            }).join('');
+
+            return `
+              <div class="report-wrong-card">
+                <div class="report-wrong-q"><strong>第 ${idx + 1} 題：</strong>${entry.q}</div>
+                <ul class="report-wrong-opts">${optsHtml}</ul>
+                <div class="report-wrong-tip">💡 解析說明：${entry.tip || '無'}</div>
+              </div>
+            `;
+          }).join('');
+        }
+      } catch (e) {
+        listContainer.innerHTML = '<div style="color:var(--accent); padding: 20px 0;">⚠️ 錯題格式解析錯誤，無法載入明細。</div>';
+      }
+
+      $('student-report-modal').classList.remove('hidden');
+    };
+
+    // 關閉與列印個人報告事件
+    $('report-close-btn').addEventListener('click', () => $('student-report-modal').classList.add('hidden'));
+    $('close-student-report-btn').addEventListener('click', () => $('student-report-modal').classList.add('hidden'));
+    $('print-student-report-btn').addEventListener('click', () => window.print());
   </script>
 </body>
 </html>

@@ -21,7 +21,7 @@
         <a class="school-mark" href="https://www.smes.tyc.edu.tw" target="_blank" rel="noopener noreferrer" aria-label="石門國小網站">
           <span class="mark-fish">🐟</span><span>石門國小<br><b>資訊科技駕駛艙</b></span>
         </a>
-        <div class="top-badges"><span id="console-status-badge" class="console-status-badge">⚪ 自主練習</span><button id="lobby-sound-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🎵 開啟 BGM</button><span class="online-dot">課堂版</span></div>
+        <div class="top-badges"><span id="console-status-badge" class="console-status-badge">⚪ 自主練習</span><button id="lobby-sound-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🎵 開啟 BGM</button><button id="lobby-tts-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🗣️ 開啟朗讀</button><span class="online-dot">課堂版</span></div>
       </div>
 
       <div class="lobby-hero">
@@ -46,8 +46,18 @@
             <div class="input-wrap">
               <input type="text" id="p1-name-input" placeholder="例如：01陳小明" maxlength="10">
             </div>
+            <div id="p1-team-wrap" class="input-wrap hidden" style="margin-top: 10px;">
+              <select id="p1-team-select">
+                <!-- 動態注入 -->
+              </select>
+            </div>
             <div id="p2-name-input-wrap" class="input-wrap hidden" style="margin-top: 10px;">
               <input type="text" id="p2-name-input" placeholder="例如：02林阿花 (玩家二)" maxlength="10">
+            </div>
+            <div id="p2-team-wrap" class="input-wrap hidden" style="margin-top: 10px;">
+              <select id="p2-team-select">
+                <!-- 動態注入 -->
+              </select>
             </div>
           </div>
         </section>

@@ -177,12 +177,12 @@ const questions = [
 const questionTags = { safety:{grade:'三至六年級',competency:'網路安全與隱私',misconception:'陌生連結與帳密可隨意分享'}, coding:{grade:'三至六年級',competency:'運算思維',misconception:'除錯只靠猜測'}, digital:{grade:'四至六年級',competency:'數位公民與 AI 素養',misconception:'網路資訊與 AI 輸出一定正確'}, mixed:{grade:'三至六年級',competency:'資訊應用與合作',misconception:'整理資料不影響作品品質'} };
 questions.forEach(question=>question.tags={...questionTags[question.unit],difficulty:question.level});
 
-const state = { mode:'solo', unit:'mixed', difficulty:'standard', roundTime:75, character:characters[0], character2:characters[1], turn:'p1', running:false, resolving:false, time:75, timerId:null, questionTimerId:null, current:null, used:[], sound:true, correct:0, bestStreak:0, round:1, p1:null, p2:null, playerStats:null, wrongAnswers:[], retryQueue:[], retryMode:false, recentResults:[], gasUrl:'', className:'501', isConsoleConnected:false, customQuestions:[] };
+const state = { mode:'solo', unit:'mixed', difficulty:'standard', roundTime:75, character:characters[0], character2:characters[1], turn:'p1', running:false, resolving:false, time:75, timerId:null, questionTimerId:null, current:null, used:[], sound:true, correct:0, bestStreak:0, round:1, p1:null, p2:null, playerStats:null, wrongAnswers:[], retryQueue:[], retryMode:false, recentResults:[], gasUrl:'', className:'501', isConsoleConnected:false, customQuestions:[], teamMode:'none', ttsEnabled:false };
 const $ = (id) => document.getElementById(id);
 const random = (items) => items[Math.floor(Math.random() * items.length)];
 
 function rosterCards(selected, dataAttribute) { return characters.map(hero => `<button class="hero-card ${hero.id===selected.id?'selected':''}" ${dataAttribute}="${hero.id}" type="button"><span class="hero-portrait" style="--hero-color:${hero.color}">${hero.image ? `<img src="${hero.image}" alt="${hero.name}角色圖">` : `<i aria-hidden="true">${hero.icon}</i>`}</span><span class="hero-content"><b>${hero.name}</b><small>${hero.skill}</small></span><em>選擇</em></button>`).join(''); }
-function renderRoster() { $('roster').innerHTML=rosterCards(state.character,'data-hero'); $('roster-p2').innerHTML=rosterCards(state.character2,'data-hero-p2'); $('p2-roster-card').classList.toggle('hidden',state.mode!=='duel'); $('p2-name-input-wrap').classList.toggle('hidden',state.mode!=='duel'); }
+function renderRoster() { $('roster').innerHTML=rosterCards(state.character,'data-hero'); $('roster-p2').innerHTML=rosterCards(state.character2,'data-hero-p2'); $('p2-roster-card').classList.toggle('hidden',state.mode!=='duel'); $('p2-name-input-wrap').classList.toggle('hidden',state.mode!=='duel'); const showTeams = state.teamMode !== 'none'; $('p1-team-wrap').classList.toggle('hidden', !showTeams); $('p2-team-wrap').classList.toggle('hidden', !showTeams || state.mode !== 'duel'); }
 function choose(selector, value, key) { document.querySelectorAll(selector).forEach(el => el.classList.toggle('selected', el.dataset[key] === value)); }
 
 function createFighter(profile, isCpu=false) { return { id:profile.id, name:profile.name, icon:profile.icon, image:profile.image, health:100, meter:0, streak:0, isCpu, cpuProfile:cpuProfiles[profile.id] || cpuProfiles.firewall, skills:skillSets[profile.id] || skillSet('掃描衝擊',8,'除錯連發',16,'同步戰術',22), ultimate:random(profile.ultimates?.length ? profile.ultimates : [{ name:'同步衝擊', damage:30, color:'#ffe479' }]) }; }
@@ -195,12 +195,19 @@ function setupBattle(retryQuestions=[]) {
   localStorage.setItem('smes-battle-p1-name', p1NameVal);
   localStorage.setItem('smes-battle-p2-name', p2NameVal);
 
+  const p1TeamVal = state.teamMode !== 'none' ? $('p1-team-select').value : '';
+  const p2TeamVal = state.teamMode !== 'none' ? $('p2-team-select').value : '';
+  localStorage.setItem('smes-battle-p1-team', p1TeamVal);
+  localStorage.setItem('smes-battle-p2-team', p2TeamVal);
+
   state.p1 = createFighter(state.character);
   if (p1NameVal) state.p1.name = p1NameVal;
+  state.p1.team = p1TeamVal;
 
   const enemy = random(cpuEnemies);
   state.p2 = state.mode === 'solo' ? createFighter(enemy, true) : createFighter(state.character2);
   if (state.mode === 'duel' && p2NameVal) state.p2.name = p2NameVal;
+  state.p2.team = p2TeamVal;
 
   state.turn='p1'; state.running=true; state.time=state.roundTime; state.current=null; state.used=[]; state.correct=0; state.bestStreak=0; state.playerStats={p1:{correct:0,bestStreak:0,damage:0},p2:{correct:0,bestStreak:0,damage:0}}; state.wrongAnswers=[]; state.retryQueue=[...retryQuestions]; state.retryMode=retryQuestions.length>0; state.recentResults=[];
   $('p1-name').textContent=state.p1.name; $('fighter-p1-name').textContent=state.p1.name; renderAvatar('p1-avatar-mini',state.p1); renderArenaAvatar('#fighter-p1 .fighter-avatar',state.p1);
@@ -262,8 +269,8 @@ function playUltimateCombo(actor, defender, damage) {
   return duration;
 }
 function focusQuestionCard(delay=0) { window.setTimeout(()=>{ const card=$('question-card'), reduce=window.matchMedia('(prefers-reduced-motion: reduce)').matches; card.scrollIntoView({behavior:reduce?'auto':'smooth',block:'center'}); card.classList.remove('question-focus'); void card.offsetWidth; card.classList.add('question-focus'); card.focus({preventScroll:true}); window.setTimeout(()=>card.classList.remove('question-focus'),900); },delay); }
-function chooseMove(skillId) { if(!state.running||state.resolving||state.turn!=='p1' && state.mode==='solo')return; const actor=state[state.turn], skill=getSkill(actor,skillId); if(skillId==='ultimate'&&actor.meter<100)return; state.current={skill,q:getQuestion(skill.questionLevel,true)}; $('question-level').textContent=`${skill.label} · ${skill.name} · 傷害 ${skill.damage}`; $('question-count').textContent=`已答對 ${state.playerStats[fighterKey(actor)].correct} 題`; $('question-text').textContent=state.current.q.q; $('answers').innerHTML=state.current.q.a.map((answer,index)=>`<button class="answer" data-answer="${index}" type="button"><b>${'ABCD'[index]}.</b> ${answer}</button>`).join(''); $('explain').textContent=state.difficulty==='practice'?difficultyModes.practice.hint:''; $('question-card').classList.remove('hidden'); $('move-deck').classList.add('hidden'); $('feedback').textContent='題目已就位，選出最合適的答案！'; startQuestionTimer(skill); focusQuestionCard(100); }
-function answer(index,timedOut=false) { if(!state.current||!state.running)return; clearQuestionTimer(); const {q,skill}=state.current; document.querySelectorAll('.answer').forEach(btn=>btn.disabled=true); const correct=!timedOut&&index===q.correct, selected=document.querySelector(`.answer[data-answer="${index}"]`); if(selected)selected.classList.add(correct?'correct':'wrong'); if(state.turn==='p1'){state.recentResults.push(correct); if(state.recentResults.length>4)state.recentResults.shift();} if(!correct)document.querySelector(`.answer[data-answer="${q.correct}"]`).classList.add('correct'); $('explain').textContent=`💡 ${q.tip}`; const actor=state[state.turn], defender=state.turn==='p1'?state.p2:state.p1, actorKey=fighterKey(actor); let attackRecovery=1600; if(correct){state.correct++; actor.streak++; defender.streak=0; state.bestStreak=Math.max(state.bestStreak,actor.streak); state.playerStats[actorKey].correct++; state.playerStats[actorKey].bestStreak=Math.max(state.playerStats[actorKey].bestStreak,actor.streak); const damage=moveDamage(actor,skill.id), meterBefore=actor.meter; actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain); if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime(); $('feedback').textContent=actor.isCpu?`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`:`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`; $('feedback').className='feedback good'; attackRecovery=attack(actor,defender,damage,skill.id); } else { actor.streak=0; actor.meter=Math.max(0,actor.meter-8); state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); $('feedback').textContent=timedOut?'時間到！這題先記下來。':'這題先記下來！攻擊沒有命中。'; $('feedback').className='feedback bad'; playTone(false); }
+function chooseMove(skillId) { if(!state.running||state.resolving||state.turn!=='p1' && state.mode==='solo')return; const actor=state[state.turn], skill=getSkill(actor,skillId); if(skillId==='ultimate'&&actor.meter<100)return; state.current={skill,q:getQuestion(skill.questionLevel,true)}; const q=state.current.q; $('question-level').textContent=`${skill.label} · ${skill.name} · 傷害 ${skill.damage}`; $('question-count').textContent=`已答對 ${state.playerStats[fighterKey(actor)].correct} 題`; $('question-text').textContent=q.q; $('answers').innerHTML=q.a.map((answer,index)=>`<button class="answer" data-answer="${index}" type="button"><b>${'ABCD'[index]}.</b> ${answer}</button>`).join(''); $('explain').textContent=state.difficulty==='practice'?difficultyModes.practice.hint:''; $('question-card').classList.remove('hidden'); $('move-deck').classList.add('hidden'); $('feedback').textContent='題目已就位，選出最合適的答案！'; startQuestionTimer(skill); focusQuestionCard(100); if (state.ttsEnabled && !actor.isCpu && typeof SpeechSynthesisUtterance !== 'undefined') { try { window.speechSynthesis.cancel(); const speakText = `${q.q}。選項A：${q.a[0]}。選項B：${q.a[1]}。選項C：${q.a[2]}。選項D：${q.a[3]}`; const utterance = new SpeechSynthesisUtterance(speakText); utterance.lang = 'zh-TW'; utterance.rate = 1.0; window.speechSynthesis.speak(utterance); } catch(e) {} } }
+function answer(index,timedOut=false) { if(!state.current||!state.running)return; clearQuestionTimer(); try{window.speechSynthesis.cancel();}catch(e){} const {q,skill}=state.current; document.querySelectorAll('.answer').forEach(btn=>btn.disabled=true); const correct=!timedOut&&index===q.correct, selected=document.querySelector(`.answer[data-answer="${index}"]`); if(selected)selected.classList.add(correct?'correct':'wrong'); if(state.turn==='p1'){state.recentResults.push(correct); if(state.recentResults.length>4)state.recentResults.shift();} if(!correct)document.querySelector(`.answer[data-answer="${q.correct}"]`).classList.add('correct'); $('explain').textContent=`💡 ${q.tip}`; const actor=state[state.turn], defender=state.turn==='p1'?state.p2:state.p1, actorKey=fighterKey(actor); let attackRecovery=1600; if(correct){state.correct++; actor.streak++; defender.streak=0; state.bestStreak=Math.max(state.bestStreak,actor.streak); state.playerStats[actorKey].correct++; state.playerStats[actorKey].bestStreak=Math.max(state.playerStats[actorKey].bestStreak,actor.streak); const damage=moveDamage(actor,skill.id), meterBefore=actor.meter; actor.meter=skill.id==='ultimate'?0:Math.min(100,actor.meter+skill.meterGain); if(actor.meter>=100&&meterBefore<100)playUltimateReadyChime(); $('feedback').textContent=actor.isCpu?`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`:`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`; $('feedback').className='feedback good'; attackRecovery=attack(actor,defender,damage,skill.id); } else { actor.streak=0; actor.meter=Math.max(0,actor.meter-8); state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); $('feedback').textContent=timedOut?'時間到！這題先記下來。':'這題先記下來！攻擊沒有命中。'; $('feedback').className='feedback bad'; playTone(false); }
   updateUI(); const recovery=correct ? attackRecovery : 1600; window.setTimeout(()=>{ if(!state.running)return; if(state.retryMode&&state.retryQueue.length===0)finish('p1','錯題再練完成！'); else if(defender.health<=0)finish(state.turn); else setTurn(state.turn==='p1'?'p2':'p1'); },recovery);
 }
 function attack(actor,defender,damage,skillId) { const source=actor===state.p1?$('fighter-p1'):$('fighter-p2'), target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); focusBattleScene(40); source.classList.remove('attack','ultimate'); void source.offsetWidth; source.classList.add(skillId==='ultimate'?'ultimate':'attack'); const blast=document.createElement('i'); blast.className=`blast ${skillId==='heavy'||skillId==='tactical'?'heavy':''} ${skillId==='ultimate'?'ultimate':''}`; if(skillId==='ultimate'){state.resolving=true;$('feedback').textContent='連招施放中，請觀察每一段命中！';blast.style.setProperty('--blast-color',actor.ultimate.color); const duration=playUltimateCombo(actor,defender,damage); $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),duration); playMusicStinger(ultimateSceneKey(actor.id)); playTone(true,skillId,actor.streak); return duration; } target.classList.remove('hit'); void target.offsetWidth; target.classList.add('hit'); defender.health=Math.max(0,defender.health-damage); state.playerStats[fighterKey(actor)].damage+=damage; $('battle-fx').append(blast); window.setTimeout(()=>blast.remove(),700); if(actor.streak>=2){const combo=$('combo');combo.textContent=`${actor.streak} HIT COMBO!`;combo.classList.remove('hidden');window.setTimeout(()=>combo.classList.add('hidden'),800);} playTone(true,skillId,actor.streak); return 1600; }
@@ -314,6 +321,23 @@ document.addEventListener('click',(event)=>{const mode=event.target.closest('[da
 document.addEventListener('pointerdown',unlockMusic,{once:true,capture:true});document.addEventListener('keydown',unlockMusic,{once:true,capture:true});
 $('lobby-sound-btn').addEventListener('click',function initialEnable(){ unlockMusic(); this.removeEventListener('click',initialEnable); this.addEventListener('click',toggleMusicMute); },{once:true});
 $('music-btn').addEventListener('click',toggleMusicMute);
+
+function updateTtsButton(){
+  const on=state.ttsEnabled;
+  const btn=$('lobby-tts-btn');
+  if(btn){
+    btn.textContent=on?'🗣️ 朗讀開啟':'🔇 朗讀關閉';
+    btn.setAttribute('aria-pressed',String(on));
+    btn.classList.toggle('active', on);
+  }
+}
+if ($('lobby-tts-btn')) {
+  $('lobby-tts-btn').addEventListener('click', () => {
+    state.ttsEnabled = !state.ttsEnabled;
+    updateTtsButton();
+  });
+  updateTtsButton();
+}
 $('launch-btn').addEventListener('click',()=>setupBattle());$('back-btn').addEventListener('click',showLobby);$('retry-btn').addEventListener('click',()=>setupBattle());$('retry-wrong-btn').addEventListener('click',startWrongAnswerRetry);$('print-report-btn').addEventListener('click',()=>window.print());$('reset-record-btn').addEventListener('click',resetRecords);$('lobby-btn').addEventListener('click',showLobby);$('sound-btn').addEventListener('click',()=>{state.sound=!state.sound;$('sound-btn').textContent=state.sound?'🔊':'🔇';$('sound-btn').setAttribute('aria-pressed',String(state.sound));});loadMusicManifest();renderRoster();renderBestRecord();renderBadgeShelf();initEdTechFeatures();
 
 // EdTech 課堂看板與自訂題庫功能實作
@@ -322,6 +346,7 @@ function syncRecordToConsole() {
   const payload = {
     className: state.className,
     name: state.p1.name,
+    team: state.p1.team || "",
     correct: state.playerStats.p1.correct,
     bestStreak: state.playerStats.p1.bestStreak,
     damage: state.playerStats.p1.damage,
@@ -351,6 +376,7 @@ function initEdTechFeatures() {
   const params = new URLSearchParams(window.location.search);
   const b64Gas = params.get('gas');
   const cls = params.get('class');
+  const teamsParam = params.get('teams');
   
   if (b64Gas) {
     try {
@@ -370,7 +396,29 @@ function initEdTechFeatures() {
     state.className = localStorage.getItem('smes-battle-class-name') || '501';
   }
   
+  if (teamsParam) {
+    state.teamMode = decodeURIComponent(teamsParam);
+    localStorage.setItem('smes-battle-team-mode', state.teamMode);
+  } else {
+    state.teamMode = localStorage.getItem('smes-battle-team-mode') || 'none';
+  }
+  
   state.isConsoleConnected = Boolean(state.gasUrl);
+
+  // 初始化大廳組別選單選項
+  if (state.teamMode !== 'none') {
+    const teams = state.teamMode === 'redblue' ? ['紅隊', '藍隊'] : ['第1組', '第2組', '第3組', '第4組', '第5組', '第6組'];
+    const p1Select = $('p1-team-select');
+    const p2Select = $('p2-team-select');
+    if (p1Select && p2Select) {
+      const optionsHtml = teams.map(t => `<option value="${t}">${t}</option>`).join('');
+      p1Select.innerHTML = optionsHtml;
+      p2Select.innerHTML = optionsHtml;
+      
+      p1Select.value = localStorage.getItem('smes-battle-p1-team') || teams[0];
+      p2Select.value = localStorage.getItem('smes-battle-p2-team') || teams[0];
+    }
+  }
   
   // 載入座號姓名快取
   if ($('p1-name-input')) {
