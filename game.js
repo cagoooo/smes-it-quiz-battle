@@ -616,28 +616,35 @@ function answer(index,timedOut=false) {
     actor.meter=Math.max(0,actor.meter-8); 
     state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); 
     
-    // 答錯卡牌 3D 故障反噬受傷與 3D 方塊粒子
+    // 答錯卡牌毀滅性 3D 故障反噬受傷、地震級搖晃、全螢幕紅色故障警報閃爍與 3D 碎裂字元粒子
     const targetCard = actor===state.p1 ? $('fighter-p1') : $('fighter-p2');
     if (targetCard) {
-      targetCard.classList.remove('glitch-damage');
+      targetCard.classList.remove('glitch-damage-epic');
       void targetCard.offsetWidth;
-      targetCard.classList.add('glitch-damage');
-      window.setTimeout(() => targetCard.classList.remove('glitch-damage'), 600);
+      targetCard.classList.add('glitch-damage-epic');
+      window.setTimeout(() => targetCard.classList.remove('glitch-damage-epic'), 1200);
     }
     const stage = document.querySelector('.arena-stage');
     if (stage) {
-      stage.classList.add('stage-3d', 'stage-shake-3d');
+      stage.classList.add('stage-3d', 'stage-earthquake');
       window.setTimeout(() => {
         if (!state.resolving) stage.classList.remove('stage-3d');
-        stage.classList.remove('stage-shake-3d');
-      }, 600);
+        stage.classList.remove('stage-earthquake');
+      }, 1200);
+    }
+    const alarm = $('wrong-alarm-overlay');
+    if (alarm) {
+      alarm.classList.remove('active');
+      void alarm.offsetWidth;
+      alarm.classList.add('active');
+      window.setTimeout(() => alarm.classList.remove('active'), 1200);
     }
     try {
       const containerRect = $('battle-fx').getBoundingClientRect();
       const targetRect = targetCard.getBoundingClientRect();
       const sparkX = targetRect.left - containerRect.left + targetRect.width / 2;
       const sparkY = targetRect.top - containerRect.top + targetRect.height * 0.45;
-      spawn3DSparks(sparkX, sparkY, '#ff3b30', 35, 'shatter');
+      spawn3DSparks(sparkX, sparkY, '#ff3b30', 85, 'shatter');
     } catch(e) {}
 
     if(state.bossGlitchActive) {
@@ -1469,7 +1476,8 @@ function spawn3DSparks(x, y, color, count, type = 'spark') {
       maxLife: life,
       color: color || '#ff5a79',
       rotation: type === 'shatter' ? Math.random() * Math.PI * 2 : 0,
-      rotSpeed: type === 'shatter' ? (Math.random() - 0.5) * 0.25 : 0
+      rotSpeed: type === 'shatter' ? (Math.random() - 0.5) * 0.25 : 0,
+      charType: type === 'shatter' ? (Math.random() < 0.55 ? 'block' : ['ERR', 'BUG', '💀', '⚡', '⚠', '0', '1'][Math.floor(Math.random() * 7)]) : null
     });
   }
 
@@ -1537,7 +1545,15 @@ function spawn3DSparks(x, y, color, count, type = 'spark') {
         ctx.fillStyle = p.color;
         ctx.shadowBlur = Math.max(2, 8 * scale);
         ctx.shadowColor = p.color;
-        ctx.fillRect(-side / 2, -side / 2, side, side);
+        
+        if (p.charType === 'block') {
+          ctx.fillRect(-side / 2, -side / 2, side, side);
+        } else {
+          ctx.font = `900 ${side * 1.3}px 'Outfit', 'Inter', sans-serif`;
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(p.charType, 0, 0);
+        }
         ctx.restore();
       } else {
         const radius = p.size * scale;
