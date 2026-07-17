@@ -1317,10 +1317,10 @@ function doOptions(e) {
     // Supabase 雲端初始化
     const supabaseUrl = '__SUPABASE_URL__';
     const supabaseKey = '__SUPABASE_ANON_KEY__';
-    let supabase = null;
+    let supabaseClient = null;
     try {
       if (supabaseUrl && !supabaseUrl.startsWith('__') && typeof window.supabase !== 'undefined') {
-        supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+        supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
       }
     } catch (e) {
       console.warn('Supabase 初始化失敗，將安全退回訪客模式', e);
@@ -1406,7 +1406,7 @@ function doOptions(e) {
       generateQrCode(state.gasUrl, state.className, state.teamMode);
     }
     initConsoleBgm();
-    if (supabase) {
+    if (supabaseClient) {
       const tabBtn = $('tab-btn-cloud-leaderboard');
       if (tabBtn) tabBtn.style.display = 'inline-block';
     }
@@ -2136,13 +2136,13 @@ function doOptions(e) {
       loading.style.display = 'block';
       list.innerHTML = '';
       
-      if (!supabase) {
+      if (!supabaseClient) {
         loading.textContent = '❌ 雲端同步功能未啟用或 Supabase 金鑰未設定。';
         return;
       }
       
       try {
-        const { data, error } = await supabase
+        const { data, error } = await supabaseClient
           .from('user_records')
           .select('*')
           .order('best_streak', { ascending: false })
