@@ -830,3 +830,55 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   85% { opacity: 1; transform: translate(-50%, -50%) scale(0.95) translateZ(260px) rotateX(10deg); }
   100% { opacity: 0; transform: translate(-50%, -120%) scale(0.7) translateZ(100px) rotateX(0deg); filter: blur(5px); }
 }
+
+/* 地震級 3D 舞台抖動 */
+.arena-stage.stage-earthquake {
+  animation: stage-earthquake-anim 1.2s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+@keyframes stage-earthquake-anim {
+  0%, 100% { transform: rotateX(var(--stage-rx, 0deg)) rotateY(var(--stage-ry, 0deg)) translateZ(var(--stage-tz, 0px)) translate(0, 0) rotate(0deg); }
+  10%, 90% { transform: rotateX(calc(var(--stage-rx, 0deg) + 7deg)) rotateY(calc(var(--stage-ry, 0deg) - 5deg)) translateZ(-15px) translate(-12px, 8px) rotate(-1.5deg); }
+  20%, 80% { transform: rotateX(calc(var(--stage-rx, 0deg) - 6deg)) rotateY(calc(var(--stage-ry, 0deg) + 6deg)) translateZ(10px) translate(12px, -8px) rotate(1.5deg); }
+  30%, 50%, 70% { transform: rotateX(calc(var(--stage-rx, 0deg) + 8deg)) rotateY(calc(var(--stage-ry, 0deg) - 7deg)) translateZ(-25px) translate(-15px, -10px) rotate(-2deg); }
+  40%, 60% { transform: rotateX(calc(var(--stage-rx, 0deg) - 7deg)) rotateY(calc(var(--stage-ry, 0deg) + 5deg)) translateZ(20px) translate(15px, 10px) rotate(2deg); }
+  25%, 75% { transform: rotateX(calc(var(--stage-rx, 0deg) + 5deg)) rotateY(calc(var(--stage-ry, 0deg) + 5deg)) translateZ(-5px) translate(-5px, 12px) rotate(1deg); }
+  35%, 65% { transform: rotateX(calc(var(--stage-rx, 0deg) - 5deg)) rotateY(calc(var(--stage-ry, 0deg) - 5deg)) translateZ(5px) translate(5px, -12px) rotate(-1deg); }
+}
+
+/* 全螢幕紅色故障警報閃爍 */
+.wrong-alarm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(255, 59, 48, 0.45);
+  box-shadow: inset 0 0 100px rgba(255, 59, 48, 0.95);
+  opacity: 0;
+  z-index: 15;
+  pointer-events: none;
+  mix-blend-mode: color-burn;
+}
+.wrong-alarm-overlay.active {
+  animation: wrong-alarm-flash 1.2s ease-out forwards;
+}
+
+@keyframes wrong-alarm-flash {
+  0% { opacity: 0; }
+  10%, 30%, 50% { opacity: 1; }
+  20%, 40% { opacity: 0.2; }
+  100% { opacity: 0; }
+}
+
+/* 答錯卡牌毀滅性倒退偏折動畫 */
+.arena-stage.stage-3d .fighter.glitch-damage-epic {
+  animation: glitch-damage-epic-anim 1.2s cubic-bezier(0.25, 0.8, 0.25, 1.2) forwards;
+}
+
+@keyframes glitch-damage-epic-anim {
+  0% { transform: translateZ(0) rotateX(0deg) rotateY(0deg) translateY(0); filter: none; }
+  10% { transform: translateZ(-160px) rotateX(-35deg) rotateY(-20deg) translateY(-20px); filter: invert(0.5) sepia(1) saturate(10) hue-rotate(-50deg) drop-shadow(0 0 35px #ff3b30); }
+  25% { transform: translateZ(-200px) rotateX(40deg) rotateY(25deg) translateY(10px) translateX(-15px); filter: invert(0.8) sepia(1) saturate(12) hue-rotate(-50deg) drop-shadow(0 0 50px #ff3b30); }
+  45% { transform: translateZ(-120px) rotateX(-20deg) rotateY(-15deg) translateY(-5px) translateX(10px); }
+  65% { transform: translateZ(-60px) rotateX(10deg) rotateY(8deg); }
+  85% { transform: translateZ(-20px) rotateX(-4deg); }
+  100% { transform: translateZ(0) rotateX(0deg) rotateY(0deg) translateY(0); filter: none; }
+}
