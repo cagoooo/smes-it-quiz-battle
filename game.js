@@ -1,5 +1,5 @@
-const supabaseUrl = '__SUPABASE_URL__';
-const supabaseKey = '__SUPABASE_ANON_KEY__';
+const supabaseUrl = 'https://lwohskolhlcxhbcamhnq.supabase.co';
+const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx3b2hza29saGxjeGhiY2FtaG5xIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzMwNzI3NjQsImV4cCI6MjA4ODY0ODc2NH0.kuPhDn4wyT3Re16FxXU7lBtH-K4Q0aG_f7kUAmpq6N0';
 let supabase = null;
 try {
   if (supabaseUrl && !supabaseUrl.startsWith('__') && typeof window.supabase !== 'undefined') {
