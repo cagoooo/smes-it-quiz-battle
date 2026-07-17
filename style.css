@@ -679,3 +679,58 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   pointer-events: none;
   z-index: 20;
 }
+
+/* 👤 雲端同步樣式 */
+.cloud-sync-container {
+  display: inline-flex;
+  align-items: center;
+  margin-right: 8px;
+}
+.cloud-btn {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #ffffff;
+  border: 1px solid #10b981;
+  padding: 6px 12px;
+  border-radius: 15px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.4);
+  transition: all 0.2s;
+}
+.cloud-btn:hover {
+  background: #059669;
+  transform: translateY(-1px);
+}
+.cloud-profile {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid #10b981;
+  padding: 3px 3px 3px 8px;
+  border-radius: 18px;
+}
+.cloud-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  border: 1px solid #10b981;
+  object-fit: cover;
+}
+.cloud-logout-btn {
+  background: none;
+  border: none;
+  color: #a7f3d0;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 0 6px;
+  transition: color 0.2s;
+}
+.cloud-logout-btn:hover {
+  color: #ef4444;
+}

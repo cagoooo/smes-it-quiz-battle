@@ -1,3 +1,14 @@
+const supabaseUrl = '__SUPABASE_URL__';
+const supabaseKey = '__SUPABASE_ANON_KEY__';
+let supabase = null;
+try {
+  if (supabaseUrl && !supabaseUrl.startsWith('__') && typeof window.supabase !== 'undefined') {
+    supabase = window.supabase.createClient(supabaseUrl, supabaseKey);
+  }
+} catch (e) {
+  console.warn('Supabase 初始化失敗，將安全退回訪客模式', e);
+}
+
 const characters = [
   { id: 'coder', icon: '💻', image: 'assets/characters/coder.png', name: '程式勇者', skill: '演算法導航', color: '#52e6ff', moves:{light:'位元突擊',heavy:'除錯連發'}, ultimates:[{ name:'迴圈風暴', damage:34, color:'#52e6ff' }, { name:'演算法連鎖', damage:38, color:'#7af4ff' }, { name:'零錯誤雷擊', damage:42, color:'#b6fbff' }, { name:'核心編譯爆', damage:46, color:'#e0feff' }] },
   { id: 'guardian', icon: '🛡️', image: 'assets/characters/guardian.png', name: '網安守護者', skill: '防毒護盾', color: '#62f7bb', moves:{light:'護盾衝刺',heavy:'掃毒彈幕'}, ultimates:[{ name:'防毒結界', damage:34, color:'#62f7bb' }, { name:'零信任護盾', damage:38, color:'#9affd8' }, { name:'資安天網', damage:42, color:'#d0ffeb' }, { name:'資安鐵壁裁決', damage:46, color:'#e8fff5' }] },
@@ -49,12 +60,86 @@ const BADGES = [
   { id:'battles50', name:'資深玩家', icon:'🏅', check:(records)=>records.battles>=50 },
   { id:'boss-slayer', name:'魔王終結者', icon:'👹', check:(records,battle)=>battle.wonBoss===true },
 ];
-function loadRecords(){ try{ const saved=JSON.parse(localStorage.getItem(RECORDS_KEY)); if(saved&&typeof saved==='object')return {battles:0,bestStreak:0,bestCorrect:0,bestDamage:0,badges:[],...saved}; }catch(e){} return {battles:0,bestStreak:0,bestCorrect:0,bestDamage:0,badges:[]}; }
-function saveRecords(records){ try{ localStorage.setItem(RECORDS_KEY,JSON.stringify(records)); }catch(e){} }
+function loadRecords(){ try{ const saved=JSON.parse(localStorage.getItem(RECORDS_KEY)); if(saved&&typeof saved==='object')return {battles:0,bestStreak:0,bestDamage:0,bestCorrect:0,badges:[],...saved}; }catch(e){} return {battles:0,bestStreak:0,bestDamage:0,bestCorrect:0,badges:[]}; }
+
+async function saveToCloud(records) {
+  if (!supabase || !state.user) return;
+  try {
+    const { error } = await supabase
+      .from('user_records')
+      .upsert({
+        user_id: state.user.id,
+        email: state.user.email,
+        display_name: state.user.user_metadata.full_name || state.user.email,
+        best_streak: records.bestStreak || 0,
+        best_correct: records.bestCorrect || 0,
+        badges: records.badges || [],
+        updated_at: new Date().toISOString()
+      });
+    if (error) console.error('雲端存檔上傳失敗', error);
+  } catch (e) {
+    console.error('上傳雲端出錯', e);
+  }
+}
+
+async function syncFromCloud() {
+  if (!supabase || !state.user) return;
+  try {
+    const { data, error } = await supabase
+      .from('user_records')
+      .select('*')
+      .eq('user_id', state.user.id)
+      .single();
+      
+    if (error && error.code !== 'PGRST116') {
+      console.error('讀取雲端存檔失敗', error);
+      return;
+    }
+    
+    if (data) {
+      const cloudRecords = {
+        battles: Math.max(loadRecords().battles, 1),
+        bestStreak: data.best_streak || 0,
+        bestCorrect: data.best_correct || 0,
+        bestDamage: Math.max(loadRecords().bestDamage, 0),
+        badges: data.badges || []
+      };
+      localStorage.setItem(RECORDS_KEY, JSON.stringify(cloudRecords));
+      renderBestRecord();
+      renderBadgeShelf();
+    } else {
+      const local = loadRecords();
+      if (local.battles > 0) {
+        await saveToCloud(local);
+      }
+    }
+  } catch (e) {
+    console.error('雲端存檔同步出錯', e);
+  }
+}
+
+function saveRecords(records){ 
+  try{ 
+    localStorage.setItem(RECORDS_KEY,JSON.stringify(records)); 
+    if (supabase && state.user) {
+      saveToCloud(records);
+    }
+  }catch(e){} 
+}
 function renderBestRecord(){ const el=$('best-record'); let records; try{ records=loadRecords(); }catch(e){ el.classList.add('hidden'); return; } if(!records.battles){ el.classList.add('hidden'); return; } el.classList.remove('hidden'); $('best-record-text').textContent=`🏆 歷史最佳：連擊 x${records.bestStreak} · 單局答對 ${records.bestCorrect} 題 · 已挑戰 ${records.battles} 場`; }
 function renderBadgeShelf(){ const el=$('badge-shelf'); let records; try{ records=loadRecords(); }catch(e){ el.classList.add('hidden'); return; } if(!records.badges.length){ el.classList.add('hidden'); return; } el.classList.remove('hidden'); el.innerHTML=records.badges.map(id=>{ const badge=BADGES.find(b=>b.id===id); return badge?`<span class="badge-icon" title="${badge.name}">${badge.icon}</span>`:''; }).join(''); }
 function renderBadgeUnlock(newBadges){ const el=$('badge-unlock'); if(!newBadges.length){ el.classList.add('hidden'); el.textContent=''; return; } el.classList.remove('hidden'); el.textContent=`🎉 新徽章解鎖：${newBadges.map(b=>`${b.icon} ${b.name}`).join('、')}`; }
-function resetRecords(){ if(!window.confirm('確定要重置本機的歷史最佳紀錄嗎？這個動作無法復原。'))return; try{ localStorage.removeItem(RECORDS_KEY); }catch(e){} renderBestRecord(); renderBadgeShelf(); }
+function resetRecords(){ 
+  if(!window.confirm('確定要重置本機與雲端的歷史最佳紀錄嗎？這個動作無法復原。'))return; 
+  try{ 
+    localStorage.removeItem(RECORDS_KEY); 
+    if (supabase && state.user) {
+      saveToCloud({ battles: 0, bestStreak: 0, bestCorrect: 0, badges: [] });
+    }
+  }catch(e){} 
+  renderBestRecord(); 
+  renderBadgeShelf(); 
+}
 function updateRecords(){ const records=loadRecords(); records.battles+=1; records.bestStreak=Math.max(records.bestStreak,state.playerStats.p1.bestStreak); records.bestCorrect=Math.max(records.bestCorrect,state.playerStats.p1.correct); records.bestDamage=Math.max(records.bestDamage,state.playerStats.p1.damage); const battleStats={bestStreak:state.playerStats.p1.bestStreak,correct:state.playerStats.p1.correct,wrongCount:state.wrongAnswers.length,wonBoss:state.bossMode&&(state.p1.health>state.p2.health)}; const newBadges=[]; for(const badge of BADGES){ if(!records.badges.includes(badge.id)&&badge.check(records,battleStats)){ records.badges.push(badge.id); newBadges.push(badge); } } saveRecords(records); renderBestRecord(); renderBadgeShelf(); renderBadgeUnlock(newBadges); }
 const questions = [
   { unit:'safety', level:'light', q:'收到不認識的人傳來的奇怪連結，最好的做法是？', a:['立刻點開看看','先告訴老師或家長，不隨意點擊','轉傳給全班同學','輸入帳密確認'], correct:1, tip:'陌生連結可能藏有釣魚網站或惡意程式，先查證最安全。' },
@@ -789,7 +874,61 @@ if ($('lobby-tts-btn')) {
   });
   updateTtsButton();
 }
-$('launch-btn').addEventListener('click',()=>setupBattle());$('back-btn').addEventListener('click',showLobby);$('retry-btn').addEventListener('click',()=>setupBattle());$('retry-wrong-btn').addEventListener('click',startWrongAnswerRetry);$('print-report-btn').addEventListener('click',()=>window.print());$('reset-record-btn').addEventListener('click',resetRecords);$('lobby-btn').addEventListener('click',showLobby);$('sound-btn').addEventListener('click',()=>{state.sound=!state.sound;$('sound-btn').textContent=state.sound?'🔊':'🔇';$('sound-btn').setAttribute('aria-pressed',String(state.sound));});loadMusicManifest();renderRoster();renderBestRecord();renderBadgeShelf();initEdTechFeatures();
+function initCloudSync() {
+  const loginBtn = $('cloud-login-btn');
+  const logoutBtn = $('cloud-logout-btn');
+  const profileEl = $('cloud-profile');
+  const avatarEl = $('cloud-avatar');
+  
+  if (!loginBtn || !logoutBtn || !profileEl || !avatarEl) return;
+  
+  if (!supabase) {
+    loginBtn.style.display = 'none';
+    return;
+  }
+  
+  loginBtn.addEventListener('click', async () => {
+    try {
+      await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + window.location.pathname
+        }
+      });
+    } catch (e) {
+      console.error('OAuth 登入出錯', e);
+    }
+  });
+  
+  logoutBtn.addEventListener('click', async () => {
+    try {
+      await supabase.auth.signOut();
+      state.user = null;
+      loginBtn.classList.remove('hidden');
+      profileEl.classList.add('hidden');
+      renderBestRecord();
+      renderBadgeShelf();
+    } catch (e) {
+      console.error('登出出錯', e);
+    }
+  });
+  
+  supabase.auth.onAuthStateChange(async (event, session) => {
+    if (session) {
+      state.user = session.user;
+      loginBtn.classList.add('hidden');
+      profileEl.classList.remove('hidden');
+      avatarEl.src = session.user.user_metadata.avatar_url || `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(session.user.email)}`;
+      await syncFromCloud();
+    } else {
+      state.user = null;
+      loginBtn.classList.remove('hidden');
+      profileEl.classList.add('hidden');
+    }
+  });
+}
+
+$('launch-btn').addEventListener('click',()=>setupBattle());$('back-btn').addEventListener('click',showLobby);$('retry-btn').addEventListener('click',()=>setupBattle());$('retry-wrong-btn').addEventListener('click',startWrongAnswerRetry);$('print-report-btn').addEventListener('click',()=>window.print());$('reset-record-btn').addEventListener('click',resetRecords);$('lobby-btn').addEventListener('click',showLobby);$('sound-btn').addEventListener('click',()=>{state.sound=!state.sound;$('sound-btn').textContent=state.sound?'🔊':'🔇';$('sound-btn').setAttribute('aria-pressed',String(state.sound));});loadMusicManifest();renderRoster();renderBestRecord();renderBadgeShelf();initEdTechFeatures();initCloudSync();
 
 // EdTech 課堂看板與自訂題庫功能實作
 function syncRecordToConsole() {

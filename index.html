@@ -12,7 +12,9 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="答題快打">
   <title>石門國小｜資訊科技駕駛艙：答題快打</title>
-  <link rel="stylesheet" href="style.css?v=2026.07.17-9">
+  <link rel="stylesheet" href="style.css?v=2026.07.17-10">
+  <!-- 引入 Supabase JS SDK -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
   <main class="app-shell">
@@ -21,7 +23,16 @@
         <a class="school-mark" href="https://www.smes.tyc.edu.tw" target="_blank" rel="noopener noreferrer" aria-label="石門國小網站">
           <span class="mark-fish">🐟</span><span>石門國小<br><b>資訊科技駕駛艙</b></span>
         </a>
-        <div class="top-badges"><span id="console-status-badge" class="console-status-badge">⚪ 自主練習</span><button id="lobby-sound-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🎵 開啟 BGM</button><button id="lobby-tts-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🗣️ 開啟朗讀</button><span class="online-dot">課堂版</span></div>
+        <div class="top-badges">
+          <!-- 👤 雲端同步 -->
+          <div id="cloud-sync-container" class="cloud-sync-container">
+            <button id="cloud-login-btn" class="cloud-btn" type="button">👤 雲端同步</button>
+            <div id="cloud-profile" class="cloud-profile hidden">
+              <img id="cloud-avatar" class="cloud-avatar" src="" alt="Google Avatar">
+              <button id="cloud-logout-btn" class="cloud-logout-btn" type="button" title="登出">✕</button>
+            </div>
+          </div>
+          <span id="console-status-badge" class="console-status-badge">⚪ 自主練習</span><button id="lobby-sound-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🎵 開啟 BGM</button><button id="lobby-tts-btn" class="lobby-sound-btn" type="button" aria-pressed="false">🗣️ 開啟朗讀</button><span class="online-dot">課堂版</span></div>
       </div>
 
       <div class="lobby-hero">
@@ -300,8 +311,8 @@
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
     <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
   </aside>
-  <script>window.APP_VERSION='2026.07.17-9';</script>
-  <script src="game.js?v=2026.07.17-9"></script>
-  <script src="sw-register.js?v=2026.07.17-9"></script>
+  <script>window.APP_VERSION='2026.07.17-10';</script>
+  <script src="game.js?v=2026.07.17-10"></script>
+  <script src="sw-register.js?v=2026.07.17-10"></script>
 </body>
 </html>
