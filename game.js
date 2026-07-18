@@ -612,6 +612,7 @@ function answer(index,timedOut=false) {
       $('feedback').className='feedback good'; 
     }
     attackRecovery=attack(actor,defender,damage,skill.id); 
+  } else {
     actor.streak=0; 
     actor.meter=Math.max(0,actor.meter-8); 
     state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); 
@@ -835,6 +836,37 @@ function resolveCpuMove(actor,mode,skill,correct){
     if(correctBtn) correctBtn.classList.add('correct');
     $('explain').textContent=`💡 ${q.tip}`;
     
+    // CPU 答錯卡牌 3D 故障反噬受傷、地震級搖晃、警報閃爍與 3D shatter 粒子
+    const targetCard = $('fighter-p2');
+    if (targetCard) {
+      targetCard.classList.remove('glitch-damage-epic');
+      void targetCard.offsetWidth;
+      targetCard.classList.add('glitch-damage-epic');
+      window.setTimeout(() => targetCard.classList.remove('glitch-damage-epic'), 1200);
+    }
+    const stage = document.querySelector('.arena-stage');
+    if (stage) {
+      stage.classList.add('stage-3d', 'stage-earthquake');
+      window.setTimeout(() => {
+        stage.classList.remove('stage-3d');
+        stage.classList.remove('stage-earthquake');
+      }, 1200);
+    }
+    const alarm = $('wrong-alarm-overlay');
+    if (alarm) {
+      alarm.classList.remove('active');
+      void alarm.offsetWidth;
+      alarm.classList.add('active');
+      window.setTimeout(() => alarm.classList.remove('active'), 1200);
+    }
+    try {
+      const containerRect = $('battle-fx').getBoundingClientRect();
+      const targetRect = targetCard.getBoundingClientRect();
+      const sparkX = targetRect.left - containerRect.left + targetRect.width / 2;
+      const sparkY = targetRect.top - containerRect.top + targetRect.height * 0.45;
+      spawn3DSparks(sparkX, sparkY, '#ff3b30', 85, 'shatter');
+    } catch(e) {}
+
     $('feedback').textContent=`AI 的資料判讀失誤：${actor.name} 選擇 ${skill.name}，這回合沒有命中！`;
     $('feedback').className='feedback bad';
     playTone(false);
