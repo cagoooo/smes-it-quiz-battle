@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="答題快打">
   <title>石門國小｜資訊科技駕駛艙：答題快打</title>
-  <link rel="stylesheet" href="style.css?v=2026.07.18-4">
+  <link rel="stylesheet" href="style.css?v=2026.07.21-1">
   <!-- 引入 Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -147,6 +147,11 @@
         </label>
       </div>
 
+      <div class="lobby-extra-actions" style="display:flex; gap:10px; margin-bottom:15px;">
+        <button id="talent-btn" class="setup-action-btn" type="button" style="flex:1; padding:10px; font-weight:700; background:linear-gradient(135deg, #10b981, #059669); color:#fff; border-radius:10px; border:none; cursor:pointer;">🌳 技能天賦</button>
+        <button id="gallery-btn" class="setup-action-btn" type="button" style="flex:1; padding:10px; font-weight:700; background:linear-gradient(135deg, #8b5cf6, #6d28d9); color:#fff; border-radius:10px; border:none; cursor:pointer;">📖 角色圖鑑</button>
+      </div>
+
       <button id="launch-btn" class="launch-btn" type="button"><span>啟動任務</span><b>→</b></button>
     </section>
 
@@ -203,7 +208,15 @@
         </div>
 
         <div id="question-card" class="question-card hidden" tabindex="-1">
-          <div class="question-top"><span id="question-level">基礎題</span><span id="question-count">第 1 題</span><b id="question-timer" aria-live="polite">--</b></div>
+          <div class="question-top">
+            <span id="question-level">基礎題</span>
+            <span id="question-count">第 1 題</span>
+            <div style="display:inline-flex; gap:4px; align-items:center; margin-left:auto; margin-right:8px;">
+              <button id="question-tts-btn" class="icon-btn-sm" type="button" title="朗讀題目與選項" style="background:rgba(56,189,248,0.2); border:1px solid #38bdf8; color:#fff; border-radius:12px; padding:2px 8px; font-size:11px; cursor:pointer;">🔊 朗讀</button>
+              <button id="question-zhuyin-btn" class="icon-btn-sm" type="button" title="切換無障礙注音模式" style="background:rgba(139,92,246,0.2); border:1px solid #8b5cf6; color:#fff; border-radius:12px; padding:2px 8px; font-size:11px; cursor:pointer;">ㄅ注音</button>
+            </div>
+            <b id="question-timer" aria-live="polite">--</b>
+          </div>
           <h2 id="question-text">題目載入中</h2>
           <div id="answers" class="answers"></div>
           <p id="explain" class="explain"></p>
@@ -308,13 +321,71 @@
     </div>
   </div>
 
+  <!-- 技能天賦彈窗 -->
+  <div id="talent-modal" class="modal hidden">
+    <div class="modal-content" style="max-width:600px;">
+      <div class="modal-header">
+        <h2>🌳 角色技能天賦樹</h2>
+        <button id="close-talent-modal" class="close-btn" type="button">✕</button>
+      </div>
+      <div class="modal-body">
+        <p style="color:var(--muted); font-size:13px; margin-bottom:15px;">利用闖關累積的天賦點數解鎖專屬被動賦能，強化對戰優勢！</p>
+        <div id="talent-points-hud" style="background:rgba(16,185,129,0.15); border:1px solid #10b981; padding:10px 15px; border-radius:10px; font-weight:700; color:#10b981; margin-bottom:15px; display:flex; justify-content:space-between;">
+          <span>可用天賦點數：<b id="talent-points-count">3</b> 點</span>
+          <span>已點亮天賦：<b id="talents-unlocked-count">0 / 4</b></span>
+        </div>
+        <div class="talent-tree-grid" style="display:grid; grid-template-columns:1fr 1fr; gap:12px;">
+          <div class="talent-card" data-talent="shield_wall" style="background:#0c2b48; border:1px solid #334155; padding:14px; border-radius:12px; cursor:pointer;">
+            <div style="font-size:24px; margin-bottom:6px;">🛡️</div>
+            <b style="color:#38bdf8; display:block;">資安防火牆</b>
+            <small style="color:var(--muted); font-size:11px; display:block; margin:4px 0;">答錯反噬傷害降低 50%</small>
+            <button class="talent-toggle-btn" type="button" style="margin-top:8px; width:100%; padding:6px; background:#10b981; color:#fff; border:none; border-radius:6px; font-weight:700; cursor:pointer;">解鎖 (1點)</button>
+          </div>
+          <div class="talent-card" data-talent="swift_decoder" style="background:#0c2b48; border:1px solid #334155; padding:14px; border-radius:12px; cursor:pointer;">
+            <div style="font-size:24px; margin-bottom:6px;">⚡</div>
+            <b style="color:#38bdf8; display:block;">急速解譯</b>
+            <small style="color:var(--muted); font-size:11px; display:block; margin:4px 0;">每題作答時間額外延長 5 秒</small>
+            <button class="talent-toggle-btn" type="button" style="margin-top:8px; width:100%; padding:6px; background:#10b981; color:#fff; border:none; border-radius:6px; font-weight:700; cursor:pointer;">解鎖 (1點)</button>
+          </div>
+          <div class="talent-card" data-talent="critical_combo" style="background:#0c2b48; border:1px solid #334155; padding:14px; border-radius:12px; cursor:pointer;">
+            <div style="font-size:24px; margin-bottom:6px;">🔥</div>
+            <b style="color:#38bdf8; display:block;">連擊爆擊</b>
+            <small style="color:var(--muted); font-size:11px; display:block; margin:4px 0;">連擊達 3 次以上時，攻擊傷害 +30%</small>
+            <button class="talent-toggle-btn" type="button" style="margin-top:8px; width:100%; padding:6px; background:#10b981; color:#fff; border:none; border-radius:6px; font-weight:700; cursor:pointer;">解鎖 (1點)</button>
+          </div>
+          <div class="talent-card" data-talent="energy_overdrive" style="background:#0c2b48; border:1px solid #334155; padding:14px; border-radius:12px; cursor:pointer;">
+            <div style="font-size:24px; margin-bottom:6px;">🔋</div>
+            <b style="color:#38bdf8; display:block;">超載充能</b>
+            <small style="color:var(--muted); font-size:11px; display:block; margin:4px 0;">開局自動預載 20% 大絕能量</small>
+            <button class="talent-toggle-btn" type="button" style="margin-top:8px; width:100%; padding:6px; background:#10b981; color:#fff; border:none; border-radius:6px; font-weight:700; cursor:pointer;">解鎖 (1點)</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- 角色圖鑑彈窗 -->
+  <div id="gallery-modal" class="modal hidden">
+    <div class="modal-content" style="max-width:700px;">
+      <div class="modal-header">
+        <h2>📖 資訊勇者與怪物圖鑑展示牆</h2>
+        <button id="close-gallery-modal" class="close-btn" type="button">✕</button>
+      </div>
+      <div class="modal-body">
+        <div id="gallery-grid" class="gallery-grid" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(140px, 1fr)); gap:12px; max-height:450px; overflow-y:auto; padding-right:5px;">
+          <!-- 動態注入圖鑑卡片 -->
+        </div>
+      </div>
+    </div>
+  </div>
+
   <footer class="site-credit">桃園市龍潭區石門國民小學 · 鱻魚特色學園<br>Made with <span class="site-credit__heart" aria-label="愛心">❤️</span> by <a href="https://www.smes.tyc.edu.tw/modules/tadnews/page.php?ncsn=11&nsn=16#a5" target="_blank" rel="noopener noreferrer">阿凱老師</a></footer>
   <aside id="sw-update-toast" class="sw-update-toast" role="status" aria-live="polite" hidden>
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
     <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
   </aside>
-  <script>window.APP_VERSION='2026.07.18-4';</script>
-  <script src="game.js?v=2026.07.18-4"></script>
-  <script src="sw-register.js?v=2026.07.18-4"></script>
+  <script>window.APP_VERSION='2026.07.21-1';</script>
+  <script src="game.js?v=2026.07.21-1"></script>
+  <script src="sw-register.js?v=2026.07.21-1"></script>
 </body>
 </html>
