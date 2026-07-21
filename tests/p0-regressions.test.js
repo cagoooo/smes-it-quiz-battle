@@ -450,3 +450,13 @@ test('怪物回合專屬警報與觀察視角 UIUX 區隔 (cpu-turn-mode)', () =
   assert.match(game, /classList\.toggle\('cpu-turn-mode',\s*actor\.isCpu\)/);
   assert.match(game, /👾 敵方技能/);
 });
+
+test('結算卡片 UIUX & RWD 重構與防字體折行機制', () => {
+  const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const styleCss = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(indexHtml, /class="primary-cta"/);
+  assert.match(indexHtml, /class="secondary-actions"/);
+  assert.match(styleCss, /\.result-actions \.primary-cta/);
+  assert.match(styleCss, /\.result-actions \.secondary-actions/);
+  assert.match(styleCss, /white-space:\s*nowrap/);
+});

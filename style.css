@@ -988,3 +988,135 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   background: rgba(16, 185, 129, 0.2);
   border-color: #10b981;
 }
+
+/* 🏆 結算卡片 UIUX & RWD 重構增強 */
+.result-card {
+  width: min(500px, 94vw) !important;
+  padding: 30px 24px 24px !important;
+  border: 2px solid rgba(56, 189, 248, 0.4) !important;
+  border-radius: 24px !important;
+  background: radial-gradient(circle at 50% 0%, #1e3e62, #0b192c 75%) !important;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.7), inset 0 0 20px rgba(56, 189, 248, 0.15) !important;
+}
+
+.result-icon {
+  margin: 5px auto;
+  font-size: 64px;
+  animation: trophy-float 3s ease-in-out infinite;
+}
+
+@keyframes trophy-float {
+  0%, 100% { transform: translateY(0) scale(1); filter: drop-shadow(0 0 15px rgba(255, 215, 0, 0.6)); }
+  50% { transform: translateY(-8px) scale(1.06); filter: drop-shadow(0 0 25px rgba(255, 215, 0, 0.9)); }
+}
+
+.result-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin: 20px 0;
+}
+
+.result-stats span {
+  padding: 12px 6px;
+  border: 1px solid rgba(56, 189, 248, 0.25);
+  background: rgba(12, 43, 72, 0.6);
+  border-radius: 14px;
+  color: #94a3b8;
+  font-size: 11px;
+  font-weight: 600;
+  backdrop-filter: blur(4px);
+}
+
+.result-stats b {
+  display: block;
+  color: #ffe477;
+  font-family: 'Outfit', Fredoka, system-ui, sans-serif;
+  font-size: 26px;
+  font-weight: 900;
+  text-shadow: 0 0 10px rgba(255, 228, 119, 0.4);
+}
+
+.result-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.result-actions .primary-cta {
+  width: 100%;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 14px;
+  color: #ffffff;
+  background: linear-gradient(135deg, #10b981, #06b6d4, #3b82f6);
+  background-size: 200% auto;
+  font-size: 1.1rem;
+  font-weight: 900;
+  cursor: pointer;
+  box-shadow: 0 4px 18px rgba(16, 185, 129, 0.4);
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.result-actions .primary-cta:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 6px 24px rgba(16, 185, 129, 0.6);
+}
+
+.result-actions .secondary-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+
+.result-actions .secondary-actions button {
+  flex: 1;
+  padding: 11px 12px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  border-radius: 12px;
+  color: #e2e8f0;
+  background: rgba(15, 23, 42, 0.8);
+  font-size: 0.92rem;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.result-actions .secondary-actions button:hover {
+  background: rgba(30, 41, 59, 1);
+  border-color: #38bdf8;
+  color: #38bdf8;
+  transform: translateY(-1px);
+}
+
+/* RWD 手機窄螢幕完美適應 */
+@media (max-width: 480px) {
+  .result-card {
+    padding: 24px 16px 18px !important;
+  }
+  .result-stats {
+    gap: 6px;
+  }
+  .result-stats span {
+    padding: 8px 3px;
+    font-size: 10px;
+  }
+  .result-stats b {
+    font-size: 22px;
+  }
+  .result-actions .primary-cta {
+    font-size: 1rem;
+    padding: 12px;
+  }
+  .result-actions .secondary-actions button {
+    font-size: 0.85rem;
+    padding: 9px 6px;
+  }
+}
