@@ -882,3 +882,109 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
   85% { transform: translateZ(-20px) rotateX(-4deg); }
   100% { transform: translateZ(0) rotateX(0deg) rotateY(0deg) translateY(0); filter: none; }
 }
+
+/* 👾 怪物/CPU 回合專屬警報與觀察視角 UIUX 樣式 */
+.command-deck.cpu-turn-mode {
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 25px rgba(244, 63, 94, 0.3), inset 0 0 15px rgba(244, 63, 94, 0.15) !important;
+}
+
+.command-deck.cpu-turn-mode .turn-strip {
+  background: linear-gradient(90deg, #9f1239, #881337) !important;
+  color: #fff !important;
+  border-bottom: 1px solid #f43f5e;
+}
+.command-deck.cpu-turn-mode .turn-strip #turn-dot {
+  background: #f43f5e;
+  box-shadow: 0 0 10px #f43f5e;
+  animation: pulse-red 1s infinite alternate;
+}
+
+@keyframes pulse-red {
+  0% { opacity: 0.4; transform: scale(0.9); }
+  100% { opacity: 1; transform: scale(1.2); }
+}
+
+.question-card.cpu-turn-mode {
+  border: 2px solid #f43f5e !important;
+  background: radial-gradient(circle at top, rgba(159, 18, 57, 0.35) 0%, rgba(15, 23, 42, 0.95) 70%) !important;
+  box-shadow: 0 0 30px rgba(244, 63, 94, 0.4) !important;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 怪物回合高科技算力掃描線 */
+.question-card.cpu-turn-mode::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, transparent, #f43f5e, #fb7185, #f43f5e, transparent);
+  box-shadow: 0 0 15px #f43f5e;
+  animation: cpu-scanline-anim 2.5s linear infinite;
+  z-index: 10;
+  pointer-events: none;
+}
+
+@keyframes cpu-scanline-anim {
+  0% { top: 0%; opacity: 0; }
+  15% { opacity: 1; }
+  85% { opacity: 1; }
+  100% { top: 100%; opacity: 0; }
+}
+
+/* 怪物回合選項唯讀與觀察標籤 */
+.question-card.cpu-turn-mode .answers .answer {
+  background: rgba(15, 23, 42, 0.75) !important;
+  border: 1px dashed rgba(244, 63, 94, 0.4) !important;
+  color: #cbd5e1 !important;
+  cursor: not-allowed !important;
+  opacity: 0.75;
+  transition: all 0.3s ease;
+  position: relative;
+}
+
+.question-card.cpu-turn-mode .answers .answer::after {
+  content: '🔒 觀察中';
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 11px;
+  font-weight: 700;
+  color: #fb7185;
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.3);
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.question-card.cpu-turn-mode .answers .answer.wrong {
+  border: 2px solid #ef4444 !important;
+  background: rgba(239, 68, 68, 0.25) !important;
+  color: #fca5a5 !important;
+  opacity: 1;
+}
+
+.question-card.cpu-turn-mode .answers .answer.wrong::after {
+  content: '❌ AI 出錯';
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.2);
+  border-color: #ef4444;
+}
+
+.question-card.cpu-turn-mode .answers .answer.correct {
+  border: 2px solid #10b981 !important;
+  background: rgba(16, 185, 129, 0.25) !important;
+  color: #6ee7b7 !important;
+  opacity: 1;
+}
+
+.question-card.cpu-turn-mode .answers .answer.correct::after {
+  content: '💡 正解';
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.2);
+  border-color: #10b981;
+}
