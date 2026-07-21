@@ -1623,3 +1623,153 @@ function spawn3DSparks(x, y, color, count, type = 'spark') {
   setTimeout(cleanup, 2000);
   animationId = requestAnimationFrame(render);
 }
+
+/* 天賦樹與圖鑑系統 (P1-1 & P1-3) 及 TTS/注音 (P0-9) */
+const TALENTS_KEY = 'smes-quiz-talents';
+function loadTalents() {
+  try {
+    const saved = JSON.parse(localStorage.getItem(TALENTS_KEY));
+    if (saved && typeof saved === 'object') return { shield_wall: false, swift_decoder: false, critical_combo: false, energy_overdrive: false, ...saved };
+  } catch(e) {}
+  return { shield_wall: false, swift_decoder: false, critical_combo: false, energy_overdrive: false };
+}
+
+function saveTalents(talents) {
+  try {
+    localStorage.setItem(TALENTS_KEY, JSON.stringify(talents));
+  } catch(e) {}
+}
+
+state.talents = loadTalents();
+
+function renderTalentsUI() {
+  const pointsHud = $('talent-points-count');
+  const unlockedHud = $('talents-unlocked-count');
+  const records = loadRecords();
+  const totalPoints = Math.max(1, Math.floor((records.battles || 0) / 2) + (records.badges ? records.badges.length : 0));
+  const unlocked = Object.values(state.talents).filter(Boolean).length;
+  const availablePoints = Math.max(0, totalPoints - unlocked);
+
+  if (pointsHud) pointsHud.textContent = availablePoints;
+  if (unlockedHud) unlockedHud.textContent = `${unlocked} / 4`;
+
+  document.querySelectorAll('.talent-card').forEach(card => {
+    const key = card.dataset.talent;
+    const btn = card.querySelector('.talent-toggle-btn');
+    const isUnlocked = state.talents[key];
+
+    if (isUnlocked) {
+      card.style.borderColor = '#10b981';
+      card.style.background = 'rgba(16, 185, 129, 0.15)';
+      if (btn) {
+        btn.textContent = '已解鎖 ✓';
+        btn.style.background = '#059669';
+      }
+    } else {
+      card.style.borderColor = '#334155';
+      card.style.background = '#0c2b48';
+      if (btn) {
+        btn.textContent = availablePoints > 0 ? '解鎖 (1點)' : '點數不足';
+        btn.style.background = availablePoints > 0 ? '#10b981' : '#475569';
+      }
+    }
+  });
+}
+
+function toggleTalent(key) {
+  const records = loadRecords();
+  const totalPoints = Math.max(1, Math.floor((records.battles || 0) / 2) + (records.badges ? records.badges.length : 0));
+  const unlocked = Object.values(state.talents).filter(Boolean).length;
+  const availablePoints = Math.max(0, totalPoints - unlocked);
+
+  if (state.talents[key]) {
+    state.talents[key] = false;
+  } else if (availablePoints > 0) {
+    state.talents[key] = true;
+  } else {
+    alert('天賦點數不足！請多完成挑戰或解鎖成就徽章來獲得點數！');
+    return;
+  }
+  saveTalents(state.talents);
+  renderTalentsUI();
+}
+
+function renderGalleryUI() {
+  const grid = $('gallery-grid');
+  if (!grid) return;
+  const allProfiles = [...characters, ...cpuEnemies];
+  grid.innerHTML = allProfiles.map(p => `
+    <div class="gallery-card" style="background:#0c2b48; border:1px solid #38bdf8; border-radius:12px; padding:10px; text-align:center; position:relative; overflow:hidden;">
+      <div style="font-size:36px; margin-bottom:4px;">${p.icon || '🤖'}</div>
+      <b style="color:#fff; font-size:13px; display:block;">${p.name}</b>
+      <small style="color:#38bdf8; font-size:10px; display:block; margin-top:2px;">${p.skill || '獨門招式'}</small>
+      <button class="gallery-preview-btn" onclick="playTone(true, 'light', 1)" style="margin-top:6px; background:rgba(56,189,248,0.2); border:1px solid #38bdf8; color:#fff; padding:2px 8px; border-radius:10px; font-size:10px; cursor:pointer;">試聽招式</button>
+    </div>
+  `).join('');
+}
+
+/* 語音朗讀 (TTS) 與無障礙注音 (P0-9) */
+function speakQuestionText() {
+  if (!('speechSynthesis' in window)) {
+    alert('您的瀏覽器不支援 Web Speech 語音朗讀功能');
+    return;
+  }
+  window.speechSynthesis.cancel();
+  const q = state.current ? state.current.q : (state.questions ? state.questions[state.qIndex] : null);
+  if (!q) return;
+  const optionsText = q.a.map((opt, idx) => `選項 ${['A','B','C','D'][idx]}：${opt}`).join('。');
+  const fullText = `題目：${q.q}。${optionsText}`;
+  const utterance = new SpeechSynthesisUtterance(fullText);
+  utterance.lang = 'zh-TW';
+  utterance.rate = 1.0;
+  window.speechSynthesis.speak(utterance);
+}
+
+function toggleZhuyinMode() {
+  state.zhuyinEnabled = !state.zhuyinEnabled;
+  const btn = $('question-zhuyin-btn');
+  const card = $('question-card');
+  if (btn) {
+    btn.textContent = state.zhuyinEnabled ? 'ㄅ注音:開' : 'ㄅ注音';
+    btn.style.background = state.zhuyinEnabled ? '#8b5cf6' : 'rgba(139,92,246,0.2)';
+  }
+  if (card) {
+    card.classList.toggle('zhuyin-mode', state.zhuyinEnabled);
+  }
+}
+
+// 綁定大廳天賦與圖鑑彈窗事件
+document.addEventListener('DOMContentLoaded', () => {
+  const talentBtn = $('talent-btn');
+  const galleryBtn = $('gallery-btn');
+  const talentModal = $('talent-modal');
+  const galleryModal = $('gallery-modal');
+
+  if (talentBtn && talentModal) {
+    talentBtn.addEventListener('click', () => {
+      renderTalentsUI();
+      talentModal.classList.remove('hidden');
+    });
+  }
+  if ($('close-talent-modal') && talentModal) {
+    $('close-talent-modal').addEventListener('click', () => talentModal.classList.add('hidden'));
+  }
+  if (galleryBtn && galleryModal) {
+    galleryBtn.addEventListener('click', () => {
+      renderGalleryUI();
+      galleryModal.classList.remove('hidden');
+    });
+  }
+  if ($('close-gallery-modal') && galleryModal) {
+    $('close-gallery-modal').addEventListener('click', () => galleryModal.classList.add('hidden'));
+  }
+
+  document.querySelectorAll('.talent-card').forEach(card => {
+    card.addEventListener('click', () => toggleTalent(card.dataset.talent));
+  });
+
+  const ttsBtn = $('question-tts-btn');
+  const zhuyinBtn = $('question-zhuyin-btn');
+  if (ttsBtn) ttsBtn.addEventListener('click', speakQuestionText);
+  if (zhuyinBtn) zhuyinBtn.addEventListener('click', toggleZhuyinMode);
+});

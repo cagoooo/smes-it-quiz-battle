@@ -429,3 +429,15 @@ test('出招3D招式字卡與大絕招電影暗幕/震撼文字3D呈現', () => 
   assert.match(game, /document\.createElement\('div'\);\s*moveCallout\.className = 'move-name-callout'/);
   assert.match(game, /document\.createElement\('div'\);\s*ultTitle\.className = 'ultimate-title-3d'/);
 });
+
+test('天賦樹系統、3D角色圖鑑展示牆、AI題目朗讀與無障礙注音系統', () => {
+  const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  assert.match(indexHtml, /id="talent-modal"/);
+  assert.match(indexHtml, /id="gallery-modal"/);
+  assert.match(indexHtml, /id="question-tts-btn"/);
+  assert.match(indexHtml, /id="question-zhuyin-btn"/);
+  assert.match(game, /function speakQuestionText\(/);
+  assert.match(game, /function toggleZhuyinMode\(/);
+  assert.match(game, /function renderTalentsUI\(/);
+  assert.match(game, /function renderGalleryUI\(/);
+});
