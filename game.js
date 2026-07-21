@@ -317,7 +317,36 @@ function renderMoveDeck(actor) { actor.skills.forEach(skill => { const button=do
 function renderCpuMoveDeck(actor, selectedId=null) { const skills=[...actor.skills, ...(actor.meter>=100?[getSkill(actor,'ultimate')]:[])]; $('cpu-move-list').innerHTML=skills.map(skill=>`<div class="cpu-move ${skill.id===selectedId?'selected':''} ${skill.id==='ultimate'?'ultimate':''}"><span>${skill.icon || '✦'}</span><div><b>${skill.name}</b><small>${skill.label} · 傷害 ${moveDamage(actor,skill.id)}</small></div><em>${skill.id===selectedId?'已鎖定':'分析中'}</em></div>`).join(''); $('cpu-move-status').textContent=selectedId?`已鎖定：${getSkill(actor,selectedId).name}`:'正在分析最佳招式…'; }
 function updateUI() { for (const id of ['p1','p2']) { const f=state[id]; const maxHp=(id==='p2'&&state.mode==='solo'&&state.bossMode)?300:100; $(`${id}-health`).style.width=`${Math.min(100,Math.max(0,(f.health/maxHp)*100))}%`; $(`${id}-health-text`).textContent=f.health; $(`${id}-meter`).style.width=`${f.meter}%`; $(`${id}-meter-text`).textContent=`${f.meter}%`; } const player=state[state.turn]; $('streak-label').textContent=`連擊 x${player.streak}`; $('ultimate-btn').classList.toggle('locked',player.meter<100); $('ultimate-btn').disabled=player.meter<100; }
 function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
-function setTurn(turn) { if(!state.running)return; state.resolving=false; state.turn=turn; state.current=null; const actor=state[turn]; $('turn-title').textContent=actor.isCpu?'駕駛艙 AI 正在分析資料…':`${actor.name} 的回合：選擇技能`; document.querySelector('.turn-strip').classList.toggle('cpu',actor.isCpu); $('move-deck').classList.toggle('hidden',actor.isCpu); $('cpu-move-deck').classList.toggle('hidden',!actor.isCpu); if(actor.isCpu)renderCpuMoveDeck(actor); else renderMoveDeck(actor); $('question-card').classList.add('hidden'); $('feedback').textContent=actor.isCpu?'AI 正在挑選它的招式…':'選擇四種專屬技能之一，答對就能發動攻擊！'; $('feedback').className='feedback'; updateUI(); if(actor.isCpu){ const cpuScene=cpuBattleSceneKey(actor.id); if(cpuScene)playMusicScene(cpuScene); window.setTimeout(cpuMove,difficultyModes[state.difficulty].delay); } else { playMusicScene(battleSceneKey()); } }
+function setTurn(turn) {
+  if(!state.running)return; 
+  state.resolving=false; 
+  state.turn=turn; 
+  state.current=null; 
+  const actor=state[turn]; 
+  $('turn-title').textContent=actor.isCpu?`⚠️ 敵方 [${actor.name}] 算力攻擊中！`: `${actor.name} 的回合：選擇技能`; 
+  document.querySelector('.turn-strip').classList.toggle('cpu',actor.isCpu); 
+  
+  const cmdDeck = document.querySelector('.command-deck');
+  const qCard = $('question-card');
+  if (cmdDeck) cmdDeck.classList.toggle('cpu-turn-mode', actor.isCpu);
+  if (qCard) qCard.classList.toggle('cpu-turn-mode', actor.isCpu);
+
+  $('move-deck').classList.toggle('hidden',actor.isCpu); 
+  $('cpu-move-deck').classList.toggle('hidden',!actor.isCpu); 
+  if(actor.isCpu)renderCpuMoveDeck(actor); 
+  else renderMoveDeck(actor); 
+  $('question-card').classList.add('hidden'); 
+  $('feedback').textContent=actor.isCpu?'👁️ 敵方 AI 正在評估招式中，請全班全神貫注觀察！':'選擇四種專屬技能之一，答對就能發動攻擊！'; 
+  $('feedback').className='feedback'; 
+  updateUI(); 
+  if(actor.isCpu){ 
+    const cpuScene=cpuBattleSceneKey(actor.id); 
+    if(cpuScene)playMusicScene(cpuScene); 
+    window.setTimeout(cpuMove,difficultyModes[state.difficulty].delay); 
+  } else { 
+    playMusicScene(battleSceneKey()); 
+  } 
+}
 function balanceOptionLengths(q) {
   if (!q || !q.a || typeof q.correct !== 'number') return q;
   const correctText = q.a[q.correct];
@@ -783,16 +812,16 @@ function cpuMove(){
     state.current={skill,q};
     
     // 渲染並顯示 CPU 題目卡，選項設為 disabled 以免玩家誤點
-    $('question-level').textContent=`${skill.label} · ${skill.name} · 傷害 ${skill.damage}`;
-    $('question-count').textContent=`${actor.name} 的挑戰`;
+    $('question-level').textContent=`👾 敵方技能：${skill.name} (${skill.label}) · 傷害 ${skill.damage}`;
+    $('question-count').textContent=`👁️ 觀察敵方算力中`;
     $('question-text').textContent=q.q;
     $('answers').innerHTML=q.a.map((answer,index)=>`<button class="answer" data-answer="${index}" type="button" disabled><b>${'ABCD'[index]}.</b> ${answer}</button>`).join('');
-    $('explain').textContent='AI 正在載入並判讀核心數據…';
+    $('explain').textContent='🤖 敵方 AI 正在進行核心數據算力分析...（觀察模式：無須作答）';
     $('question-card').classList.remove('hidden');
     $('cpu-move-deck').classList.add('hidden');
     
-    $('turn-title').textContent=`駕駛艙 AI 鎖定 ${skill.name}！`;
-    $('feedback').textContent=`⚡ ${actor.name} 鎖定了 ${skill.name}，正在進行資料編譯…`;
+    $('turn-title').textContent=`⚠️ 警報：${actor.name} 鎖定了 ${skill.name}！`;
+    $('feedback').textContent=`👁️ [觀察視角] ${actor.name} 正在編譯答案數據...`;
     
     window.setTimeout(()=>resolveCpuMove(actor,mode,skill,correct), 2000);
   }, thinkTime);
