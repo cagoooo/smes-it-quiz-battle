@@ -460,3 +460,31 @@ test('結算卡片 UIUX & RWD 重構與防字體折行機制', () => {
   assert.match(styleCss, /\.result-actions \.secondary-actions/);
   assert.match(styleCss, /white-space:\s*nowrap/);
 });
+
+test('雙人對戰拼刀對決機制 (P0-16)', () => {
+  const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const styleCss = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(indexHtml, /id="clash-overlay"/);
+  assert.match(styleCss, /\.clash-title-3d/);
+  assert.match(styleCss, /\.clash-bar-container/);
+  assert.match(game, /function triggerClashMode\(/);
+  assert.match(game, /function updateClashBar\(/);
+});
+
+test('全班沉浸式 AI 戰況主播語音即時播報 (P0-17)', () => {
+  assert.match(game, /function announceEsportsMatch\(/);
+  assert.match(game, /first_blood/);
+  assert.match(game, /streak_5/);
+});
+
+test('MVP 3D 榮譽頒獎台與可列印資科小勇者證書 (P0-18)', () => {
+  const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const styleCss = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  assert.match(indexHtml, /id="mvp-podium-modal"/);
+  assert.match(indexHtml, /id="certificate-modal"/);
+  assert.match(styleCss, /\.podium-stage-3d/);
+  assert.match(styleCss, /\.printable-certificate/);
+  assert.match(styleCss, /@media print/);
+  assert.match(game, /function renderPodiumUI\(/);
+  assert.match(game, /function renderCertificateUI\(/);
+});

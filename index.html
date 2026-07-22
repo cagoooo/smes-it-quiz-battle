@@ -12,7 +12,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="答題快打">
   <title>石門國小｜資訊科技駕駛艙：答題快打</title>
-  <link rel="stylesheet" href="style.css?v=2026.07.21-3">
+  <link rel="stylesheet" href="style.css?v=2026.07.22-1">
   <!-- 引入 Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -237,12 +237,81 @@
         <div class="result-actions">
           <button id="retry-btn" class="primary-cta" type="button">⚔️ 再戰一次</button>
           <div class="secondary-actions">
-            <button id="print-report-btn" class="secondary" type="button">🖨️ 列印本局報告</button>
+            <button id="podium-btn" class="secondary" type="button">🏆 榮耀頒獎台</button>
+            <button id="print-report-btn" class="secondary" type="button">🖨️ 列印報告</button>
             <button id="lobby-btn" class="secondary" type="button">🏠 任務大廳</button>
           </div>
         </div>
       </div>
     </section>
+
+    <!-- ⚔️ 雙人拼刀對決 Overlay (P0-16) -->
+    <div id="clash-overlay" class="clash-overlay hidden" role="dialog" aria-modal="true">
+      <div class="clash-title-3d">⚔️ ULTIMATE DUEL CLASH ⚔️</div>
+      <p class="clash-subtitle">雙方極限大絕碰撞！快速作答碾壓對手！</p>
+      <div class="clash-bar-container">
+        <div id="clash-bar-p1" class="clash-bar-fill p1" style="width: 50%;"></div>
+        <div id="clash-bar-p2" class="clash-bar-fill p2" style="width: 50%;"></div>
+        <div id="clash-spark-head" class="clash-spark-head" style="left: 50%;">⚡</div>
+      </div>
+      <div class="clash-timer"><span id="clash-time">8</span>s</div>
+    </div>
+  </main>
+
+  <!-- 🏆 MVP 3D 金銀銅頒獎台 Modal (P0-18) -->
+  <div id="mvp-podium-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content podium-content">
+      <div class="modal-header">
+        <h2>🏆 榮耀電競 MVP 頒獎台</h2>
+        <button id="close-podium-btn" class="close-btn" type="button">✕</button>
+      </div>
+      <div class="podium-stage-3d">
+        <div class="podium-step step-2"><div class="podium-rank">2nd</div><div id="podium-p2-avatar" class="podium-avatar">🥈</div><div id="podium-p2-name">玩家 2</div></div>
+        <div class="podium-step step-1"><div class="podium-crown">👑</div><div class="podium-rank">1st MVP</div><div id="podium-p1-avatar" class="podium-avatar">🥇</div><div id="podium-p1-name">玩家 1</div></div>
+        <div class="podium-step step-3"><div class="podium-rank">3rd</div><div id="podium-p3-avatar" class="podium-avatar">🥉</div><div id="podium-p3-name">駕駛艙 AI</div></div>
+      </div>
+      <div class="podium-actions" style="margin-top:20px; text-align:center;">
+        <button id="open-cert-btn" class="primary-cta" type="button" style="width:auto; padding:12px 24px;">📜 生成小勇者證書</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 📜 可列印小勇者證書 Modal (P0-18) -->
+  <div id="certificate-modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modal-content cert-modal-content">
+      <div class="modal-header no-print">
+        <h2>📜 石門國小資訊科技勇者認證證書</h2>
+        <button id="close-cert-btn" class="close-btn" type="button">✕</button>
+      </div>
+      <div id="printable-certificate" class="printable-certificate">
+        <div class="cert-border">
+          <div class="cert-header">
+            <div class="cert-badge-logo">🏫</div>
+            <h1>桃園市龍潭區石門國民小學</h1>
+            <h2>資訊科技競技戰場 · 小勇者認證證書</h2>
+          </div>
+          <div class="cert-body">
+            <p class="cert-recipient">茲證明 <b><span id="cert-student-name">資訊勇者</span></b> 同學</p>
+            <p class="cert-desc">參與【答題快打】資訊科技領域課堂競賽表現卓越，成功守護校園網路資安！</p>
+            <div class="cert-metrics">
+              <div><span>完成難度</span><b id="cert-diff">普通挑戰</b></div>
+              <div><span>答對率</span><b id="cert-acc">100%</b></div>
+              <div><span>最高連擊</span><b id="cert-streak">5 連爆擊</b></div>
+              <div><span>獲頒稱號</span><b id="cert-title">資安防禦大師</b></div>
+            </div>
+          </div>
+          <div class="cert-footer">
+            <div class="cert-seal">🎖️ 石門國小教務處驗證</div>
+            <div class="cert-signature">指導教師：<b>阿凱老師 簽署</b></div>
+            <div class="cert-date" id="cert-date">2026年07月22日</div>
+          </div>
+        </div>
+      </div>
+      <div class="cert-actions no-print" style="margin-top:20px; text-align:center;">
+        <button id="do-print-cert-btn" class="primary-cta" type="button" style="width:auto; padding:12px 28px;">🖨️ 立即列印證書 (A4橫式)</button>
+      </div>
+    </div>
+  </div>
   </main>
 
   <!-- 自訂題庫 Modal -->
@@ -390,8 +459,8 @@
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
     <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
   </aside>
-  <script>window.APP_VERSION='2026.07.21-3';</script>
-  <script src="game.js?v=2026.07.21-3"></script>
-  <script src="sw-register.js?v=2026.07.21-3"></script>
+  <script>window.APP_VERSION='2026.07.22-1';</script>
+  <script src="game.js?v=2026.07.22-1"></script>
+  <script src="sw-register.js?v=2026.07.22-1"></script>
 </body>
 </html>
