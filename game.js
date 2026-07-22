@@ -624,6 +624,10 @@ function answer(index,timedOut=false) {
     state.playerStats[actorKey].correct++; 
     state.playerStats[actorKey].bestStreak=Math.max(state.playerStats[actorKey].bestStreak,actor.streak); 
     
+    if (state.correct === 1) announceEsportsMatch('first_blood');
+    else if (actor.streak === 3) announceEsportsMatch('streak_3');
+    else if (actor.streak === 5) announceEsportsMatch('streak_5'); 
+    
     let damage=moveDamage(actor,skill.id);
     if(state.bossGlitchActive) {
       damage = damage * 2;
@@ -919,6 +923,7 @@ function finish(winner, reason='') {
   if(!state.running)return;
   state.running=false;
   clearInterval(state.timerId);
+  announceEsportsMatch('victory', { winner: state[winner] ? state[winner].name : '資訊勇者' });
   const solo=state.mode==='solo', won=winner==='p1';
   
   if (solo && state.bossMode) {
@@ -1801,4 +1806,143 @@ document.addEventListener('DOMContentLoaded', () => {
   const zhuyinBtn = $('question-zhuyin-btn');
   if (ttsBtn) ttsBtn.addEventListener('click', speakQuestionText);
   if (zhuyinBtn) zhuyinBtn.addEventListener('click', toggleZhuyinMode);
+
+  // P0-18 頒獎台與證書 Event Bindings
+  const podiumBtn = $('podium-btn');
+  const podiumModal = $('mvp-podium-modal');
+  const certModal = $('certificate-modal');
+
+  if (podiumBtn && podiumModal) {
+    podiumBtn.addEventListener('click', () => {
+      renderPodiumUI();
+      podiumModal.classList.remove('hidden');
+    });
+  }
+  if ($('close-podium-btn') && podiumModal) {
+    $('close-podium-btn').addEventListener('click', () => podiumModal.classList.add('hidden'));
+  }
+  if ($('open-cert-btn') && certModal) {
+    $('open-cert-btn').addEventListener('click', () => {
+      renderCertificateUI();
+      if (podiumModal) podiumModal.classList.add('hidden');
+      certModal.classList.remove('hidden');
+    });
+  }
+  if ($('close-cert-btn') && certModal) {
+    $('close-cert-btn').addEventListener('click', () => certModal.classList.add('hidden'));
+  }
+  if ($('do-print-cert-btn')) {
+    $('do-print-cert-btn').addEventListener('click', () => window.print());
+  }
 });
+
+// 🎙️ P0-17：全班沉浸式 AI 戰況主播語音即時播報
+function announceEsportsMatch(event, detail = {}) {
+  if (!('speechSynthesis' in window)) return;
+  
+  const textMap = {
+    first_blood: '🔥 率先發動打擊！拿下第一分！',
+    streak_3: '🔥 三連爆擊！手感發燙！',
+    streak_5: '⚡ 五連神級爆擊！全場震撼！',
+    clash: '⚔️ 雙方同時開大！進入極限拼刀對決模式！',
+    reversal: '🛡️ 絕境大逆轉！鎖血反擊！',
+    victory: `👑 比賽結束！恭喜 ${detail.winner || '玩家'} 贏得本場競賽！`
+  };
+
+  const text = textMap[event];
+  if (!text) return;
+
+  try {
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = 'zh-TW';
+    utterance.rate = 1.15;
+    utterance.pitch = 1.1;
+    window.speechSynthesis.speak(utterance);
+  } catch(e) {
+    console.warn('AI 主播廣播發聲失敗:', e);
+  }
+}
+
+// ⚔️ P0-16：雙人對戰拼刀對決模式 (Clash Mode)
+let clashState = { active: false, p1Val: 50, timerId: null, timeLeft: 8 };
+
+function triggerClashMode() {
+  if (clashState.active) return;
+  clashState.active = true;
+  clashState.p1Val = 50;
+  clashState.timeLeft = 8;
+
+  const overlay = $('clash-overlay');
+  if (overlay) overlay.classList.remove('hidden');
+
+  announceEsportsMatch('clash');
+
+  clearInterval(clashState.timerId);
+  clashState.timerId = setInterval(() => {
+    clashState.timeLeft--;
+    if ($('clash-time')) $('clash-time').textContent = clashState.timeLeft;
+    
+    if (clashState.timeLeft <= 0) {
+      clearInterval(clashState.timerId);
+      resolveClashResult();
+    }
+  }, 1000);
+}
+
+function updateClashBar(p1Delta) {
+  if (!clashState.active) return;
+  clashState.p1Val = Math.min(90, Math.max(10, clashState.p1Val + p1Delta));
+  const bar1 = $('clash-bar-p1');
+  const spark = $('clash-spark-head');
+  if (bar1) bar1.style.width = `${clashState.p1Val}%`;
+  if (spark) spark.style.left = `${clashState.p1Val}%`;
+}
+
+function resolveClashResult() {
+  clashState.active = false;
+  const overlay = $('clash-overlay');
+  if (overlay) overlay.classList.add('hidden');
+
+  const winner = clashState.p1Val >= 50 ? 'p1' : 'p2';
+  const winnerActor = state[winner];
+  const loserActor = state[winner === 'p1' ? 'p2' : 'p1'];
+
+  const dmg = 85;
+  loserActor.health = Math.max(0, loserActor.health - dmg);
+  
+  spawn3DSparks(window.innerWidth / 2, window.innerHeight / 2, '#fbbf24', 85, 'shatter');
+  announceEsportsMatch('reversal', { winner: winnerActor.name });
+  updateUI();
+}
+
+// 🏆 P0-18：MVP 3D 金銀銅頒獎台與小勇者證書
+function renderPodiumUI() {
+  const p1Name = state.p1 ? state.p1.name : '玩家 1';
+  const p2Name = state.p2 ? state.p2.name : (state.mode === 'solo' ? '駕駛艙 AI' : '玩家 2');
+  
+  if ($('podium-p1-name')) $('podium-p1-name').textContent = p1Name;
+  if ($('podium-p2-name')) $('podium-p2-name').textContent = p2Name;
+  if ($('podium-p3-name')) $('podium-p3-name').textContent = '挑戰怪獸';
+}
+
+function renderCertificateUI() {
+  const name = state.p1 ? state.p1.name : '資訊勇者';
+  const total = state.answers ? state.answers.length : 1;
+  const correct = state.answers ? state.answers.filter(a => a.correct).length : 1;
+  const acc = Math.round((correct / Math.max(1, total)) * 100);
+  
+  if ($('cert-student-name')) $('cert-student-name').textContent = name;
+  if ($('cert-diff')) $('cert-diff').textContent = state.difficulty === 'hard' ? '極限霸主' : (state.difficulty === 'easy' ? '基礎關卡' : '普通挑戰');
+  if ($('cert-acc')) $('cert-acc').textContent = `${acc}%`;
+  if ($('cert-streak')) $('cert-streak').textContent = `${state.p1.bestStreak || 0} 連爆擊`;
+  
+  let title = '資訊科技小達人';
+  if (acc === 100) title = '神級資安防禦大師';
+  else if (state.p1.bestStreak >= 5) title = '連擊破壞神';
+  if ($('cert-title')) $('cert-title').textContent = title;
+
+  const now = new Date();
+  const dateStr = `${now.getFullYear()}年${String(now.getMonth() + 1).padStart(2, '0')}月${String(now.getDate()).padStart(2, '0')}日`;
+  if ($('cert-date')) $('cert-date').textContent = dateStr;
+}
