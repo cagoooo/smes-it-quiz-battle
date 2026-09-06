@@ -1,5 +1,7 @@
 # 石門國小資訊科技駕駛艙：答題快打
 
+> 📌 **建置版本：2026.07.22-1**（依據 `version.json`）
+
 線上遊玩：https://cagoooo.github.io/smes-it-quiz-battle/
 
 給國小學生使用的資訊素養答題對戰遊戲。直接開啟 `index.html` 即可使用，無需登入或後端。
