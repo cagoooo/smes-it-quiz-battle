@@ -84,7 +84,7 @@
 - Repository：`cagoooo/smes-it-quiz-battle`
 - 可見性：公開
 - 主要技術：JavaScript
-- 線上入口：未在 GitHub repository metadata 設定
+- 線上入口：<https://cagoooo.github.io/smes-it-quiz-battle/>
 
 ### 可以怎麼應用
 
