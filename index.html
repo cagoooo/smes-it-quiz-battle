@@ -73,7 +73,7 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="apple-mobile-web-app-title" content="答題快打">
   <title>石門國小｜資訊科技駕駛艙：答題快打</title>
-  <link rel="stylesheet" href="style.css?v=2026.11.23-1">
+  <link rel="stylesheet" href="style.css?v=2026.11.23-2">
   <!-- 引入 Supabase JS SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
@@ -309,13 +309,19 @@
     <!-- ⚔️ 雙人拼刀對決 Overlay (P0-16) -->
     <div id="clash-overlay" class="clash-overlay hidden" role="dialog" aria-modal="true">
       <div class="clash-title-3d">⚔️ ULTIMATE DUEL CLASH ⚔️</div>
-      <p class="clash-subtitle">雙方極限大絕碰撞！快速作答碾壓對手！</p>
+      <p class="clash-subtitle">雙方極限大絕碰撞！狂點按鈕，把能量推向對手！</p>
+      <div class="clash-names" aria-hidden="true"><span id="clash-name-p1" class="clash-name p1">1P</span><span id="clash-name-p2" class="clash-name p2">2P</span></div>
       <div class="clash-bar-container">
         <div id="clash-bar-p1" class="clash-bar-fill p1" style="width: 50%;"></div>
         <div id="clash-bar-p2" class="clash-bar-fill p2" style="width: 50%;"></div>
         <div id="clash-spark-head" class="clash-spark-head" style="left: 50%;">⚡</div>
       </div>
       <div class="clash-timer"><span id="clash-time">8</span>s</div>
+      <div class="clash-controls">
+        <button id="clash-tap-p1" class="clash-tap p1" type="button" data-clash-tap="p1">👊 1P 狂點！<small id="clash-tap-p1-key">鍵盤按 A</small></button>
+        <button id="clash-tap-p2" class="clash-tap p2" type="button" data-clash-tap="p2">2P 狂點！👊<small>鍵盤按 L</small></button>
+      </div>
+      <p id="clash-hint" class="clash-hint" aria-live="polite"></p>
     </div>
   </main>
 
@@ -520,8 +526,8 @@
     <div><b>✨ 遊戲已推出新版</b><small>更新後可使用最新角色、題目與功能。</small></div>
     <div class="sw-update-actions"><button id="sw-update-now" type="button">立刻更新</button><button id="sw-update-later" type="button" aria-label="稍後再說">✕</button></div>
   </aside>
-  <script>window.APP_VERSION='2026.11.23-1';</script>
-  <script src="game.js?v=2026.11.23-1"></script>
-  <script src="sw-register.js?v=2026.11.23-1"></script>
+  <script>window.APP_VERSION='2026.11.23-2';</script>
+  <script src="game.js?v=2026.11.23-2"></script>
+  <script src="sw-register.js?v=2026.11.23-2"></script>
 </body>
 </html>

@@ -471,6 +471,33 @@ test('雙人對戰拼刀對決機制 (P0-16)', () => {
   assert.match(game, /function updateClashBar\(/);
 });
 
+test('拼刀對決已接上觸發點、連打輸入與結算 (P0-16)', () => {
+  const indexHtml = fs.readFileSync(path.join(root, 'index.html'), 'utf8');
+  const styleCss = fs.readFileSync(path.join(root, 'style.css'), 'utf8');
+  // 觸發：玩家答對（answer）與電腦答對（resolveCpuMove）兩條流程都要檢查
+  assert.match(game, /clashTriggered=shouldTriggerClash\(actor,defender,skill\.id\)/);
+  assert.match(game, /if\(shouldTriggerClash\(actor,state\.p1,skill\.id\)\)/);
+  assert.match(game, /function startClashAfterAnswer\(/);
+  // 連打輸入：兩顆按鈕＋鍵盤，電腦對手自動連打
+  assert.match(indexHtml, /data-clash-tap="p1"/);
+  assert.match(indexHtml, /data-clash-tap="p2"/);
+  assert.match(game, /function clashTap\(/);
+  assert.match(game, /CLASH_CPU_TAPS_PER_SECOND/);
+  assert.match(styleCss, /\.clash-tap\b/);
+  // 結束或回大廳時要能中止，避免殘留計時器
+  assert.match(game, /function cancelClash\(/);
+  assert.match(game, /clearInterval\(state\.timerId\);\s*cancelClash\(\);/);
+
+  // 勝負判定是純函式：直接取出來驗證（中線平手由先出招的一方獲勝）
+  const source = game.match(/function clashWinnerKey\(p1Val, attackerKey\) \{[\s\S]*?\n\}/);
+  assert.ok(source, '找不到 clashWinnerKey');
+  const clashWinnerKey = new Function(`${source[0]}; return clashWinnerKey;`)();
+  assert.equal(clashWinnerKey(72.5, 'p2'), 'p1');
+  assert.equal(clashWinnerKey(31, 'p1'), 'p2');
+  assert.equal(clashWinnerKey(50, 'p1'), 'p1');
+  assert.equal(clashWinnerKey(50, 'p2'), 'p2');
+});
+
 test('全班沉浸式 AI 戰況主播語音即時播報 (P0-17)', () => {
   assert.match(game, /function announceEsportsMatch\(/);
   assert.match(game, /first_blood/);
