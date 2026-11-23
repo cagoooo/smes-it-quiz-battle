@@ -37,6 +37,10 @@ const skillSet = (quick, quickDamage, heavy, heavyDamage, tactical, tacticalDama
   { id:'tactical', name:tactical, damage:tacticalDamage, meterGain:34, questionLevel:'tactical', label:'戰術題', icon:'✹' },
 ];
 const difficultyModes = { practice:{label:'練習',accuracy:-.14,delay:1450,ultimateChance:.28,hint:'提示：先看清楚題目中的關鍵詞。'}, standard:{label:'標準',accuracy:0,delay:900,ultimateChance:.55,hint:''}, challenge:{label:'挑戰',accuracy:.09,delay:620,ultimateChance:.78,hint:''} };
+// ⚔️ P0-16 拼刀對決的設定與狀態（宣告在最前面，結束／回大廳時要能安全取消）
+const CLASH_SECONDS = 8, CLASH_TAP_POWER = 2.5, CLASH_DAMAGE_BONUS = 1.25, CLASH_INTRO_DELAY = 900;
+const CLASH_CPU_TAPS_PER_SECOND = { practice: 2.5, standard: 3.5, challenge: 4.5 };
+let clashState = { active: false, pending: false, p1Val: 50, timerId: null, cpuTimerId: null, introTimerId: null, timeLeft: CLASH_SECONDS, attackerKey: 'p1', onResolve: null };
 const cpuProfiles = { firewall:{accuracy:.68,light:.55,heavy:.3,tactical:.15}, 'cache-golem':{accuracy:.64,light:.35,heavy:.5,tactical:.15}, 'noise-beast':{accuracy:.58,light:.45,heavy:.22,tactical:.33}, 'phishing-siren':{accuracy:.6,light:.3,heavy:.25,tactical:.45}, 'bug-phantom':{accuracy:.65,light:.36,heavy:.35,tactical:.29}, 'malware-mimic':{accuracy:.63,light:.3,heavy:.4,tactical:.3}, 'glitch-dragon':{accuracy:.61,light:.22,heavy:.42,tactical:.36}, 'bot-swarm':{accuracy:.59,light:.48,heavy:.2,tactical:.32} };
 const skillSets = {
   coder: skillSet('位元突擊',7,'除錯連發',14,'函式分身斬',21), guardian: skillSet('護盾衝刺',8,'掃毒彈幕',15,'權限封鎖陣',22),
@@ -276,6 +280,7 @@ function renderAvatar(elementId, fighter) { const element = $(elementId); if (fi
 function renderArenaAvatar(selector, fighter) { const element = document.querySelector(selector); element.closest('.fighter')?.classList.toggle('has-art', Boolean(fighter.image)); if (fighter.image) element.innerHTML = `<img src="${fighter.image}" alt="${fighter.name}">`; else element.textContent = fighter.icon; }
 function fighterKey(actor) { return actor===state.p1?'p1':'p2'; }
 function setupBattle(retryQuestions=[]) {
+  cancelClash();
   const p1NameVal = $('p1-name-input').value.trim();
   const p2NameVal = $('p2-name-input').value.trim();
   localStorage.setItem('smes-battle-p1-name', p1NameVal);
@@ -316,7 +321,7 @@ function setupBattle(retryQuestions=[]) {
 function renderMoveDeck(actor) { actor.skills.forEach(skill => { const button=document.querySelector(`[data-move="${skill.id}"]`); button.querySelector('.move-icon').textContent=skill.icon; button.querySelector('b').textContent=skill.name; button.querySelector('small').textContent=`${skill.label} · 傷害 ${skill.damage} · 能量 +${skill.meterGain}`; }); const ultimateButton=$('ultimate-btn'); ultimateButton.querySelector('b').textContent=actor.ultimate.name; ultimateButton.querySelector('small').textContent=`專屬大絕 · 傷害 ${actor.ultimate.damage} · 能量 100%`; ultimateButton.style.setProperty('--ultimate-color',actor.ultimate.color); }
 function renderCpuMoveDeck(actor, selectedId=null) { const skills=[...actor.skills, ...(actor.meter>=100?[getSkill(actor,'ultimate')]:[])]; $('cpu-move-list').innerHTML=skills.map(skill=>`<div class="cpu-move ${skill.id===selectedId?'selected':''} ${skill.id==='ultimate'?'ultimate':''}"><span>${skill.icon || '✦'}</span><div><b>${skill.name}</b><small>${skill.label} · 傷害 ${moveDamage(actor,skill.id)}</small></div><em>${skill.id===selectedId?'已鎖定':'分析中'}</em></div>`).join(''); $('cpu-move-status').textContent=selectedId?`已鎖定：${getSkill(actor,selectedId).name}`:'正在分析最佳招式…'; }
 function updateUI() { for (const id of ['p1','p2']) { const f=state[id]; const maxHp=(id==='p2'&&state.mode==='solo'&&state.bossMode)?300:100; $(`${id}-health`).style.width=`${Math.min(100,Math.max(0,(f.health/maxHp)*100))}%`; $(`${id}-health-text`).textContent=f.health; $(`${id}-meter`).style.width=`${f.meter}%`; $(`${id}-meter-text`).textContent=`${f.meter}%`; } const player=state[state.turn]; $('streak-label').textContent=`連擊 x${player.streak}`; $('ultimate-btn').classList.toggle('locked',player.meter<100); $('ultimate-btn').disabled=player.meter<100; }
-function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running||document.hidden)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
+function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running||document.hidden||clashState.active||clashState.pending)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
 function setTurn(turn) {
   if(!state.running)return; 
   state.resolving=false; 
@@ -616,8 +621,8 @@ function answer(index,timedOut=false) {
   if(!correct)document.querySelector(`.answer[data-answer="${q.correct}"]`).classList.add('correct'); 
   $('explain').textContent=`💡 ${q.tip}`; 
   const actor=state[state.turn], defender=state.turn==='p1'?state.p2:state.p1, actorKey=fighterKey(actor); 
-  let attackRecovery=1600; 
-  
+  let attackRecovery=1600, clashTriggered=false;
+
   if(correct){
     state.correct++; 
     actor.streak++; 
@@ -646,10 +651,12 @@ function answer(index,timedOut=false) {
       $('feedback').textContent=actor.isCpu?`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`:`答對！${actor.name} 發動 ${moveName(actor,skill.id)}！`; 
       $('feedback').className='feedback good'; 
     }
-    attackRecovery=attack(actor,defender,damage,skill.id); 
+    // 對手的能量條也滿了 → 雙方大絕相撞，改由拼刀對決決定誰的大絕命中
+    clashTriggered=shouldTriggerClash(actor,defender,skill.id);
+    if(!clashTriggered)attackRecovery=attack(actor,defender,damage,skill.id);
   } else {
-    actor.streak=0; 
-    actor.meter=Math.max(0,actor.meter-8); 
+    actor.streak=0;
+    actor.meter=Math.max(0,actor.meter-8);
     state.wrongAnswers.push({question:q,selectedIndex:index,timedOut}); 
     
     // 答錯卡牌毀滅性 3D 故障反噬受傷、地震級搖晃、全螢幕紅色故障警報閃爍與 3D 碎裂字元粒子
@@ -698,7 +705,7 @@ function answer(index,timedOut=false) {
   
   state.bossGlitchActive = false;
   $('question-card').classList.remove('boss-glitched');
-  updateUI(); const recovery=correct ? attackRecovery : 1600; window.setTimeout(()=>{ if(!state.running)return; if(state.retryMode&&state.retryQueue.length===0)finish('p1','錯題再練完成！'); else if(defender.health<=0)finish(state.turn); else setTurn(state.turn==='p1'?'p2':'p1'); },recovery);
+  updateUI(); if(clashTriggered){ startClashAfterAnswer(actorKey); return; } const recovery=correct ? attackRecovery : 1600; window.setTimeout(()=>{ if(!state.running)return; if(state.retryMode&&state.retryQueue.length===0)finish('p1','錯題再練完成！'); else if(defender.health<=0)finish(state.turn); else setTurn(state.turn==='p1'?'p2':'p1'); },recovery);
 }
 function attack(actor,defender,damage,skillId) { 
   const source=actor===state.p1?$('fighter-p1'):$('fighter-p2'), target=defender===state.p1?$('fighter-p1'):$('fighter-p2'); 
@@ -857,6 +864,12 @@ function resolveCpuMove(actor,mode,skill,correct){
     if(state.mode==='solo'&&state.bossMode){
       finalDamage=Math.ceil(finalDamage*1.3);
     }
+    // 玩家的能量條也滿了 → 雙方大絕相撞，改由拼刀對決決定誰的大絕命中
+    if(shouldTriggerClash(actor,state.p1,skill.id)){
+      updateUI();
+      startClashAfterAnswer('p2');
+      return;
+    }
     recovery=attack(actor,state.p1,finalDamage,skill.id);
   } else {
     actor.streak=0;
@@ -925,6 +938,7 @@ function finish(winner, reason='') {
   if(!state.running)return;
   state.running=false;
   clearInterval(state.timerId);
+  cancelClash();
   announceEsportsMatch('victory', { winner: state[winner] ? state[winner].name : '資訊勇者' });
   const solo=state.mode==='solo', won=winner==='p1';
   
@@ -984,7 +998,7 @@ function playMusicStinger(scene) { const track = approvedTrack(scene); if (!musi
 function unlockMusic() { const wasLocked=!music.unlocked; music.unlocked=true; if (music.enabled && wasLocked) playMusicScene(state.running?battleSceneKey():'lobby', true); updateMusicButtons(); }
 function updateMusicButtons(){ const on=music.enabled; const lobbyBtn=$('lobby-sound-btn'); if(lobbyBtn){lobbyBtn.textContent=on?'🎵 BGM 開啟':'🔕 BGM 關閉';lobbyBtn.setAttribute('aria-pressed',String(on));} const battleBtn=$('music-btn'); if(battleBtn){battleBtn.textContent=on?'🎵':'🔕';battleBtn.setAttribute('aria-pressed',String(on));} }
 function toggleMusicMute(){ music.enabled=!music.enabled; if(!music.enabled)stopMusic(); else playMusicScene(state.running?battleSceneKey():'lobby',true); updateMusicButtons(); }
-function showLobby() { state.running=false; clearInterval(state.timerId); stopMusic(); $('result').classList.add('hidden'); $('battle').classList.add('hidden'); $('lobby').classList.remove('hidden'); playMusicScene('lobby', true); }
+function showLobby() { state.running=false; clearInterval(state.timerId); cancelClash(); stopMusic(); $('result').classList.add('hidden'); $('battle').classList.add('hidden'); $('lobby').classList.remove('hidden'); playMusicScene('lobby', true); }
 
 document.addEventListener('click',(event)=>{const mode=event.target.closest('[data-mode]');if(mode){state.mode=mode.dataset.mode;choose('[data-mode]',state.mode,'mode');renderRoster();}const difficulty=event.target.closest('[data-difficulty]');if(difficulty){state.difficulty=difficulty.dataset.difficulty;choose('[data-difficulty]',state.difficulty,'difficulty');}const roundTime=event.target.closest('[data-round-time]');if(roundTime){state.roundTime=Number(roundTime.dataset.roundTime);choose('[data-round-time]',roundTime.dataset.roundTime,'roundTime');}const unit=event.target.closest('[data-unit]');if(unit){state.unit=unit.dataset.unit;choose('[data-unit]',state.unit,'unit');}const hero=event.target.closest('[data-hero]');if(hero){state.character=characters.find(c=>c.id===hero.dataset.hero);renderRoster();}const hero2=event.target.closest('[data-hero-p2]');if(hero2){state.character2=characters.find(c=>c.id===hero2.dataset.heroP2);renderRoster();}const move=event.target.closest('[data-move]');if(move)chooseMove(move.dataset.move);const answerBtn=event.target.closest('[data-answer]');if(answerBtn)answer(Number(answerBtn.dataset.answer));const competencyBtn=event.target.closest('[data-competency-retry]');if(competencyBtn)startCompetencyRetry(competencyBtn.dataset.competencyRetry);});
 document.addEventListener('keydown',(event)=>{ if(event.ctrlKey||event.metaKey||event.altKey||event.repeat)return; const target=event.target; if(target&&target.closest&&target.closest('input,textarea,select,[contenteditable="true"]'))return; if(state.mode!=='solo'||!state.running||!state.current||state.turn!=='p1'||state.resolving)return; const index='1234'.indexOf(event.key); const letter='abcd'.indexOf(event.key.toLowerCase()); const choice=index>=0?index:letter; if(choice<0)return; const btn=document.querySelector(`#answers .answer[data-answer="${choice}"]`); if(!btn||btn.disabled||$('question-card').classList.contains('hidden'))return; event.preventDefault(); btn.click(); });
@@ -1874,56 +1888,181 @@ function announceEsportsMatch(event, detail = {}) {
 }
 
 // ⚔️ P0-16：雙人對戰拼刀對決模式 (Clash Mode)
-let clashState = { active: false, p1Val: 50, timerId: null, timeLeft: 8 };
+// 觸發：一方答對放出大絕時，對手的能量條也已集滿 → 雙方大絕相撞。
+// 玩法：8 秒內各自狂點自己的按鈕（鍵盤 1P 按 A、2P 按 L）把能量推向對手；電腦對手依難度自動連打。
+// 結算：能量推過中線的一方獲勝，贏家的大絕以 1.25 倍傷害命中；剛好平手由先出招的一方獲勝。
+function shouldTriggerClash(actor, defender, skillId) {
+  return skillId === 'ultimate' && !state.retryMode && defender.meter >= 100 && defender.health > 0;
+}
 
-function triggerClashMode() {
+// 純函式：依能量條位置（50 為中線，越大越偏向 1P 優勢）與先出招的一方決定贏家
+function clashWinnerKey(p1Val, attackerKey) {
+  if (p1Val > 50) return 'p1';
+  if (p1Val < 50) return 'p2';
+  return attackerKey === 'p2' ? 'p2' : 'p1';
+}
+
+function clashWinnerDamage(winner) {
+  let damage = moveDamage(winner, 'ultimate');
+  if (winner.isCpu && state.mode === 'solo' && state.bossMode) damage = Math.ceil(damage * 1.3);
+  return Math.round(damage * CLASH_DAMAGE_BONUS);
+}
+
+function clearClashTimers() {
+  clearInterval(clashState.timerId);
+  clearInterval(clashState.cpuTimerId);
+  clearTimeout(clashState.introTimerId);
+  clashState.timerId = clashState.cpuTimerId = clashState.introTimerId = null;
+}
+
+// 比賽結束、回大廳、重新開局時呼叫：中止進行中的拼刀，不結算
+function cancelClash() {
+  clearClashTimers();
+  clashState.active = false;
+  clashState.pending = false;
+  clashState.onResolve = null;
+  const overlay = $('clash-overlay');
+  if (overlay) overlay.classList.add('hidden');
+}
+
+// 答對放大絕且對手能量也滿時由 answer()／resolveCpuMove() 呼叫：先讓大家看到答對回饋，再進入拼刀
+function startClashAfterAnswer(attackerKey) {
+  const attacker = state[attackerKey], defenderKey = attackerKey === 'p1' ? 'p2' : 'p1', defender = state[defenderKey];
+  state.resolving = true;
+  clashState.pending = true;
+  $('feedback').textContent = `⚔️ ${attacker.name} 與 ${defender.name} 同時放出大絕！準備拼刀對決！`;
+  $('feedback').className = 'feedback good';
+  clearTimeout(clashState.introTimerId);
+  clashState.introTimerId = window.setTimeout(() => {
+    clashState.introTimerId = null;
+    clashState.pending = false;
+    if (!state.running) return;
+    triggerClashMode(attackerKey, (recovery) => {
+      window.setTimeout(() => {
+        if (!state.running) return;
+        if (state.p1.health <= 0) finish('p2');
+        else if (state.p2.health <= 0) finish('p1');
+        else setTurn(defenderKey);
+      }, Math.max(recovery, 1600));
+    });
+  }, CLASH_INTRO_DELAY);
+}
+
+function triggerClashMode(attackerKey = 'p1', onResolve = null) {
   if (clashState.active) return;
+  clearClashTimers();
   clashState.active = true;
+  clashState.pending = false;
   clashState.p1Val = 50;
-  clashState.timeLeft = 8;
+  clashState.timeLeft = CLASH_SECONDS;
+  clashState.attackerKey = attackerKey;
+  clashState.onResolve = onResolve;
+  state.resolving = true;
+  // 雙方的大絕都在這次碰撞中用掉
+  state.p1.meter = 0;
+  state.p2.meter = 0;
+  updateUI();
+
+  const cpuOpponent = !!state.p2.isCpu;
+  if ($('clash-name-p1')) $('clash-name-p1').textContent = state.p1.name;
+  if ($('clash-name-p2')) $('clash-name-p2').textContent = state.p2.name;
+  if ($('clash-tap-p2')) $('clash-tap-p2').classList.toggle('hidden', cpuOpponent);
+  if ($('clash-tap-p1-key')) $('clash-tap-p1-key').textContent = cpuOpponent ? '也可以按鍵盤 A' : '鍵盤按 A';
+  if ($('clash-hint')) $('clash-hint').textContent = cpuOpponent
+    ? `${state.p2.name} 正在自動連打，快狂點按鈕壓過它！`
+    : '兩位玩家各自狂點自己那一側的按鈕，把能量推向對手！';
+  if ($('clash-time')) $('clash-time').textContent = clashState.timeLeft;
+  updateClashBar(0);
 
   const overlay = $('clash-overlay');
   if (overlay) overlay.classList.remove('hidden');
 
   announceEsportsMatch('clash');
 
-  clearInterval(clashState.timerId);
   clashState.timerId = setInterval(() => {
+    if (!clashState.active || document.hidden) return;
     clashState.timeLeft--;
-    if ($('clash-time')) $('clash-time').textContent = clashState.timeLeft;
-    
-    if (clashState.timeLeft <= 0) {
-      clearInterval(clashState.timerId);
-      resolveClashResult();
-    }
+    if ($('clash-time')) $('clash-time').textContent = Math.max(0, clashState.timeLeft);
+    if (clashState.timeLeft <= 0) resolveClashResult();
   }, 1000);
+
+  if (cpuOpponent) {
+    const rate = (CLASH_CPU_TAPS_PER_SECOND[state.difficulty] || 3.5) + (state.bossMode ? 0.5 : 0);
+    clashState.cpuTimerId = setInterval(() => {
+      if (!clashState.active || document.hidden) return;
+      updateClashBar(-CLASH_TAP_POWER * rate / 10);
+    }, 100);
+  }
 }
 
 function updateClashBar(p1Delta) {
   if (!clashState.active) return;
   clashState.p1Val = Math.min(90, Math.max(10, clashState.p1Val + p1Delta));
   const bar1 = $('clash-bar-p1');
+  const bar2 = $('clash-bar-p2');
   const spark = $('clash-spark-head');
   if (bar1) bar1.style.width = `${clashState.p1Val}%`;
+  if (bar2) bar2.style.width = `${100 - clashState.p1Val}%`;
   if (spark) spark.style.left = `${clashState.p1Val}%`;
+  // 推到底就直接分出勝負，不必等時間到
+  if (p1Delta !== 0 && (clashState.p1Val >= 90 || clashState.p1Val <= 10)) resolveClashResult();
+}
+
+// 玩家連打一下（1P 往右推、2P 往左推）；電腦控制的一方不接受手動輸入
+function clashTap(playerKey) {
+  if (!clashState.active) return;
+  if (playerKey !== 'p1' && playerKey !== 'p2') return;
+  if (state[playerKey].isCpu) return;
+  const button = $(`clash-tap-${playerKey}`);
+  if (button) {
+    button.classList.remove('tapped');
+    void button.offsetWidth;
+    button.classList.add('tapped');
+  }
+  updateClashBar(playerKey === 'p1' ? CLASH_TAP_POWER : -CLASH_TAP_POWER);
 }
 
 function resolveClashResult() {
+  if (!clashState.active) return;
   clashState.active = false;
+  clearClashTimers();
   const overlay = $('clash-overlay');
   if (overlay) overlay.classList.add('hidden');
 
-  const winner = clashState.p1Val >= 50 ? 'p1' : 'p2';
-  const winnerActor = state[winner];
-  const loserActor = state[winner === 'p1' ? 'p2' : 'p1'];
+  const onResolve = clashState.onResolve;
+  clashState.onResolve = null;
+  if (!state.running) return;
 
-  const dmg = 85;
-  loserActor.health = Math.max(0, loserActor.health - dmg);
-  
-  spawn3DSparks(window.innerWidth / 2, window.innerHeight / 2, '#fbbf24', 85, 'shatter');
-  announceEsportsMatch('reversal', { winner: winnerActor.name });
+  const winnerKey = clashWinnerKey(clashState.p1Val, clashState.attackerKey);
+  const winner = state[winnerKey];
+  const loser = state[winnerKey === 'p1' ? 'p2' : 'p1'];
+  const damage = clashWinnerDamage(winner);
+
+  // 後出招的一方反而贏了才算逆轉
+  if (winnerKey !== clashState.attackerKey) announceEsportsMatch('reversal', { winner: winner.name });
+  if (state.sound && typeof navigator.vibrate === 'function') { try { navigator.vibrate([30, 40, 80]); } catch (e) {} }
+
+  const recovery = attack(winner, loser, damage, 'ultimate');
+  // attack() 會先寫入「連招施放中」，這裡再改成拼刀結果，讓全班看得到誰贏了
+  $('feedback').textContent = `⚔️ 拼刀勝出！${winner.name} 的 ${moveName(winner, 'ultimate')} 壓過對手，造成 ${damage} 點傷害！`;
+  $('feedback').className = 'feedback good';
   updateUI();
+  if (onResolve) onResolve(recovery, winnerKey);
 }
+
+// 拼刀輸入：按鈕用 pointerdown（支援兩位玩家同時多指連打），鍵盤 1P 按 A、2P 按 L
+document.addEventListener('pointerdown', (event) => {
+  const button = event.target && event.target.closest ? event.target.closest('[data-clash-tap]') : null;
+  if (!button) return;
+  event.preventDefault();
+  clashTap(button.dataset.clashTap);
+});
+document.addEventListener('keydown', (event) => {
+  if (!clashState.active || event.repeat || event.ctrlKey || event.metaKey || event.altKey) return;
+  const key = event.key.toLowerCase();
+  if (key === 'a') { event.preventDefault(); clashTap('p1'); }
+  else if (key === 'l') { event.preventDefault(); clashTap('p2'); }
+});
 
 // 🏆 P0-18：MVP 3D 金銀銅頒獎台與小勇者證書
 function renderPodiumUI() {

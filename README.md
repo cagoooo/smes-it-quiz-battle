@@ -1,6 +1,6 @@
 # 石門國小資訊科技駕駛艙：答題快打
 
-> 📌 **建置版本：2026.11.23-1**（依據 `version.json`）
+> 📌 **建置版本：2026.11.23-2**（依據 `version.json`）
 
 線上遊玩：https://cagoooo.github.io/smes-it-quiz-battle/
 
