@@ -1404,3 +1404,6 @@ button { font:inherit; } button:focus-visible,a:focus-visible { outline:3px soli
     margin: 10mm;
   }
 }
+
+/* 觸控優化：避免連點觸發雙擊放大與點擊灰框 */
+button, .answer, .move, .hero-card, .roster-card, [data-hero], [data-hero-p2], [data-mode], [data-difficulty] { touch-action:manipulation; -webkit-tap-highlight-color:transparent; }

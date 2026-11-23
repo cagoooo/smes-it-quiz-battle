@@ -316,7 +316,7 @@ function setupBattle(retryQuestions=[]) {
 function renderMoveDeck(actor) { actor.skills.forEach(skill => { const button=document.querySelector(`[data-move="${skill.id}"]`); button.querySelector('.move-icon').textContent=skill.icon; button.querySelector('b').textContent=skill.name; button.querySelector('small').textContent=`${skill.label} · 傷害 ${skill.damage} · 能量 +${skill.meterGain}`; }); const ultimateButton=$('ultimate-btn'); ultimateButton.querySelector('b').textContent=actor.ultimate.name; ultimateButton.querySelector('small').textContent=`專屬大絕 · 傷害 ${actor.ultimate.damage} · 能量 100%`; ultimateButton.style.setProperty('--ultimate-color',actor.ultimate.color); }
 function renderCpuMoveDeck(actor, selectedId=null) { const skills=[...actor.skills, ...(actor.meter>=100?[getSkill(actor,'ultimate')]:[])]; $('cpu-move-list').innerHTML=skills.map(skill=>`<div class="cpu-move ${skill.id===selectedId?'selected':''} ${skill.id==='ultimate'?'ultimate':''}"><span>${skill.icon || '✦'}</span><div><b>${skill.name}</b><small>${skill.label} · 傷害 ${moveDamage(actor,skill.id)}</small></div><em>${skill.id===selectedId?'已鎖定':'分析中'}</em></div>`).join(''); $('cpu-move-status').textContent=selectedId?`已鎖定：${getSkill(actor,selectedId).name}`:'正在分析最佳招式…'; }
 function updateUI() { for (const id of ['p1','p2']) { const f=state[id]; const maxHp=(id==='p2'&&state.mode==='solo'&&state.bossMode)?300:100; $(`${id}-health`).style.width=`${Math.min(100,Math.max(0,(f.health/maxHp)*100))}%`; $(`${id}-health-text`).textContent=f.health; $(`${id}-meter`).style.width=`${f.meter}%`; $(`${id}-meter-text`).textContent=`${f.meter}%`; } const player=state[state.turn]; $('streak-label').textContent=`連擊 x${player.streak}`; $('ultimate-btn').classList.toggle('locked',player.meter<100); $('ultimate-btn').disabled=player.meter<100; }
-function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
+function startTimer() { clearInterval(state.timerId); $('timer').textContent=state.time; state.timerId=setInterval(()=>{ if(!state.running||document.hidden)return; state.time--; $('timer').textContent=state.time; if(state.time<=10) $('timer').style.color='#ff9eaa'; if(state.time<=0) finish(state.p1.health>=state.p2.health?'p1':'p2','時間到囉！'); },1000); }
 function setTurn(turn) {
   if(!state.running)return; 
   state.resolving=false; 
@@ -446,7 +446,7 @@ function getQuestion(level, useRetry=false) {
   return shuffleQuestion(q);
 }
 function clearQuestionTimer(){window.clearInterval(state.questionTimerId);state.questionTimerId=null;}
-function startQuestionTimer(skill){clearQuestionTimer();let seconds=skill.id==='light'?14:skill.id==='heavy'?17:skill.id==='tactical'?20:24;if(state.bossGlitchActive)seconds=15;const output=$('question-timer');const tick=()=>output.textContent=`⏱ ${seconds}s`;tick();state.questionTimerId=window.setInterval(()=>{seconds--;tick();if(seconds<=0){clearQuestionTimer();answer(-1,true);}},1000);}
+function startQuestionTimer(skill){clearQuestionTimer();let seconds=skill.id==='light'?14:skill.id==='heavy'?17:skill.id==='tactical'?20:24;if(state.bossGlitchActive)seconds=15;const output=$('question-timer');const tick=()=>output.textContent=`⏱ ${seconds}s`;tick();state.questionTimerId=window.setInterval(()=>{if(document.hidden)return;seconds--;tick();if(seconds<=0){clearQuestionTimer();answer(-1,true);}},1000);}
 function getSkill(actor, skillId) { return skillId==='ultimate' ? { id:'ultimate', name:actor.ultimate.name, damage:actor.ultimate.damage, meterGain:0, questionLevel:'ultimate', label:'專屬大絕' } : actor.skills.find(skill=>skill.id===skillId); }
 function moveName(actor, skillId) { return getSkill(actor,skillId).name; }
 function moveDamage(actor, skillId) { return getSkill(actor,skillId).damage + Math.min((actor.streak-1)*2,8); }
@@ -602,6 +602,7 @@ function chooseMove(skillId) {
     } catch(e) {} 
   } 
 }
+function vibrateFeedback(correct){ if(!state.sound||typeof navigator.vibrate!=='function')return; try{ if(window.matchMedia('(prefers-reduced-motion: reduce)').matches)return; navigator.vibrate(correct?20:[40,50,40]); }catch(e){} }
 function answer(index,timedOut=false) { 
   if(!state.current||!state.running)return; 
   clearQuestionTimer(); 
@@ -609,6 +610,7 @@ function answer(index,timedOut=false) {
   const {q,skill}=state.current; 
   document.querySelectorAll('.answer').forEach(btn=>btn.disabled=true); 
   const correct=!timedOut&&index===q.correct, selected=document.querySelector(`.answer[data-answer="${index}"]`); 
+  if(!state[state.turn].isCpu)vibrateFeedback(correct); 
   if(selected)selected.classList.add(correct?'correct':'wrong'); 
   if(state.turn==='p1'){state.recentResults.push(correct); if(state.recentResults.length>4)state.recentResults.shift();} 
   if(!correct)document.querySelector(`.answer[data-answer="${q.correct}"]`).classList.add('correct'); 
@@ -985,6 +987,7 @@ function toggleMusicMute(){ music.enabled=!music.enabled; if(!music.enabled)stop
 function showLobby() { state.running=false; clearInterval(state.timerId); stopMusic(); $('result').classList.add('hidden'); $('battle').classList.add('hidden'); $('lobby').classList.remove('hidden'); playMusicScene('lobby', true); }
 
 document.addEventListener('click',(event)=>{const mode=event.target.closest('[data-mode]');if(mode){state.mode=mode.dataset.mode;choose('[data-mode]',state.mode,'mode');renderRoster();}const difficulty=event.target.closest('[data-difficulty]');if(difficulty){state.difficulty=difficulty.dataset.difficulty;choose('[data-difficulty]',state.difficulty,'difficulty');}const roundTime=event.target.closest('[data-round-time]');if(roundTime){state.roundTime=Number(roundTime.dataset.roundTime);choose('[data-round-time]',roundTime.dataset.roundTime,'roundTime');}const unit=event.target.closest('[data-unit]');if(unit){state.unit=unit.dataset.unit;choose('[data-unit]',state.unit,'unit');}const hero=event.target.closest('[data-hero]');if(hero){state.character=characters.find(c=>c.id===hero.dataset.hero);renderRoster();}const hero2=event.target.closest('[data-hero-p2]');if(hero2){state.character2=characters.find(c=>c.id===hero2.dataset.heroP2);renderRoster();}const move=event.target.closest('[data-move]');if(move)chooseMove(move.dataset.move);const answerBtn=event.target.closest('[data-answer]');if(answerBtn)answer(Number(answerBtn.dataset.answer));const competencyBtn=event.target.closest('[data-competency-retry]');if(competencyBtn)startCompetencyRetry(competencyBtn.dataset.competencyRetry);});
+document.addEventListener('keydown',(event)=>{ if(event.ctrlKey||event.metaKey||event.altKey||event.repeat)return; const target=event.target; if(target&&target.closest&&target.closest('input,textarea,select,[contenteditable="true"]'))return; if(state.mode!=='solo'||!state.running||!state.current||state.turn!=='p1'||state.resolving)return; const index='1234'.indexOf(event.key); const letter='abcd'.indexOf(event.key.toLowerCase()); const choice=index>=0?index:letter; if(choice<0)return; const btn=document.querySelector(`#answers .answer[data-answer="${choice}"]`); if(!btn||btn.disabled||$('question-card').classList.contains('hidden'))return; event.preventDefault(); btn.click(); });
 document.addEventListener('pointerdown',unlockMusic,{once:true,capture:true});document.addEventListener('keydown',unlockMusic,{once:true,capture:true});
 $('lobby-sound-btn').addEventListener('click',function initialEnable(){ unlockMusic(); this.removeEventListener('click',initialEnable); this.addEventListener('click',toggleMusicMute); },{once:true});
 $('music-btn').addEventListener('click',toggleMusicMute);
